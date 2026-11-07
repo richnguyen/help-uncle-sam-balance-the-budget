@@ -66,7 +66,7 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
           </figure>
           {mine && (
             <div className="celebrate-share celebrate-me">
-              <div className="small"><span className="stat-label">Your card is ready</span><div>What your taxes do for the whole country, with your name on it. Nothing political: just your own numbers.</div></div>
+              <div className="small"><span className="stat-label">Your card is ready</span><div>What you pay in federal taxes, and the interest one year of it would save if it paid down the debt, with your name on it. Nothing political: just your own numbers.</div></div>
               <MyShareCard compact />
             </div>
           )}

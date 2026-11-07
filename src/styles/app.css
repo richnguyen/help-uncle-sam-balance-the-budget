@@ -1458,6 +1458,8 @@ html.modal-open { overflow: hidden; }
   padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   background: color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter: blur(10px);
   border-top: 1px solid var(--line); box-shadow: 0 -10px 22px -18px rgba(0, 0, 0, 0.4);
+  /* Its own layer, so changes in the page behind it don't make the frosted bar re-render. */
+  transform: translateZ(0); backface-visibility: hidden;
 }
 .actionbar .btn { min-height: 48px; justify-content: center; text-align: center; line-height: 1.2; white-space: normal; padding-inline: 14px; }
 .actionbar .share-manual { position: absolute; left: 12px; right: 12px; bottom: calc(100% + 8px); }
@@ -1502,6 +1504,7 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 }
 .samdock .samdock-inner {
   display: flex; flex-direction: row; align-items: flex-end; gap: 0; width: 100%; pointer-events: auto;
+  will-change: transform; backface-visibility: hidden;
   padding: 12px max(12px, env(safe-area-inset-right, 0px)) 0 max(6px, env(safe-area-inset-left, 0px));
   cursor: pointer;
   border-radius: 0;
@@ -1644,11 +1647,12 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 .story-split-note { margin: 0 0 10px; }
 
 /* ---------- the debt clock ---------- */
-.clock { display: flex; flex-direction: column; gap: 10px; border-top: 4px solid var(--c-interest); }
+/* Contained, so a ticking digit never makes the browser lay out (or repaint) the rest of the page. */
+.clock { display: flex; flex-direction: column; gap: 10px; border-top: 4px solid var(--c-interest); contain: layout paint; }
+.clock-tick { display: inline-block; contain: layout paint style; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .clock-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .clock-label { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.clock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-interest); animation: clock-pulse 1.6s ease-in-out infinite; }
-@keyframes clock-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.clock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-interest); }
 .clock-num { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.9rem, 7.4vw, 3.6rem); line-height: 1.02; letter-spacing: 0.01em; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .clock-compact .clock-num { font-size: clamp(1.6rem, 6.2vw, 2.6rem); }
 .clock-src { margin: 0; }
@@ -1661,7 +1665,6 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 .clock-meter { height: 14px; border-radius: 7px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
 .clock-meter span { display: block; height: 100%; background: linear-gradient(90deg, var(--c-income), var(--c-interest)); border-radius: 7px; }
 .clock-how ul { display: flex; flex-direction: column; gap: 8px; padding-left: 18px; margin: 0 0 8px; }
-@media (prefers-reduced-motion: reduce) { .clock-dot { animation: none; opacity: 1; } }
 
 /* ---------- today: deadlines in the news ---------- */
 .today-news { background: color-mix(in srgb, var(--c-interest) 9%, var(--surface)); box-shadow: inset 3px 0 0 var(--c-interest); }
@@ -1688,3 +1691,29 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 .teach-questions { display: flex; flex-direction: column; gap: 8px; padding-left: 18px; margin: 0; }
 .teach-needs { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; margin: 0; }
 .teach-copy { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- the tax receipt, in a pop-up ---------- */
+.receipt-teaser { display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--ring); align-self: stretch; }
+.receipt-teaser-num { font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 8vw, 2.6rem); line-height: 1.05; color: var(--ink); }
+.receipt-teaser-num span { font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--ink-2); }
+.receipt-teaser-btn { align-self: flex-start; margin-top: 4px; }
+.popup-scrim { position: fixed; inset: 0; z-index: 90; background: rgba(10, 16, 13, 0.55); display: grid; place-items: center; padding: 16px; overflow-y: auto; animation: fadein 0.2s ease both; }
+.popup { width: min(100%, 500px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; border-radius: 18px; background: var(--paper); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); overflow: hidden; }
+.popup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 12px 12px 18px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.popup-x { border: 0; background: transparent; color: inherit; font-size: 1.6rem; line-height: 1; cursor: pointer; min-width: 44px; min-height: 44px; border-radius: 8px; }
+.popup-x:hover { background: var(--surface-2); }
+.popup-body { padding: 18px; overflow-y: auto; overscroll-behavior: contain; display: flex; justify-content: center; }
+.popup-actions { display: flex; gap: 10px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); }
+.popup-actions .btn { min-height: 48px; justify-content: center; }
+.popup-actions .btn-primary { flex: 1; }
+/* It prints: the paper comes down out of the slot. */
+.receipt-print .receipt { animation: receipt-print 0.9s cubic-bezier(0.25, 0.8, 0.3, 1) 0.1s both; }
+@keyframes receipt-print { from { clip-path: inset(0 0 100% 0); transform: translateY(-24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
+@media (max-width: 640px) {
+  .popup-scrim { padding: 0; place-items: end stretch; }
+  .popup { width: 100%; border-radius: 18px 18px 0 0; max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { .receipt-print .receipt { animation: none; } }
+/* On a phone the result (and the button that prints the receipt) comes first, in view; the
+   salary controls below it update it as they move. */
+@media (max-width: 760px) { .try-receipt .receipt-teaser { order: -1; } }

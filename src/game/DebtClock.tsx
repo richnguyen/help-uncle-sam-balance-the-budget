@@ -43,19 +43,61 @@ export function useDebtClock() {
 }
 export type DebtClockModel = ReturnType<typeof useDebtClock>;
 
-/** A number that ticks on its own (written straight into the page, ten times a second). */
+// Every ticking number on the page shares one clock, four times a second (once a second with
+// reduced motion). A number changes only while it is in the clear part of the screen: on screen,
+// below the top bar, and above the action bar and Uncle Sam's frosted glass. Digits changing
+// behind frosted glass make the glass shimmer, so under it they hold still until scrolled clear.
+type Sub = { el: HTMLElement; value: () => (now: number) => number; fmt: (v: number) => string; drawn: boolean };
+const subs = new Set<Sub>();
+let timer: number | null = null;
+let lastStep = 0;
+function clearBand() {
+  const top = document.querySelector('.appbar')?.getBoundingClientRect().bottom ?? 0;
+  let bottom = window.innerHeight;
+  for (const bar of document.querySelectorAll<HTMLElement>('.actionbar')) {
+    const cs = getComputedStyle(bar);
+    if (cs.display !== 'none' && cs.position === 'fixed') bottom = Math.min(bottom, bar.getBoundingClientRect().top);
+  }
+  const glass = document.querySelector('.samdock[data-shown] .samdock-inner');
+  if (glass) bottom = Math.min(bottom, glass.getBoundingClientRect().top);
+  return { top, bottom };
+}
+function step() {
+  if (document.hidden) return;
+  const now = Date.now();
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches && now - lastStep < 950) return;
+  lastStep = now;
+  const band = clearBand();
+  for (const s of subs) {
+    const r = s.el.getBoundingClientRect();
+    const clear = r.height > 0 && r.top >= band.top && r.bottom <= band.bottom;
+    if (!clear && s.drawn) continue;
+    const t = s.fmt(s.value()(now));
+    if (s.el.textContent !== t) s.el.textContent = t;
+    s.drawn = true;
+  }
+}
+function watch(s: Sub) {
+  subs.add(s);
+  step();
+  timer ??= window.setInterval(step, 250);
+  return () => {
+    subs.delete(s);
+    if (!subs.size && timer != null) { clearInterval(timer); timer = null; }
+  };
+}
+
+/** A number that ticks on its own, written straight into the page (see the shared clock above). */
 function Tick({ value, digits = 0, prefix = '$' }: { value: (now: number) => number; digits?: number; prefix?: string }) {
   const el = useRef<HTMLSpanElement>(null);
   const fn = useRef(value);
   fn.current = value;
   useEffect(() => {
+    if (!el.current) return;
     const fmt = (v: number) => prefix + v.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-    const draw = () => { if (el.current) el.current.textContent = fmt(fn.current(Date.now())); };
-    draw();
-    const iv = setInterval(draw, 100);
-    return () => clearInterval(iv);
+    return watch({ el: el.current, value: () => fn.current, fmt, drawn: false });
   }, [digits, prefix]);
-  return <span ref={el} className="num" />;
+  return <span ref={el} className="num clock-tick" />;
 }
 
 const months = (m: number) => (m < 1 ? 'less than a month' : m < 1.5 ? 'about a month' : `about ${Math.round(m)} months`);
@@ -126,9 +168,11 @@ export function DebtClock({ compact = false }: { compact?: boolean }) {
 export default function ClockPage() {
   return (
     <>
-      <PageHead eyebrow="Live, from the Treasury" title="The debt clock" lede="Uncle Sam’s debt, ticking: the Treasury’s own count, carried forward second by second at the pace of the past year, with the legal limit on how much he can borrow." />
-      <SamSays mood="worried" auto>{CLOCK_LINES.intro}</SamSays>
+      {/* The number comes first, so it is in clear view above Uncle Sam when the page opens. */}
+      <PageHead eyebrow="Live, from the Treasury" title="The debt clock" />
       <DebtClock />
+      <SamSays mood="worried" auto>{CLOCK_LINES.intro}</SamSays>
+      <p className="lede clock-lede">Uncle Sam’s debt, ticking: the Treasury’s own count, carried forward second by second at the pace of the past year, with the legal limit on how much he can borrow.</p>
       <section className="card clock-how">
         <h2 className="section-title">How this clock works</h2>
         <ul className="small">

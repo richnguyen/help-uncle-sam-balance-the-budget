@@ -160,9 +160,10 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   challenge links and their message ("Rich here. I balanced Uncle Sam's budget…"), the Budget
   Story, chains, and Uncle Sam's greeting on screen (his recorded voice says the line without it).
 - **"My share of Uncle Sam"** (`#me`), the card at the end of level 1: what the player's salary
-  pays in federal taxes, how long that keeps the whole federal government running ("1/22 of a
-  second", from FY spending per second), and where the dollars go, as a 1080×1350 image with
-  their name. It is about the player, not a position, so it is safe to post anywhere
+  pays in federal taxes, how much interest one year of it would save Uncle Sam over 10 years if
+  it paid down the debt (compounding at the Treasury's average interest rate on its debt; about
+  $4,400 for a $65,000 salary), and where the dollars go, as a 1080×1350 image with their
+  name. It is about the player, not a position, so it is safe to post anywhere
   (`src/game/MyShare.tsx`).
 - **Certificates that give nothing away.** A chapter level's share says the stars, how long it
   took (active time only, `src/game/levelTime.ts`), and one fact chosen never to be the answer to

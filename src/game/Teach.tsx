@@ -15,7 +15,7 @@ const L = (n: number) => STOPS[n - 1];
 
 const PLAN = [
   { min: 5, title: 'Warm-up: today’s Daily Dollar', body: 'Put it on the projector. For each pair of numbers, the class votes higher or lower before you reveal it. Same puzzle for everyone today.' },
-  { min: 15, title: `Levels 1 and 2: ${L(1).title.toLowerCase()} and ${L(2).title.toLowerCase()}`, body: 'Students play on their own phones or laptops. Each level ends with a card; level 1’s shows what a salary pays in federal taxes and how long that keeps the government running.' },
+  { min: 15, title: `Levels 1 and 2: ${L(1).title.toLowerCase()} and ${L(2).title.toLowerCase()}`, body: 'Students play on their own phones or laptops. Each level ends with a card; level 1’s shows what a salary pays in federal taxes, and how much interest one year of it would save if it paid down the debt.' },
   { min: 20, title: `The budget desk, as a room: level ${L(5).n}`, body: 'Start a room for level 5 and put the 6-character code on the board. Students join and build plans with real options the Congressional Budget Office has priced. The room shows the plan the class agrees on, card by card.' },
   { min: 10, title: 'Discussion', body: 'Use the room’s results and the questions below. The room shows totals only, never who chose what.' },
 ];

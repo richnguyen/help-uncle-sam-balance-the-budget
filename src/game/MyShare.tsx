@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { PageHead } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
 import { receiptFor, STATUS, useWages, WageControls } from '../components/TaxReceipt';
-import { POP, tax } from '../data';
+import { debt, POP, tax } from '../data';
 import type { FilingStatus } from '../data/types';
 import { dollars, people } from '../lib/format';
 import { NameField } from './NameField';
@@ -14,27 +14,27 @@ import { useJourney } from './state';
 import { SamSays, UncleSam } from './UncleSam';
 
 // "My share of Uncle Sam": the card a player gets at the end of level 1. It is about them, not
-// about a position: what their salary pays in federal taxes, how long that keeps the whole federal
-// government running, and where their dollars went. Nothing to agree or disagree with, and the
-// same kind of card for everyone, so it is safe to post anywhere.
+// about a position: what their salary pays in federal taxes, the interest that amount would save
+// Uncle Sam over ten years if it went to paying down the debt, and where their dollars went. Nothing to agree or disagree with, and the same kind of card for
+// everyone, so it is safe to post anywhere.
 
-const SECONDS_PER_YEAR = 365 * 24 * 3600;
+export const YEARS = 10;
+/** The Treasury's average interest rate on all its interest-bearing debt, latest month. */
+export const RATE = debt.rates.at(-1)!;
 
-/** "1/25 of a second", "0.6 seconds", "2.4 seconds" */
-export function secondsLabel(s: number) {
-  if (!(s > 0)) return '';
-  if (s < 0.5) return `1/${Math.max(2, Math.round(1 / s))} of a second`;
-  if (s < 1) return `${s.toFixed(1)} seconds`;
-  return `${s.toFixed(1)} seconds`;
-}
+/**
+ * Interest saved over `years` by owing `amount` less today. The interest avoided each year is
+ * borrowed less too, so the saving compounds: amount × ((1 + r)^years − 1).
+ */
+export const interestSaved = (amount: number, years = YEARS, rate = RATE.total / 100) => amount * ((1 + rate) ** years - 1);
 
 export function myShare(wages: number, status: FilingStatus) {
-  const { fy, t, r, lines } = receiptFor(wages, status);
-  const perSecond = t.outlays / SECONDS_PER_YEAR;
-  const seconds = r.total / perSecond;
+  const { fy, r, lines } = receiptFor(wages, status);
+  const saved = interestSaved(r.total);
   const top = [...lines].sort((a, b) => b.mine - a.mine).slice(0, 3).filter((l) => l.mine >= 1);
-  return { fy, total: r.total, perSecond, seconds, top, wages, status };
+  return { fy, total: r.total, saved, top, wages, status };
 }
+const monthName = (iso: string) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 export type MyShareFacts = ReturnType<typeof myShare>;
 
 /** A palette color ("var(--c-ss)") as a plain color, for drawing into an image. */
@@ -60,13 +60,13 @@ export function meCardSvg(f: MyShareFacts, name: string, samSvg?: string) {
   const ts = 92;
   for (const l of wrapPx(title.toUpperCase(), `800 ${ts}px ${COND}`, MAXW, 3)) { y += ts + 4; out.push(`<text x="${X}" y="${y}" font-family='${COND}' font-weight="800" font-size="${ts}" fill="#111b16">${esc(l)}</text>`); }
   if (f.total >= 1) {
-    let bs = 124;
-    const big = secondsLabel(f.seconds);
+    let bs = 132;
+    const big = `${dollars(f.saved)} saved`;
     while (bs > 80 && wrapPx(big, `800 ${bs}px ${SANS}`, MAXW).length > 1) bs -= 6;
     y += 40 + bs;
     out.push(`<text x="${X}" y="${y}" font-family="${SANS}" font-weight="800" font-size="${bs}" fill="#1d5a43">${esc(big)}</text>`);
     y += 20;
-    for (const l of wrapPx(`That’s how long ${name ? 'these' : 'my'} federal taxes keep the whole U.S. government running.`, `44px ${SERIF}`, MAXW, 3)) { y += 58; out.push(`<text x="${X}" y="${y}" font-family='${SERIF}' font-size="44" fill="#2b3530">${esc(l)}</text>`); }
+    for (const l of wrapPx(`in interest over ${YEARS} years, if one year of ${name ? 'these' : 'my'} taxes paid down Uncle Sam’s debt.`, `44px ${SERIF}`, MAXW, 3)) { y += 58; out.push(`<text x="${X}" y="${y}" font-family='${SERIF}' font-size="44" fill="#2b3530">${esc(l)}</text>`); }
     y += 70;
     out.push(`<text x="${X}" y="${y}" font-family="${MONO}" font-size="28" letter-spacing="3" fill="#47524c">WHERE ${name ? 'THE' : 'MY'} DOLLARS GO</text>`);
     const rowW = MAXW - 330; // Uncle Sam stands to the right of the rows
@@ -82,8 +82,8 @@ export function meCardSvg(f: MyShareFacts, name: string, samSvg?: string) {
     for (const l of wrapPx('Everyone in America is part of Uncle Sam’s household. Here’s where the money comes from, and where it goes.', `44px ${SERIF}`, MAXW, 4)) { y += 58; out.push(`<text x="${X}" y="${y}" font-family='${SERIF}' font-size="44" fill="#2b3530">${esc(l)}</text>`); }
   }
   const note = f.total >= 1
-    ? `An estimate: ${dollars(f.wages)} in wages, ${STATUS.find((s) => s.value === f.status)!.label.toLowerCase()}, ${tax.year} IRS rates; federal spending of ${dollars(f.perSecond)} a second in FY${f.fy} (Treasury).`
-    : `Federal spending in FY${f.fy}: ${dollars(f.perSecond)} a second (Treasury).`;
+    ? `An estimate: ${dollars(f.wages)} in wages, ${STATUS.find((s) => s.value === f.status)!.label.toLowerCase()}, ${tax.year} IRS rates. Interest at the Treasury’s average rate on its debt, ${RATE.total.toFixed(2)}% (${monthName(RATE.date)}), compounding.`
+    : `Where the money comes from and where it goes, FY${f.fy} (Treasury).`;
   let ny = 1150;
   for (const l of wrapPx(note, `26px ${SANS}`, MAXW - 330, 3)) { out.push(`<text x="${X}" y="${ny}" font-family="${SANS}" font-size="26" fill="#47524c">${esc(l)}</text>`); ny += 34; }
   const site = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -100,8 +100,8 @@ export function meCardSvg(f: MyShareFacts, name: string, samSvg?: string) {
 
 export function shareTextFor(f: MyShareFacts) {
   return f.total >= 1
-    ? `I chip in about ${dollars(f.total)} a year in federal taxes. That keeps the whole U.S. government running for ${secondsLabel(f.seconds)}. What’s your share?`
-    : `Uncle Sam spends ${dollars(f.perSecond)} every second. Where does it come from, and where does it go?`;
+    ? `I chip in about ${dollars(f.total)} a year in federal taxes. Put toward the debt, one year of that would save Uncle Sam about ${dollars(f.saved)} in interest over ${YEARS} years. What’s your share?`
+    : 'Everyone in America is part of Uncle Sam’s household. Where does the money come from, and where does it go?';
 }
 
 /** Uncle Sam drawn off-screen, so the card image can carry him. */
@@ -150,8 +150,8 @@ export default function MyShare() {
   const f = myShare(w.wages, w.status);
   return (
     <>
-      <PageHead eyebrow="Your card" title={name ? `${name}’s share of Uncle Sam` : 'Your share of Uncle Sam'} lede="What your salary pays in federal taxes, how long that keeps the whole federal government running, and where your dollars go. Nothing political about it: just your own numbers, ready to post." />
-      <SamSays mood="proud" auto say={ME_LINES.page}>{f.total >= 1 ? <>Your taxes keep my whole household running for <strong>{secondsLabel(f.seconds)}</strong>. Every one of those moments counts. Put your name on your card and see what your friends chip in.</> : ME_LINES.page}</SamSays>
+      <PageHead eyebrow="Your card" title={name ? `${name}’s share of Uncle Sam` : 'Your share of Uncle Sam'} lede="What your salary pays in federal taxes, how much interest one year of it would save if it paid down the debt, and where your dollars go. Nothing political about it: just your own numbers, ready to post." />
+      <SamSays mood="proud" auto say={ME_LINES.page}>{f.total >= 1 ? <>Put toward my debt, one year of your taxes would save me about <strong>{dollars(f.saved)}</strong> in interest over {YEARS} years. Put your name on your card and see what your friends chip in.</> : ME_LINES.page}</SamSays>
       <section className="card me-controls" aria-label="Your salary">
         <WageControls id="me-w" {...w} />
         <p className="small muted">An estimate: {tax.year} IRS rates, the standard deduction, and wages as your only income. The same salary as on level 1 and your tax receipt.</p>

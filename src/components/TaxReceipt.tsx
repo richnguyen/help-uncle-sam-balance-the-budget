@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { budget, debt, fyTotals, POP, tax } from '../data';
 import type { FilingStatus } from '../data/types';
 import { categoryTotals } from '../lib/derive';
@@ -85,6 +86,54 @@ export function receiptFor(wages: number, status: FilingStatus, method: Method =
     }));
   }
   return { fy, t, r, lines, borrowedOnTop: r.total * (t.deficit / t.receipts) };
+}
+
+/**
+ * The receipt in a pop-up, printed out of the top like a real one. Closes with the button, a tap
+ * outside, or Escape; Uncle Sam steps aside while it is open (html.modal-open).
+ */
+export function ReceiptPopup({ wages, status, onClose }: { wages: number; status: FilingStatus; onClose: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const tid = useId();
+  useEffect(() => {
+    const back = document.activeElement as HTMLElement | null;
+    box.current?.querySelector<HTMLElement>('[data-primary]')?.focus({ preventScroll: true });
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', k);
+    document.documentElement.classList.add('modal-open');
+    return () => { window.removeEventListener('keydown', k); document.documentElement.classList.remove('modal-open'); back?.focus?.({ preventScroll: true }); };
+  }, [onClose]);
+  return createPortal(
+    <div className="popup-scrim" onClick={onClose}>
+      <div className="popup popup-receipt" role="dialog" aria-modal="true" aria-labelledby={tid} onClick={(e) => e.stopPropagation()} ref={box}>
+        <div className="popup-head">
+          <strong id={tid}>Your federal tax receipt</strong>
+          <button type="button" className="popup-x" aria-label="Close" onClick={onClose}>×</button>
+        </div>
+        <div className="popup-body receipt-print"><TaxReceipt wages={wages} status={status} /></div>
+        <div className="popup-actions">
+          <button type="button" className="btn btn-primary" data-primary onClick={onClose}>Done</button>
+          <a className="btn" href="#receipt" onClick={onClose}>More options</a>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** A one-line summary of the receipt, with the button that prints the whole thing in a pop-up. */
+export function ReceiptTeaser({ wages, status }: { wages: number; status: FilingStatus }) {
+  const [open, setOpen] = useState(false);
+  const r = estimateTaxes(wages, status, tax);
+  return (
+    <div className="receipt-teaser">
+      <span className="stat-label">You pay in federal taxes</span>
+      <strong className="receipt-teaser-num num">{dollars(r.total)} <span>a year</span></strong>
+      <span className="small muted">{pct(r.effective)} of your salary: income tax {dollars(r.incomeTax)}, Social Security {dollars(r.ssTax)}, Medicare {dollars(r.medicareTax)}.</span>
+      <button type="button" className="btn btn-primary receipt-teaser-btn" onClick={() => setOpen(true)}>Print my receipt</button>
+      {open && <ReceiptPopup wages={wages} status={status} onClose={() => setOpen(false)} />}
+    </div>
+  );
 }
 
 /** The receipt itself. */

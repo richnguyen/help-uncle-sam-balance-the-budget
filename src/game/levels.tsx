@@ -7,7 +7,7 @@ import { BUCKETS, REVENUE_BY_ID } from '../lib/categories';
 import { bucketYear, categoryTotals, cboSeries } from '../lib/derive';
 import { dateLabel, dollars, money, moneyWords, pct, people } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
-import { TaxReceipt, useWages, WageControls } from '../components/TaxReceipt';
+import { ReceiptTeaser, useWages, WageControls } from '../components/TaxReceipt';
 import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
 import { QUOTES, type Quote } from './quotes';
@@ -102,7 +102,8 @@ function TaxTry() {
         <WageControls id="try-w" {...w} />
         <p className="small muted">An estimate: {tax.year} IRS rates, the standard deduction, and wages as your only income. <a href="#receipt">More options and assumptions</a></p>
       </div>
-      <TaxReceipt wages={w.wages} status={w.status} />
+      {/* The receipt itself opens as a pop-up, so the step stays short on a phone. */}
+      <ReceiptTeaser wages={w.wages} status={w.status} />
     </div>
   );
 }
