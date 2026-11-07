@@ -1717,3 +1717,9 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 /* On a phone the result (and the button that prints the receipt) comes first, in view; the
    salary controls below it update it as they move. */
 @media (max-width: 760px) { .try-receipt .receipt-teaser { order: -1; } }
+/* The desk's part of the fix: a summary on the desk, the details in a pop-up. */
+.planforyou-teaser .pfy-open { align-self: flex-start; }
+.planforyou-teaser p { margin: 0; }
+.popup-pfy { width: min(100%, 760px); }
+.popup-pfy .popup-body { display: block; }
+.pfy-details { display: flex; flex-direction: column; gap: 14px; }

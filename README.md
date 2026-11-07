@@ -160,11 +160,12 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   challenge links and their message ("Rich here. I balanced Uncle Sam's budget…"), the Budget
   Story, chains, and Uncle Sam's greeting on screen (his recorded voice says the line without it).
 - **"My share of Uncle Sam"** (`#me`), the card at the end of level 1: what the player's salary
-  pays in federal taxes, how much interest one year of it would save Uncle Sam over 10 years if
-  it paid down the debt (compounding at the Treasury's average interest rate on its debt; about
-  $4,400 for a $65,000 salary), and where the dollars go, as a 1080×1350 image with their
-  name. It is about the player, not a position, so it is safe to post anywhere
+  pays in federal taxes, how much interest Uncle Sam would save if ten straight years of it paid
+  down the debt (compounding at the Treasury's average interest rate on its debt; about $22,900
+  for a $65,000 salary), and where the dollars go, as a 1080×1350 image with their name. It is about the player, not a position, so it is safe to post anywhere
   (`src/game/MyShare.tsx`).
+- **The tax receipt as a pop-up.** Level 1's "Your share" step shows the total and "Print my
+  receipt"; the full receipt prints out of the top of a pop-up sheet.
 - **Certificates that give nothing away.** A chapter level's share says the stars, how long it
   took (active time only, `src/game/levelTime.ts`), and one fact chosen never to be the answer to
   any quick check in the game (each level's `shareFact`), so friends still get to guess.
@@ -215,7 +216,8 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   such as usdebtclock.org, publish their own estimates with no data feed; this one uses only the
   Treasury's published figures.) `node scripts/fetch-debt-limit.mjs` refreshes the baked-in
   limit between full data runs.
-- **Your part of the fix**, on the budget desk: what the plan changes in the player's own federal
+- **Your part of the fix**, on the budget desk (a one-line summary there, the details in a
+  pop-up): what the plan changes in the player's own federal
   taxes, per year and per day, next to what it buys (the yearly borrowing it stops and the
   interest it saves, per household), and the interest every household already pays. A tax
   increase is still called one, line by line.

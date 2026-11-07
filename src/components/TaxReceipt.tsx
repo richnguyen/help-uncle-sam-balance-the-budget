@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState } from 'react';
+import { Popup } from './Popup';
 import { budget, debt, fyTotals, POP, tax } from '../data';
 import type { FilingStatus } from '../data/types';
 import { categoryTotals } from '../lib/derive';
@@ -88,36 +88,12 @@ export function receiptFor(wages: number, status: FilingStatus, method: Method =
   return { fy, t, r, lines, borrowedOnTop: r.total * (t.deficit / t.receipts) };
 }
 
-/**
- * The receipt in a pop-up, printed out of the top like a real one. Closes with the button, a tap
- * outside, or Escape; Uncle Sam steps aside while it is open (html.modal-open).
- */
+/** The receipt in a pop-up, printed out of the top like a real one (see Popup). */
 export function ReceiptPopup({ wages, status, onClose }: { wages: number; status: FilingStatus; onClose: () => void }) {
-  const box = useRef<HTMLDivElement>(null);
-  const tid = useId();
-  useEffect(() => {
-    const back = document.activeElement as HTMLElement | null;
-    box.current?.querySelector<HTMLElement>('[data-primary]')?.focus({ preventScroll: true });
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', k);
-    document.documentElement.classList.add('modal-open');
-    return () => { window.removeEventListener('keydown', k); document.documentElement.classList.remove('modal-open'); back?.focus?.({ preventScroll: true }); };
-  }, [onClose]);
-  return createPortal(
-    <div className="popup-scrim" onClick={onClose}>
-      <div className="popup popup-receipt" role="dialog" aria-modal="true" aria-labelledby={tid} onClick={(e) => e.stopPropagation()} ref={box}>
-        <div className="popup-head">
-          <strong id={tid}>Your federal tax receipt</strong>
-          <button type="button" className="popup-x" aria-label="Close" onClick={onClose}>×</button>
-        </div>
-        <div className="popup-body receipt-print"><TaxReceipt wages={wages} status={status} /></div>
-        <div className="popup-actions">
-          <button type="button" className="btn btn-primary" data-primary onClick={onClose}>Done</button>
-          <a className="btn" href="#receipt" onClick={onClose}>More options</a>
-        </div>
-      </div>
-    </div>,
-    document.body,
+  return (
+    <Popup title="Your federal tax receipt" onClose={onClose} className="popup-receipt" actions={<a className="btn" href="#receipt" onClick={onClose}>More options</a>}>
+      <div className="receipt-print"><TaxReceipt wages={wages} status={status} /></div>
+    </Popup>
   );
 }
 

@@ -14,8 +14,8 @@ import { useJourney } from './state';
 import { SamSays, UncleSam } from './UncleSam';
 
 // "My share of Uncle Sam": the card a player gets at the end of level 1. It is about them, not
-// about a position: what their salary pays in federal taxes, the interest that amount would save
-// Uncle Sam over ten years if it went to paying down the debt, and where their dollars went. Nothing to agree or disagree with, and the same kind of card for
+// about a position: what their salary pays in federal taxes, the interest Uncle Sam would save if
+// ten straight years of it went to paying down the debt, and where their dollars went. Nothing to agree or disagree with, and the same kind of card for
 // everyone, so it is safe to post anywhere.
 
 export const YEARS = 10;
@@ -23,10 +23,16 @@ export const YEARS = 10;
 export const RATE = debt.rates.at(-1)!;
 
 /**
- * Interest saved over `years` by owing `amount` less today. The interest avoided each year is
- * borrowed less too, so the saving compounds: amount × ((1 + r)^years − 1).
+ * Interest saved if `amount` paid down the debt at the start of each of `years` years. A dollar
+ * paid down j years before the end saves (1 + r)^j − 1 by then (the interest it avoids is borrowed
+ * less too, so the saving compounds); summed over the payments:
+ *   amount × Σ_{j=1..years} ((1 + r)^j − 1)
  */
-export const interestSaved = (amount: number, years = YEARS, rate = RATE.total / 100) => amount * ((1 + rate) ** years - 1);
+export const interestSaved = (amount: number, years = YEARS, rate = RATE.total / 100) => {
+  let sum = 0;
+  for (let j = 1; j <= years; j++) sum += (1 + rate) ** j - 1;
+  return amount * sum;
+};
 
 export function myShare(wages: number, status: FilingStatus) {
   const { fy, r, lines } = receiptFor(wages, status);
@@ -66,7 +72,7 @@ export function meCardSvg(f: MyShareFacts, name: string, samSvg?: string) {
     y += 40 + bs;
     out.push(`<text x="${X}" y="${y}" font-family="${SANS}" font-weight="800" font-size="${bs}" fill="#1d5a43">${esc(big)}</text>`);
     y += 20;
-    for (const l of wrapPx(`in interest over ${YEARS} years, if one year of ${name ? 'these' : 'my'} taxes paid down Uncle Sam’s debt.`, `44px ${SERIF}`, MAXW, 3)) { y += 58; out.push(`<text x="${X}" y="${y}" font-family='${SERIF}' font-size="44" fill="#2b3530">${esc(l)}</text>`); }
+    for (const l of wrapPx(`in interest, if ${YEARS} straight years of ${name ? 'these' : 'my'} federal taxes paid down Uncle Sam’s debt.`, `44px ${SERIF}`, MAXW, 3)) { y += 58; out.push(`<text x="${X}" y="${y}" font-family='${SERIF}' font-size="44" fill="#2b3530">${esc(l)}</text>`); }
     y += 70;
     out.push(`<text x="${X}" y="${y}" font-family="${MONO}" font-size="28" letter-spacing="3" fill="#47524c">WHERE ${name ? 'THE' : 'MY'} DOLLARS GO</text>`);
     const rowW = MAXW - 330; // Uncle Sam stands to the right of the rows
@@ -82,7 +88,7 @@ export function meCardSvg(f: MyShareFacts, name: string, samSvg?: string) {
     for (const l of wrapPx('Everyone in America is part of Uncle Sam’s household. Here’s where the money comes from, and where it goes.', `44px ${SERIF}`, MAXW, 4)) { y += 58; out.push(`<text x="${X}" y="${y}" font-family='${SERIF}' font-size="44" fill="#2b3530">${esc(l)}</text>`); }
   }
   const note = f.total >= 1
-    ? `An estimate: ${dollars(f.wages)} in wages, ${STATUS.find((s) => s.value === f.status)!.label.toLowerCase()}, ${tax.year} IRS rates. Interest at the Treasury’s average rate on its debt, ${RATE.total.toFixed(2)}% (${monthName(RATE.date)}), compounding.`
+    ? `An estimate: ${dollars(f.wages)} in wages, ${STATUS.find((s) => s.value === f.status)!.label.toLowerCase()}, ${tax.year} IRS rates. ${YEARS} yearly payments toward the debt; interest at the Treasury’s average rate on its debt, ${RATE.total.toFixed(2)}% (${monthName(RATE.date)}), compounding.`
     : `Where the money comes from and where it goes, FY${f.fy} (Treasury).`;
   let ny = 1150;
   for (const l of wrapPx(note, `26px ${SANS}`, MAXW - 330, 3)) { out.push(`<text x="${X}" y="${ny}" font-family="${SANS}" font-size="26" fill="#47524c">${esc(l)}</text>`); ny += 34; }
@@ -100,7 +106,7 @@ export function meCardSvg(f: MyShareFacts, name: string, samSvg?: string) {
 
 export function shareTextFor(f: MyShareFacts) {
   return f.total >= 1
-    ? `I chip in about ${dollars(f.total)} a year in federal taxes. Put toward the debt, one year of that would save Uncle Sam about ${dollars(f.saved)} in interest over ${YEARS} years. What’s your share?`
+    ? `I chip in about ${dollars(f.total)} a year in federal taxes. Put toward the debt for ${YEARS} straight years, that would save Uncle Sam about ${dollars(f.saved)} in interest. What’s your share?`
     : 'Everyone in America is part of Uncle Sam’s household. Where does the money come from, and where does it go?';
 }
 
@@ -150,8 +156,8 @@ export default function MyShare() {
   const f = myShare(w.wages, w.status);
   return (
     <>
-      <PageHead eyebrow="Your card" title={name ? `${name}’s share of Uncle Sam` : 'Your share of Uncle Sam'} lede="What your salary pays in federal taxes, how much interest one year of it would save if it paid down the debt, and where your dollars go. Nothing political about it: just your own numbers, ready to post." />
-      <SamSays mood="proud" auto say={ME_LINES.page}>{f.total >= 1 ? <>Put toward my debt, one year of your taxes would save me about <strong>{dollars(f.saved)}</strong> in interest over {YEARS} years. Put your name on your card and see what your friends chip in.</> : ME_LINES.page}</SamSays>
+      <PageHead eyebrow="Your card" title={name ? `${name}’s share of Uncle Sam` : 'Your share of Uncle Sam'} lede="What your salary pays in federal taxes, how much interest ten years of it would save if it paid down the debt, and where your dollars go. Nothing political about it: just your own numbers, ready to post." />
+      <SamSays mood="proud" auto say={ME_LINES.page}>{f.total >= 1 ? <>Put toward my debt for {YEARS} straight years, your taxes would save me about <strong>{dollars(f.saved)}</strong> in interest. Put your name on your card and see what your friends chip in.</> : ME_LINES.page}</SamSays>
       <section className="card me-controls" aria-label="Your salary">
         <WageControls id="me-w" {...w} />
         <p className="small muted">An estimate: {tax.year} IRS rates, the standard deduction, and wages as your only income. The same salary as on level 1 and your tax receipt.</p>
