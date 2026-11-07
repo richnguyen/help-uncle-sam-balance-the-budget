@@ -183,9 +183,12 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   downloading only after the first tap. The share stats count each step: took the challenge, met
   the goal, sent a plan back.
 - **Your Budget Story** (`#story`): phone-story cards (1080×1920) drawn as SVG and saved as
-  PNG: a nonpartisan budget personality, the biggest move, the debt path against current law, and
-  the closest real proposal; and, if the player chooses, how the plan splits taxes and cuts and
-  their part of the fix.
+  PNG: a budget personality, the biggest move, the debt path against current law, and the
+  closest real proposal; and, if the player chooses, how the plan splits taxes and cuts and their
+  part of the fix. The six personalities are about how a plan works, never which way it leans:
+  whether one card does most of the work or many share it, and whether it goes easy on the
+  economy (The Precision Planner, The Big Mover, The Steady Hand, The Dealmaker, The Patient
+  Builder, The Overhauler; `archetype()` in `src/game/plans.ts`).
 - **A 10-second clip** of the plan bending the debt curve, with Uncle Sam's recorded voice, made
   in the browser with a canvas and MediaRecorder (MP4 where supported, else WebM).
 - **The Daily Dollar** (`#daily`, `?daily`): five higher-or-lower calls a day on real federal
@@ -254,7 +257,8 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
 - **Link previews that match the plan.** Crawlers ignore the query string, so a shared link goes
   through one of 54 small static pages, `/p/<level>-<stars>-<personality>/`, each with its own
   1200×630 card ("Can you beat The Steady Hand's 3-star plan?"); people are forwarded to the plan
-  at once. No server is involved. Regenerate the pages and cards with `npm run previews` (dev
+  at once. Pages for links shared under the earlier, lean-based personalities
+  (`/p/10-3-revenue-bold/`) still work, with the matching neutral preview. No server is involved. Regenerate the pages and cards with `npm run previews` (dev
   server running) after changing their wording in `src/game/previews.ts` or the card's look in
   `src/game/OgCard.tsx`.
 

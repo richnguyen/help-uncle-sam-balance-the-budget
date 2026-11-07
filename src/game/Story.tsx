@@ -10,7 +10,7 @@ import { partOfTheFix, personalEffect, savedWages } from '../lib/personal';
 import { GOAL_DONE, whoPays } from './ChallengeParts';
 import { ClipMaker } from './Clip';
 import { DESK, MAX_STARS, rankFor, STOPS } from './levels';
-import { archetype, ballotFrom, closestPreset, myName, type SavedPlan } from './plans';
+import { archetype, ballotFrom, closestPreset, concentration, myName, type SavedPlan } from './plans';
 import { useShareLink } from './shortlinks';
 import { STORY_LINES } from './script';
 import { shareText, svgSrc, svgToPng } from './share';
@@ -41,7 +41,7 @@ function buildCards(level: string, plan: SavedPlan, o: { name: string; stars: nu
   const d = DESK.find((x) => x.id === level)!;
   const a = assess(d.goal, plan.ids, plan.lv, plan.gradual);
   const slidersUsed = Object.values(plan.lv).some((v) => v !== 0);
-  const arche = archetype({ revenueShare: a.revenueShare, rating: a.econ.rating, cards: plan.ids.length, slidersUsed });
+  const arche = archetype({ top: concentration(a.shares), rating: a.econ.rating, cards: plan.ids.length, slidersUsed });
   const top = a.shares[0];
   const bill = top ? CONGRESS.options[top.id] : undefined;
   const { wages, status } = savedWages();

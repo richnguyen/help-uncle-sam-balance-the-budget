@@ -51,11 +51,14 @@ const page_ = (k, t) => `<!doctype html>
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 page.on('pageerror', (e) => console.error('page error:', e.message));
-await page.goto(base + '#og-card?k=10-3-balanced-gentle');
+await page.goto(base + '#og-card?k=10-3-mix-gentle');
 await page.waitForSelector('.ogcard');
-const kinds = await page.evaluate(async () => {
+const { kinds, legacy } = await page.evaluate(async () => {
   const P = await import('/src/game/previews.ts');
-  return [...P.PREVIEW_KINDS.map((k) => ({ k, t: P.previewText(k) })), ...P.SPECIAL_PREVIEWS.map((x) => ({ k: { id: x.id }, t: x }))];
+  return {
+    kinds: [...P.PREVIEW_KINDS.map((k) => ({ k, t: P.previewText(k) })), ...P.SPECIAL_PREVIEWS.map((x) => ({ k: { id: x.id }, t: x }))],
+    legacy: P.LEGACY_PREVIEW_KINDS.map((k) => ({ k, t: P.previewText(k) })),
+  };
 });
 mkdirSync(new URL('img/', root), { recursive: true });
 for (const { k, t } of kinds) {
@@ -66,6 +69,12 @@ for (const { k, t } of kinds) {
   await page.screenshot({ path: new URL(`img/${k.id}.jpg`, root).pathname, type: 'jpeg', quality: 86, clip: { x: 0, y: 0, width: 1200, height: 630 } });
   mkdirSync(new URL(`${k.id}/`, root), { recursive: true });
   writeFileSync(new URL(`${k.id}/index.html`, root), page_(k, t));
+}
+// Pages for links shared before the personalities went lean-neutral: the same preview as the
+// matching new kind, image included.
+for (const { k, t } of legacy) {
+  mkdirSync(new URL(`${k.id}/`, root), { recursive: true });
+  writeFileSync(new URL(`${k.id}/index.html`, root), page_({ ...k, id: k.image }, t));
 }
 const fontsOk = await page.evaluate(() => document.fonts.check('800 96px "Big Shoulders Display"') && document.fonts.check('600 28px "Public Sans"'));
 await browser.close();

@@ -1,5 +1,5 @@
 import { DESK } from './levels';
-import { ARCHETYPES } from './plans';
+import { ARCHETYPES, LEGACY_ARCHETYPE } from './plans';
 
 // Link previews for shared plans. Link-preview crawlers read a page's preview tags and ignore the
 // query string, so each shared link points at one of a fixed set of small static pages
@@ -12,17 +12,24 @@ export interface PreviewKind { id: string; level: number; stars: 1 | 2 | 3; arch
 export const PREVIEW_KINDS: PreviewKind[] = DESK.flatMap((d) =>
   ([1, 2, 3] as const).flatMap((stars) => Object.keys(ARCHETYPES).map((a) => ({ id: `${d.n}-${stars}-${a}`, level: d.n, stars, archetype: a }))));
 
+/**
+ * Links shared before the personalities went lean-neutral (…/p/10-3-revenue-bold/) keep working:
+ * each old page now shows the matching new preview (same level and stars, a neutral personality).
+ */
+export const LEGACY_PREVIEW_KINDS: (PreviewKind & { image: string })[] = DESK.flatMap((d) =>
+  ([1, 2, 3] as const).flatMap((stars) => Object.entries(LEGACY_ARCHETYPE).map(([old, a]) => ({ id: `${d.n}-${stars}-${old}`, level: d.n, stars, archetype: a, image: `${d.n}-${stars}-${a}` }))));
+
 /** The kind for a plan, from its level, stars, and personality. */
 export const previewKindId = (level: number, stars: number, archetype: string) => `${level}-${Math.min(3, Math.max(1, Math.round(stars)))}-${archetype}`;
 
 // About someone else's plan, so in the third person (the Budget Story speaks to the player).
 const LINE: Record<string, string> = {
-  'revenue-gentle': 'Closes the gap mostly with revenue, chosen to go easy on the economy.',
-  'revenue-bold': 'Makes big changes to the tax code to close the gap fast.',
-  'balanced-gentle': 'Splits the load between taxes and spending cuts, phased in gently.',
-  'balanced-bold': 'Goes big on both taxes and spending: everyone gives a little.',
-  'spending-gentle': 'Closes the gap mostly by spending smarter, going easy on the economy.',
-  'spending-bold': 'Makes big spending cuts and leaves taxes where they are.',
+  'big-gentle': 'One well-chosen move does most of the work, going easy on the economy.',
+  'big-bold': 'One big move does most of the work, closing the gap fast.',
+  'mix-gentle': 'A few solid moves share the work, phased in gently.',
+  'mix-bold': 'A few strong moves share the work and get the job done.',
+  'spread-gentle': 'Lots of small moves add up to the fix, each one easy on the economy.',
+  'spread-bold': 'A sweeping plan: lots of moves, changing a lot at once.',
 };
 const GOAL: Record<number, { phrase: string; short: string }> = {
   5: { phrase: 'A plan to stop Uncle Sam’s debt from outgrowing the economy.', short: 'Stop the debt from outgrowing the economy' },

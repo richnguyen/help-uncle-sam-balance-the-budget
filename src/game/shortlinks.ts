@@ -3,7 +3,7 @@ import { assess } from '../lib/assess';
 import { backendOn, createPlan } from '../lib/backend';
 import { load, save } from '../lib/storage';
 import { DESK } from './levels';
-import { archetype, planCode, planLink, type SavedPlan, type SharedPlan, shortLink } from './plans';
+import { archetype, concentration, planCode, planLink, type SavedPlan, type SharedPlan, shortLink } from './plans';
 import { previewKindId } from './previews';
 
 // Short links for shared plans, on balancethebudget.us. A finished plan is stored once (its cards,
@@ -57,6 +57,6 @@ export function useShareLink(level: string | undefined, plan: Pick<SavedPlan, 'i
 export function previewKind(level: string, plan: Pick<SavedPlan, 'ids' | 'lv' | 'gradual' | 'stars'>) {
   const d = DESK.find((x) => x.id === level)!;
   const a = assess(d.goal, plan.ids, plan.lv, plan.gradual);
-  const arche = archetype({ revenueShare: a.revenueShare, rating: a.econ.rating, cards: plan.ids.length, slidersUsed: Object.values(plan.lv).some((v) => v !== 0) });
+  const arche = archetype({ top: concentration(a.shares), rating: a.econ.rating, cards: plan.ids.length, slidersUsed: Object.values(plan.lv).some((v) => v !== 0) });
   return previewKindId(d.n, Math.max(1, a.ev.stars || plan.stars), arche.id);
 }

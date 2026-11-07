@@ -161,18 +161,35 @@ export function closestPreset(ids: string[]) {
 }
 
 // ---------- the player's budget personality ----------
+// About how a plan works, never which way it leans: whether one card does most of the work or many
+// share it, and whether it goes easy on the economy. A name never says taxes or cuts, so it is
+// safe to share anywhere; how a plan splits the two is shown only where the player chooses.
 export interface Archetype { id: string; name: string; line: string }
 export const ARCHETYPES: Record<string, Archetype> = {
-  'revenue-gentle': { id: 'revenue-gentle', name: 'The Fair-Share Builder', line: 'You closed the gap mostly with revenue, chosen to go easy on the economy. You’d rather ask more of the tax code than cut what people count on.' },
-  'revenue-bold': { id: 'revenue-bold', name: 'The Tax Reformer', line: 'You made big changes to the tax code to close the gap fast. Bold, and you kept spending for the programs people count on.' },
-  'balanced-gentle': { id: 'balanced-gentle', name: 'The Steady Hand', line: 'You split the load between taxes and spending cuts and phased it in gently, the way most bipartisan deficit commissions have.' },
-  'balanced-bold': { id: 'balanced-bold', name: 'The Grand Bargainer', line: 'You went big on both taxes and spending. Everyone gives a little, and the deal gets done.' },
-  'spending-gentle': { id: 'spending-gentle', name: 'The Careful Trimmer', line: 'You closed the gap mostly by spending smarter, picking cuts that go easy on the economy. You’d rather trim than raise taxes.' },
-  'spending-bold': { id: 'spending-bold', name: 'The Lean-Government Reformer', line: 'You made big cuts to spending to close the gap. Bold, and you kept taxes where they are.' },
+  'big-gentle': { id: 'big-gentle', name: 'The Precision Planner', line: 'One well-chosen move does most of the work, and it goes easy on the economy.' },
+  'big-bold': { id: 'big-bold', name: 'The Big Mover', line: 'One big move does most of the work, and it closes the gap fast.' },
+  'mix-gentle': { id: 'mix-gentle', name: 'The Steady Hand', line: 'A few solid moves share the work, phased in gently.' },
+  'mix-bold': { id: 'mix-bold', name: 'The Dealmaker', line: 'A few strong moves share the work, and the job gets done.' },
+  'spread-gentle': { id: 'spread-gentle', name: 'The Patient Builder', line: 'Lots of small moves add up to the fix, each one easy on the economy.' },
+  'spread-bold': { id: 'spread-bold', name: 'The Overhauler', line: 'A sweeping plan: lots of moves, changing a lot at once.' },
 };
-export function archetype(o: { revenueShare: number; rating: 'gentle' | 'moderate' | 'steep'; cards: number; slidersUsed: boolean }): Archetype {
-  // The same thirds the "balance taxes and spending cuts" star uses.
-  const lean = o.revenueShare > 2 / 3 + 1e-9 ? 'revenue' : o.revenueShare < 1 / 3 - 1e-9 ? 'spending' : 'balanced';
-  const bold = o.rating !== 'gentle' || o.cards >= 8 || o.slidersUsed;
-  return ARCHETYPES[`${lean}-${bold ? 'bold' : 'gentle'}`];
+/** Personalities from before the names went lean-neutral (they still name old link previews). */
+export const LEGACY_ARCHETYPE: Record<string, string> = {
+  'revenue-gentle': 'mix-gentle', 'balanced-gentle': 'mix-gentle', 'spending-gentle': 'mix-gentle',
+  'revenue-bold': 'mix-bold', 'balanced-bold': 'mix-bold', 'spending-bold': 'mix-bold',
+};
+/** How much of a plan's own work its biggest card does (1 = all of it), from each card's share of the gap. */
+export const concentration = (shares: { share: number }[]) => {
+  const total = shares.reduce((s, x) => s + Math.max(0, x.share), 0);
+  return total > 0 ? Math.max(0, shares[0].share) / total : 0;
+};
+/**
+ * `top`: the biggest card's part of the plan's work (see concentration), the same measure on
+ * every level. Bold: the plan is steep or moderate on the economy, or uses the across-the-board
+ * changes.
+ */
+export function archetype(o: { top: number; rating: 'gentle' | 'moderate' | 'steep'; cards: number; slidersUsed: boolean }): Archetype {
+  const scope = o.cards === 0 ? 'spread' : o.top >= 0.5 ? 'big' : o.top >= 0.25 ? 'mix' : 'spread';
+  const bold = o.rating !== 'gentle' || o.slidersUsed;
+  return ARCHETYPES[`${scope}-${bold ? 'bold' : 'gentle'}`];
 }

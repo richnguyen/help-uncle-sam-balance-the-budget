@@ -3,7 +3,7 @@ import { PREVIEW_KINDS, previewText, SPECIAL_PREVIEWS } from './previews';
 import { UncleSam } from './UncleSam';
 
 // One link-preview card, drawn at exactly 1200×630 for scripts/make-previews.mjs to photograph
-// (#og-card?k=10-3-balanced-gentle). Not linked from anywhere in the game.
+// (#og-card?k=10-3-mix-gentle). Not linked from anywhere in the game.
 
 export default function OgCard({ param }: { param: string | null }) {
   const id = new URLSearchParams(param ?? '').get('k') ?? '';
