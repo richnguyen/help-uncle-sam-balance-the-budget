@@ -38,7 +38,7 @@ const GOAL: Record<number, { phrase: string; short: string }> = {
 };
 
 /** Previews for the shared pages that aren't plans (public/p/<id>/). */
-export interface SpecialPreview { id: string; eyebrow: string; heading: [string, string]; sub: string; boxLabel: string; box: string; title: string; description: string; alt: string; color: string; mood: 'happy' | 'cheering' }
+export interface SpecialPreview { id: string; eyebrow: string; heading: [string, string]; sub: string; boxLabel: string; box: string; title: string; description: string; alt: string; color: string; mood: 'happy' | 'cheering' | 'surprised' | 'proud' }
 export const SPECIAL_PREVIEWS: SpecialPreview[] = [
   {
     id: 'peoples', color: '#1d5a43', mood: 'happy',
@@ -63,6 +63,22 @@ export const SPECIAL_PREVIEWS: SpecialPreview[] = [
     title: 'Join our room: build one plan for Uncle Sam’s budget together',
     description: 'You’ve been invited to a room in Help Uncle Sam Balance the Budget. Play the room’s level, and your plan joins the group’s. Real CBO numbers.',
     alt: 'Join our room: build one plan for Uncle Sam’s budget together.',
+  },
+  {
+    id: 'duel', color: '#b4232f', mood: 'surprised',
+    eyebrow: 'Level 10 duel · plan vs. plan', heading: ['Duel me on', 'level 10'], sub: 'Balance the budget, then compare plans',
+    boxLabel: 'Three rounds', box: 'We each balance Uncle Sam’s budget on our own. My plan stays sealed until you finish yours; then the plans face off: the debt, the economy, and the balance.',
+    title: 'Duel me: balance Uncle Sam’s budget on level 10',
+    description: 'A friend sent you a level 10 duel. Balance the federal budget your way, then compare plans in three rounds: the debt, the economy, and the balance. Real CBO numbers.',
+    alt: 'Duel me on level 10: we each balance the budget, then compare plans in three rounds.',
+  },
+  {
+    id: 'duel-back', color: '#1d5a43', mood: 'cheering',
+    eyebrow: 'Level 10 duel · the reveal', heading: ['Our duel', 'is in'], sub: 'Two plans, three rounds',
+    boxLabel: 'Three rounds', box: 'The debt: whose plan leaves it lower. The economy: whose plan goes easier on it. The balance: whose split of taxes and cuts is closer to even.',
+    title: 'Our level 10 duel is in: see the three rounds',
+    description: 'Your friend played your level 10 duel. See both plans side by side, round by round: the debt, the economy, and the balance. Plans are compared, never people.',
+    alt: 'Our level 10 duel is in: two plans, three rounds.',
   },
 ];
 /** The People's Budget's preview, kept for links made before the others existed. */

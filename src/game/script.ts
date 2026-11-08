@@ -85,6 +85,18 @@ export const TOGETHER_LINES = {
   teach: 'Teachers, this one’s for your class. Everybody plays on their own phone, and the class builds one plan together. No accounts, no sign-ups.',
 };
 
+// The level 10 duel: two plans built blind, then compared in three rounds.
+export const DUEL_LINES = {
+  invite: 'A friend wants a duel, partner! You each balance my budget on your own, then we compare three rounds: the debt, the economy, and the balance.',
+  playing: 'Their plan is sealed until you reveal yours. Balance my budget your way, then tap Reveal the duel.',
+  host: 'Your plan is sealed in this link. Send it to as many friends as you like, and each reply gets its own head-to-head.',
+  won: 'Your plan takes the duel, partner! Send it back to your friend, then see who else wants a go.',
+  tied: 'An even duel! Two good plans, built different ways. Send yours back and compare notes.',
+  lost: 'Their plan takes this one. Want a rematch? Every round can swing with a card or two.',
+  list: 'Here’s every duel on this device: your plan next to each friend’s. Plans get compared, never people.',
+  broken: 'Hmm, this duel link looks incomplete, partner. Ask your friend to send it again.',
+};
+
 export const PLAN_LINES = {
   intro: 'A friend sent you their plan for my budget. Have a look, then see if you can do better.',
   played: 'You’ve played this level too. Here’s how your plan stacks up against theirs.',

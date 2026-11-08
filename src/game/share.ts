@@ -20,7 +20,7 @@ export function linkKind(url: string): LinkKind {
   if (/\/p\/chain\/|[?&]chain(&|=|$)/.test(url)) return 'chain';
   if (/\/p\/peoples\/|[?&]peoples(&|=|$)/.test(url)) return 'peoples';
   if (/[?&]daily(&|=|$)/.test(url)) return 'daily';
-  if (/\/p\/[^/]+\/|[?&](p|plan)=/.test(url)) return 'plan';
+  if (/\/p\/[^/]+\/|[?&](p|plan|duel|duelr)=/.test(url)) return 'plan';
   return 'site';
 }
 

@@ -7,7 +7,7 @@ export const ROUTES = [
   'level-9', 'level-10',
   'overview', 'spending', 'revenue', 'gap', 'debt', 'laws', 'process', 'state', 'social-security',
   'receipt', 'glossary', 'sources', 'results', 'plan', 'story', 'daily', 'og-card', 'peoples', 'rooms', 'room', 'chain', 'stats',
-  'me', 'clock', 'together', 'teach',
+  'me', 'clock', 'together', 'teach', 'duel', 'duels',
 ] as const;
 export type Route = (typeof ROUTES)[number];
 
@@ -20,6 +20,8 @@ export function parseHash(hash: string): { route: Route; param: string | null } 
   // A room (room?c=CODE) and a pass-the-budget chain (chain?g=…&t=…) carry their details too.
   if (/^room\?/i.test(raw)) return { route: 'room', param: raw.slice(5) };
   if (/^chain(\?|$)/i.test(raw)) return { route: 'chain', param: raw.slice(6) || null };
+  // A level 10 duel: the invite (duel=…, the host's plan) or the reply (duelr=…, both plans).
+  if (/^duel(\?|$)/i.test(raw)) return { route: 'duel', param: raw.slice(5) || null };
   // A preview of another day's Daily Dollar (daily?d=2027-04-15), for checking themed weeks.
   if (/^daily\?/i.test(raw)) return { route: 'daily', param: raw.slice(6) };
   const h = raw.toLowerCase();

@@ -38,6 +38,8 @@ import MyShare from './game/MyShare';
 import ClockPage from './game/DebtClock';
 import Together from './game/Together';
 import { activeChallenge } from './game/challenge';
+import DuelPage, { DuelsPage } from './game/Duel';
+import { activeDuel, DUEL_LEVEL, loadDuels } from './game/duel';
 import { activeRoom } from './game/rooms';
 import { JourneyProvider, useJourney } from './game/state';
 import Journey from './game/Journey';
@@ -97,6 +99,8 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['clock', 'The debt clock'],
   ['together', 'Play together'],
   ['teach', 'For teachers'],
+  ['duel', 'A level 10 duel'],
+  ['duels', 'Your duels'],
   ...STOPS.map((l) => [l.id, `Level ${l.n}: ${l.title}`]),
 ]);
 
@@ -144,6 +148,8 @@ const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   clock: () => <ClockPage />,
   together: () => <Together />,
   teach: () => <Teach />,
+  duel: ({ param }) => <DuelPage key={param ?? ''} param={param} />,
+  duels: () => <DuelsPage />,
 };
 
 function DeskPage({ id }: { id: string }) {
@@ -151,7 +157,9 @@ function DeskPage({ id }: { id: string }) {
   const d = DESK.find((x) => x.id === id)!;
   // A friend's challenge opens its level straight away.
   // So does the level of the room the player is playing for.
-  if (!isUnlocked(id, j.done, j.settings.freeRoam) && activeChallenge()?.plan.level !== id && activeRoom()?.level !== d.n) return <DeskLocked id={id} />;
+  // And level 10 opens for anyone in a duel (or with one on this device, for a rematch).
+  const dueling = id === DUEL_LEVEL && (!!activeDuel() || loadDuels().length > 0);
+  if (!isUnlocked(id, j.done, j.settings.freeRoam) && activeChallenge()?.plan.level !== id && activeRoom()?.level !== d.n && !dueling) return <DeskLocked id={id} />;
   return <Sandbox key={id} desk={d} />;
 }
 

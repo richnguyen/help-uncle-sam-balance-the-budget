@@ -182,6 +182,19 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   ends on "Try again". Newcomers are pointed to level 1 at the end, and Uncle Sam's voice starts
   downloading only after the first tap. The share stats count each step: took the challenge, met
   the goal, sent a plan back.
+- **Level 10 duel** (`/p/duel/?duel=…`, `#duel`, `#duels`): level 10 shares a duel instead of a
+  challenge. The host's plan travels sealed in the invite (`hp`, `hlv`, `hph`, `hby`); the friend
+  sees only that it exists and whether it balances the budget, plays level 10 on their own from
+  a fresh plan (level 10 opens straight away, with no celebration pop-up), and taps "Reveal the
+  duel". Both plans then go head to head in three rounds, best of three: **the debt** (debt held
+  by the public as a share of GDP in the last projection year, lower wins), **the economy** (the
+  steepest single-year tightening, gentler wins), and **the balance** (new taxes against spending
+  cuts over the projection, cards and across-the-board changes alike, closer to half and half
+  wins). The reveal shows what each plan does on its own and the cards they share. The friend
+  sends a reply link (`/p/duel-back/?duelr=…`, both plans) back; the host sees the same rounds
+  from their side. One invite goes to many friends: each reply is its own head-to-head, and the
+  Duels page lists every one next to your plan, with "See the rounds" and "Rematch". Everything
+  is in links and this browser's storage, with no accounts; plans are compared, never people.
 - **Your Budget Story** (`#story`): phone-story cards (1080×1920) drawn as SVG and saved as
   PNG: a budget personality, the biggest move, the debt path against current law, and the
   closest real proposal; and, if the player chooses, how the plan splits taxes and cuts and their
@@ -226,9 +239,10 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   increase is still called one, line by line.
 - **Uncle Sam reacts** the first time each policy card is played, with one true fact from CBO's
   data.
-- **Play together** (`#together`, and on the road map): the three ways to play with other
+- **Play together** (`#together`, and on the road map): the ways to play with other
   people, each with who it's for, how long it takes, and one button: a room for a class, club,
-  or office; the Daily Dollar as a group-chat habit ("Invite the group"); and pass the budget.
+  or office; the Daily Dollar as a group-chat habit ("Invite the group"); pass the budget; and
+  the level 10 duel.
   Each chapter level's last screen points to them too.
 - **For teachers** (`#teach`, linked from Rooms): a ready 45-minute class (Daily Dollar warm-up,
   levels 1 and 2, a room on level 5, discussion), five discussion questions that don't take

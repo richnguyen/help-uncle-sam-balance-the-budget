@@ -32,11 +32,14 @@ import { useShareLink } from '../game/shortlinks';
 import { activeRoom, type RoomRef, setActiveRoom } from '../game/rooms';
 import { sendRoomPlan } from '../lib/backend';
 import { load, save } from '../lib/storage';
+import { activeDuel, assessDuel, DUEL_LEVEL, type Duel, rematchFor, resultHash, saveDuel, setActiveDuel, setRematch, splitLabel } from '../game/duel';
+import { DuelStart, useDuelInvite } from '../game/Duel';
+import { DUEL_LINES } from '../game/script';
 
 type Desk = DeskLevel;
 
 interface Draft { ids: string[]; lv: Levers; gradual: boolean }
-const draftKey = (desk: Desk | undefined, c: Challenge | null) => (desk ? desk.id + (c ? ':' + encodePlan(c.plan) : '') : '');
+const draftKey = (desk: Desk | undefined, c: Challenge | null, duel?: Duel | null) => (desk ? desk.id + (duel ? ':duel:' + duel.id : c ? ':' + encodePlan(c.plan) : '') : '');
 function readDraft(key: string): Draft | null {
   if (!key) return null;
   const d = load<Record<string, Draft>>('desk-draft', {})[key];
@@ -99,11 +102,16 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const [goal, setGoal] = useState<Goal>(desk?.goal ?? 'stabilize');
   const journey = useJourney();
   const buzz = useHaptics();
-  // A friend's challenge for this level, if the player took one.
-  const [challenge, setChallenge] = useState<Challenge | null>(() => { const c = activeChallenge(); return c && desk && c.plan.level === desk.id ? c : null; });
-  // The plan in progress is kept for each level (and each friend's challenge), so a call, a
-  // locked screen, or a reload drops the player back exactly where they were.
-  const [draft] = useState(() => readDraft(draftKey(desk, challenge)));
+  // A level 10 duel the player accepted: a friend's plan, sealed until the player reveals theirs.
+  const isDuelLevel = desk?.id === DUEL_LEVEL;
+  const [duel, setDuel] = useState<Duel | null>(() => (isDuelLevel ? activeDuel() : null));
+  // A friend's challenge for this level, if the player took one (a duel comes first).
+  const [challenge, setChallenge] = useState<Challenge | null>(() => { const c = activeChallenge(); return c && desk && c.plan.level === desk.id && !duel ? c : null; });
+  // A rematch: the friend the next duel invite is for.
+  const [rematch, setRematchState] = useState(() => (isDuelLevel && !duel ? rematchFor() : null));
+  // The plan in progress is kept for each level (and each friend's challenge or duel), so a call,
+  // a locked screen, or a reload drops the player back exactly where they were.
+  const [draft] = useState(() => readDraft(draftKey(desk, challenge, duel)));
   const [gradual, setGradual] = useState(draft?.gradual ?? true);
   const [ids, setIds] = useState<string[]>(draft?.ids ?? []);
   const [lv, setLv] = useState<Levers>(draft?.lv ?? { ...ZERO });
@@ -194,7 +202,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     const counts = !!desk || isUnlocked(deskStop.id, journey.done, journey.settings.freeRoam);
     if (met && counts && (!journey.done.includes(deskStop.id) || ev.stars > (journey.stars[deskStop.id] ?? 0))) journey.completeLevel(deskStop.id, ev.stars);
     // A friend's challenge shows its result on the page instead (see "You vs …" below).
-    if (met && desk && !wasMet.current && !challenge) setParty(ev.stars);
+    // So does a duel: the player reveals both plans when they're ready.
+    if (met && desk && !wasMet.current && !challenge && !duel) setParty(ev.stars);
     wasMet.current = met;
   }, [met, ev.stars, deskStop.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const nextStop = desk ? STOPS[desk.n] : undefined;
@@ -205,7 +214,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     journey.savePlan(desk.id, { ids, lv, gradual, stars: ev.stars, at: new Date().toISOString() });
   }, [met, ids.join(), Object.values(lv).join(), gradual, ev.stars]); // eslint-disable-line react-hooks/exhaustive-deps
   // Playing for a room: the plan that meets the goal is sent to the room (cards only).
-  useEffect(() => { if (desk) writeDraft(draftKey(desk, challenge), ids.length || slidersUsed ? { ids, lv, gradual } : null); }, [ids.join(), Object.values(lv).join(), gradual, challenge]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (desk) writeDraft(draftKey(desk, challenge, duel), ids.length || slidersUsed ? { ids, lv, gradual } : null); }, [ids.join(), Object.values(lv).join(), gradual, challenge, duel]); // eslint-disable-line react-hooks/exhaustive-deps
   const [room, setRoom] = useState<RoomRef | null>(() => { const r = activeRoom(); return r && desk && r.level === desk.n ? r : null; });
   const [roomSent, setRoomSent] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   useEffect(() => {
@@ -229,6 +238,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   useEffect(() => { if (met && challenge) countStep('met', challengeKey); }, [met, challengeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const name = useMyName();
   const myLink = useShareLink(desk?.id, met && desk ? { ids, lv, gradual, stars: ev.stars } : null, { by: name || undefined, ballot: ballotFrom(journey.choices) });
+  // Level 10 shares a duel invite instead of a challenge.
+  const invite = useDuelInvite(isDuelLevel && met && !duel && !challenge ? { ids, lv, gradual } : null);
   const shareText = desk ? challengeText(name, `I ${GOAL_DONE[goal]} with ${ids.length} policy card${ids.length === 1 ? '' : 's'} and ${ev.stars} of 3 stars${h2h?.outcome === 'won' ? `, and beat ${byShort}’s plan` : ''}. Can you beat mine?`) : undefined;
   const challengeResult = (inCard: boolean) => challenge && theirs && mineNow ? (
     <div className="challenge-result">
@@ -322,7 +333,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       : `The big one: no borrowing at all. ${missionFacts(goal)} It hasn’t happened since FY2001. Fair warning: ${cardsCanWin ? 'this takes a lot of cards.' : 'even every card on the table isn’t quite enough, so we’ll need some across-the-board changes too.'}`;
   // On level 10 the board's coach also gives the opening line, since the board comes first.
   // A friend's challenge opens with a short line, so the cards come sooner on a phone.
-  const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : special && !met && prog <= 0.001 ? (challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
+  const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : special && !met && prog <= 0.001 ? (duel ? { mood: 'happy' as Mood, line: DUEL_LINES.playing } : challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
   // Uncle Sam coaches from his dock above the action bar (samdock.tsx), so he's always in one place.
   const coachBlock = desk ? <SamSays mood={said.mood} auto={party == null && !(met && !wasMet.current)} delay={special ? 300 : 900}>{said.line}</SamSays> : null;
   const progressBlock = (
@@ -448,9 +459,23 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         ))}
       </details>
   );
-  const toChallenge = (e: React.MouseEvent) => { e.preventDefault(); document.getElementById('challenge')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const toChallenge = (e: React.MouseEvent) => { e.preventDefault(); document.getElementById(isDuelLevel ? 'duel-start' : 'challenge')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const friendLabel = isDuelLevel ? 'Duel a friend' : 'Challenge a friend';
+  // The duel's reveal: the player's plan joins the friend's, and both open side by side.
+  const reveal = () => {
+    if (!duel) return;
+    const done: Duel = { ...duel, guest: { ids, lv, gradual }, guestName: name || undefined, revealed: true, at: new Date().toISOString() };
+    saveDuel(done);
+    setActiveDuel(null);
+    setDuel(null);
+    location.hash = resultHash(done);
+  };
+  const leaveDuel = () => { setActiveDuel(null); setDuel(null); };
+  const duelBy = duel?.hostName || 'your friend';
   // The bottom bar's actions: the hint before the goal (level 5); after it, the challenge or the next level.
-  const barButtons = !met
+  const barButtons = duel
+    ? (met ? <button type="button" className="btn btn-primary" onClick={reveal}>Reveal the duel</button> : null)
+    : !met
     ? (desk?.hint ? <button type="button" className="btn btn-hint" onClick={giveHint}>Hint</button> : null)
     : challenge && h2h
       ? <>
@@ -459,7 +484,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         </>
       : desk
         ? <>
-            <a className="btn" href="#challenge" onClick={toChallenge}>Challenge a friend</a>
+            <a className="btn" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>
             {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary" href="#story">Your Budget Story</a>}
           </>
         : null;
@@ -470,9 +495,9 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       <PageHead
         eyebrow={`Level ${desk?.n} of ${STOPS.length} · ${desk?.difficulty} level · budget desk`}
         title={desk ? mission.title : 'Can you fix the budget?'}
-        lede={challenge ? undefined : desk ? <>Play policy cards, real options the Congressional Budget Office (CBO) has priced, until the bar reaches the goal. Earn stars for going easy on the economy and for balancing tax increases with spending cuts.</> : <>Pick a mission, then play policy cards, real options the Congressional Budget Office (CBO) has priced, until the bar reaches the goal. Earn stars for going easy on the economy and for balancing tax increases with spending cuts.</>}
+        lede={challenge || duel ? undefined : desk ? <>Play policy cards, real options the Congressional Budget Office (CBO) has priced, until the bar reaches the goal. Earn stars for going easy on the economy and for balancing tax increases with spending cuts.</> : <>Pick a mission, then play policy cards, real options the Congressional Budget Office (CBO) has priced, until the bar reaches the goal. Earn stars for going easy on the economy and for balancing tax increases with spending cuts.</>}
       />
-      {!challenge && <Accomplishments stars={bestStars} badges={progress.badges} />}
+      {!challenge && !duel && <Accomplishments stars={bestStars} badges={progress.badges} />}
 
 
 
@@ -486,6 +511,23 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
           <button type="button" className="btn" onClick={() => { setActiveRoom(null); setRoom(null); }}>Play just for me</button>
         </div>
       )}
+      {duel && (
+        <div className="challenge-banner duel-banner" role="note">
+          <div>
+            <strong>Duel with {duelBy}:</strong> {duel.hostName ? `${duel.hostName}’s` : 'their'} plan is <span className="duel-sealed">sealed</span> until you reveal yours.<span className="challenge-banner-more"> Balance the budget your way, then compare three rounds: the debt, the economy, and the balance.</span>
+          </div>
+          <span className="duel-banner-actions">
+            {!met && (ids.length > 0 || slidersUsed) && <button type="button" className="link-btn small" onClick={reveal}>Reveal now</button>}
+            <button type="button" className="link-btn small" onClick={leaveDuel}>Leave the duel</button>
+          </span>
+        </div>
+      )}
+      {rematch && !duel && (
+        <div className="challenge-banner" role="note">
+          <div><strong>Rematch with {rematch.name || 'your friend'}:</strong> build a new plan, then send it from “Duel a friend” below the cards.</div>
+          <button type="button" className="link-btn small" onClick={() => { setRematch(null); setRematchState(null); }}>Cancel the rematch</button>
+        </div>
+      )}
       {challenge && theirs && (
         <div className="challenge-banner" role="note">
           <div>
@@ -496,7 +538,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         </div>
       )}
       <>
-          <section className="topboard card" id="game" aria-label="Scoreboard" data-cm={challenge ? true : undefined}>
+          <section className="topboard card" id="game" aria-label="Scoreboard" data-cm={challenge || duel ? true : undefined}>
             {coachBlock}
             <div className="tb-main">
               <div className="tb-head">
@@ -504,13 +546,14 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                 <StarsPopover stars={ev.stars} checks={ev.checks} extra={efficiencyBlock} />
               </div>
               {progressBlock}
-              {challenge && <div className="small muted tb-cm-line">Economy: {econ.rating} · Who pays: {revTen + spTen ? `${Math.round(revenueShare * 100)}% taxes, ${Math.round((1 - revenueShare) * 100)}% cuts` : 'no cards yet'}</div>}
+              {(challenge || duel) && <div className="small muted tb-cm-line">Economy: {econ.rating} · Who pays: {duel ? splitLabel(assessDuel({ ids, lv, gradual })) : revTen + spTen ? `${Math.round(revenueShare * 100)}% taxes, ${Math.round((1 - revenueShare) * 100)}% cuts` : 'no cards yet'}</div>}
               <div className="sb-actions tb-actions">
                 {hintButton}
                 <button type="button" className="btn" onClick={reset} disabled={!ids.length && !slidersUsed}>Start over</button>
-                {met && <a className="btn bar-dup" href="#challenge" onClick={toChallenge}>Challenge a friend</a>}
+                {met && duel && <button type="button" className="btn btn-primary bar-dup" onClick={reveal}>Reveal the duel</button>}
+                {met && !duel && <a className="btn bar-dup" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>}
                 {met && <button type="button" className="btn" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my plan'}</button>}
-                {met && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
+                {met && !duel && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
               </div>
               {copyBox}
             </div>
@@ -544,7 +587,9 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
           {!cardsCanWin && leversBlock(true)}
       </>
       <PlanForYou ids={ids} lv={lv} gradual={gradual} />
-      {met && desk && <ChallengeShare level={desk.id} plan={{ ids, lv, gradual, stars: ev.stars, at: '' }} onShare={returned} />}
+      {met && desk && (isDuelLevel && !challenge
+        ? !duel && <DuelStart plan={{ ids, lv, gradual }} />
+        : <ChallengeShare level={desk.id} plan={{ ids, lv, gradual, stars: ev.stars, at: '' }} onShare={returned} />)}
 
       {/* Phones and tablets: where the plan stands, always in view, with this screen's actions. */}
       <ActionBar className="plan-bar" phoneOnly label="Your plan">
@@ -609,9 +654,9 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       {desk && <p className="fineprint-link small">This level’s full chapters and the original documents are in <a href={'#sources-' + desk.id}>Sources &amp; methods</a>.</p>}
       {party != null && desk && (
         <Celebration stop={STOP_BY_ID[desk.id]} stars={party} onClose={() => setParty(null)}
-          line={h2h?.outcome ? CHALLENGE_LINES[h2h.outcome] : DESK_PARTY[party]} share={myLink && shareText ? { url: myLink, text: shareText } : undefined}
+          line={h2h?.outcome ? CHALLENGE_LINES[h2h.outcome] : DESK_PARTY[party]} share={invite ? { url: invite.url, text: invite.text, duel: true } : myLink && shareText ? { url: myLink, text: shareText } : undefined}
           challenge={challenge && h2h?.outcome ? { outcome: h2h.outcome, by: challengeBy === 'Your friend' ? 'your friend' : challengeBy } : undefined}
-          newcomer={newcomer} onShare={returned}>
+          newcomer={newcomer} onShare={() => { returned(); invite?.keep(); }}>
           {challengeResult(true)}
         </Celebration>
       )}

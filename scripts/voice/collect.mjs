@@ -77,6 +77,7 @@ const banks = await page.evaluate(async () => {
   Object.values(S.ME_LINES).forEach((t) => add('common', t));
   Object.values(S.CLOCK_LINES).forEach((t) => add('common', t));
   Object.values(S.TOGETHER_LINES).forEach((t) => add('common', t));
+  Object.values(S.DUEL_LINES).forEach((t) => add('common', t));
   add('common', S.DAILY_LINES.done);
   S.DAILY_LINES.score.forEach((t) => add('common', t));
   add('common', S.VOICE_TEST);

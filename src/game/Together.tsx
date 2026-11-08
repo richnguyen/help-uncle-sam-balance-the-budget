@@ -51,6 +51,16 @@ export function TogetherCards({ compact = false }: { compact?: boolean }) {
           {!compact && <ShareButton text={chainText} url={siteRoot() + '?chain'} label="Send it to the group" kind="chain" />}
         </span>
       </li>
+      <li className="tcard" data-kind="duel">
+        <span className="tcard-tag">One friend, or many</span>
+        <strong className="tcard-title">Duel on level 10</strong>
+        <span className="tcard-meta">2 plans per duel · about 10 minutes each · one link for many friends</span>
+        {!compact && <p className="small">You each balance the budget on your own, with your plans sealed. Then the two plans face off in three rounds: the debt, the economy, and the balance. Plans are compared, never people.</p>}
+        <span className="tcard-actions">
+          <a className="btn btn-primary" href="#level-10">Build your plan</a>
+          <a className="btn" href="#duels">Your duels</a>
+        </span>
+      </li>
       {backendOn() && !compact && (
         <li className="tcard" data-kind="peoples">
           <span className="tcard-tag">Everyone at once</span>

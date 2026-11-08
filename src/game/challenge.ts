@@ -39,9 +39,14 @@ export function takeLinkFromSearch() {
     const chain = new URLSearchParams();
     for (const k of ['g', 't', 'n']) { const v = q.get(k); if (v != null) chain.set(k, v); }
     const isChain = q.has('chain');
+    // A level 10 duel: the invite carries the host's plan (h…), the reply both plans.
+    const duel = new URLSearchParams();
+    if (q.has('duel') || q.has('duelr')) for (const k of ['duel', 'duelr', 'hp', 'hlv', 'hph', 'hby', 'p', 'lv', 'ph', 'by']) { const v = q.get(k); if (v != null) duel.set(k, v); }
+    const isDuel = duel.has('hp');
     const isPlan = keep.has('p') || keep.has('id');
-    if (!isPlan && !daily && !peoples && !room && !isChain && !s) return;
-    const hash = isPlan ? '#plan?' + keep.toString()
+    if (!isDuel && !isPlan && !daily && !peoples && !room && !isChain && !s) return;
+    const hash = isDuel ? '#duel?' + duel.toString()
+      : isPlan ? '#plan?' + keep.toString()
       : room ? '#room?c=' + encodeURIComponent(room)
       : isChain ? '#chain' + (chain.toString() ? '?' + chain.toString() : '')
       : daily ? '#daily' : peoples ? '#peoples' : location.hash;

@@ -27,7 +27,7 @@ const took = (m?: number | null) => (m ? ` in ${m} minute${m === 1 ? '' : 's'}` 
  * `challenge`: the player took a friend's challenge, so the card ends with the result (send it back,
  * or try again). `newcomer`: they haven't played the earlier levels, so the next step is level 1.
  */
-export function Celebration({ stop, stars, onClose, line, share, children, challenge, newcomer = false, onShare, minutes }: { stop: Stop; stars: number; onClose: () => void; line?: string; share?: { text: string; url: string }; children?: ReactNode; challenge?: { outcome: Outcome; by: string }; newcomer?: boolean; onShare?: () => void; minutes?: number | null }) {
+export function Celebration({ stop, stars, onClose, line, share, children, challenge, newcomer = false, onShare, minutes }: { stop: Stop; stars: number; onClose: () => void; line?: string; share?: { text: string; url: string; duel?: boolean }; children?: ReactNode; challenge?: { outcome: Outcome; by: string }; newcomer?: boolean; onShare?: () => void; minutes?: number | null }) {
   const next = STOPS[stop.n] as Stop | undefined; // n is 1-based, so this is the following level
   const box = useRef<HTMLDivElement>(null);
   const buzz = useHaptics();
@@ -72,9 +72,9 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
           )}
           {!challenge && !mine && (
             <div className="celebrate-share">
-              <div className="small"><span className="stat-label">{share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share ? 'Send your plan as a link. Your friend plays the same level and sees how much you two agree.' : fact}</div></div>
-              {share && <NameField id="cel-name" label="Sign your challenge (first name, optional)" />}
-              <div className="celebrate-share-actions"><ShareButton text={text} card={card} url={url} label={share ? 'Send the challenge' : 'Share'} kind={share ? 'plan' : 'level'} onShare={onShare} /></div>
+              <div className="small"><span className="stat-label">{share?.duel ? 'Duel a friend' : share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share?.duel ? 'Your plan goes in the link, sealed. Each friend balances the budget on their own, then you compare three rounds: the debt, the economy, and the balance.' : share ? 'Send your plan as a link. Your friend plays the same level and sees how much you two agree.' : fact}</div></div>
+              {share && <NameField id="cel-name" label={share.duel ? 'Sign your duel (first name, optional)' : 'Sign your challenge (first name, optional)'} />}
+              <div className="celebrate-share-actions"><ShareButton text={text} card={card} url={url} label={share?.duel ? 'Send the duel' : share ? 'Send the challenge' : 'Share'} kind={share ? 'plan' : 'level'} onShare={onShare} /></div>
               <SocialShare text={text} url={url} kind={share ? 'plan' : 'level'} onShare={onShare} />
             </div>
           )}
