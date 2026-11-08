@@ -1649,7 +1649,10 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 /* ---------- the debt clock ---------- */
 /* Contained, so a ticking digit never makes the browser lay out (or repaint) the rest of the page. */
 .clock { display: flex; flex-direction: column; gap: 10px; border-top: 4px solid var(--c-interest); contain: layout paint; }
-.clock-tick { display: inline-block; contain: layout paint style; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* The numbers themselves stay ordinary inline text, on the line's baseline (containment on them
+   would make the browser align them by their bottom edge); the clock box around them is what keeps
+   their ticking from reaching the rest of the page. */
+.clock-tick { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .clock-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .clock-label { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .clock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-interest); }
