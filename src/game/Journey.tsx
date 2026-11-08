@@ -1,4 +1,4 @@
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import { Stars } from '../components/game';
 import { PageHead, Section } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
@@ -9,7 +9,10 @@ import { useVotes } from '../lib/votes';
 import { LevelIcon, LockIcon } from './icons';
 import { diffKey, isUnlocked, LEVELS, MAX_STARS, rankFor, STOPS, unlockText } from './levels';
 import { dayNumber, editionName, loadResults, longDate, nextDeadline, nextTheme, ROUNDS, span, type ThemeId, themeFor, todayKey, untilNext } from './daily';
-import { DebtClock, useDebtClock } from './DebtClock';
+import { useDebtClock } from './DebtClock';
+import { DeficitClock } from './DeficitClock';
+import { duckMusic, setMusicWanted, startMusic, stopMusic, useMusicWanted, whenAudioAllowed } from './music';
+import { useNarrator } from './voice';
 import { backendOn } from '../lib/backend';
 import { MEDALS } from './medals';
 import { GAME_NAME, SITE_URL } from './share';
@@ -61,19 +64,26 @@ const isDark = () => { const t = document.documentElement.dataset.theme; return 
 export default function Journey() {
   const { j, done, next, stars, rank, finished, fresh } = useProgress();
   const name = useMyName();
+  const n = useNarrator();
   const T = budget.receiptsByFY[String(budget.latestFY)]?.reduce((s, r) => s + r.amount, 0) ?? 0;
   const key = todayKey();
   const played = loadResults()[key];
   const theme = themeFor(key);
   const sound = useAmbienceWanted();
-  // The soundscape plays only here, and only once the player asked for it.
+  const music = useMusicWanted();
+  // The music and the soundscape play only here: once the browser allows sound (the first tap
+  // or key), while the tab is in view, and only while the player wants them.
   useEffect(() => {
-    if (!sound) return;
-    const go = () => { if (!document.hidden) startAmbience(isDark()); else stopAmbience(); };
-    go();
-    document.addEventListener('visibilitychange', go);
-    return () => { document.removeEventListener('visibilitychange', go); stopAmbience(); };
-  }, [sound]);
+    if (!music && !sound) return;
+    const on = () => { if (music) startMusic(); if (sound) startAmbience(isDark()); };
+    const off = () => { stopMusic(); stopAmbience(); };
+    const vis = () => (document.hidden ? off() : on());
+    const cancel = whenAudioAllowed(() => { if (!document.hidden) on(); });
+    document.addEventListener('visibilitychange', vis);
+    return () => { cancel(); document.removeEventListener('visibilitychange', vis); off(); };
+  }, [music, sound]);
+  // The music steps back while Uncle Sam talks.
+  useEffect(() => { duckMusic(!!n.speakingId); }, [n.speakingId]);
 
   const greeting = finished
     ? JOURNEY_LINES.finished
@@ -90,40 +100,42 @@ export default function Journey() {
     { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
     { href: '#daily', title: 'The Daily Dollar', sub: played && played.length >= ROUNDS ? `#${dayNumber(key)} done: ${played.filter(Boolean).length} of ${ROUNDS} · next in ${untilNext()}` : `#${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''} · five calls, about a minute`, icon: 'daily' },
     { href: '#overview', title: 'Field guide', sub: 'Every chapter in full, no game needed', icon: 'book' },
+    { href: '#settings', title: 'Settings', sub: 'Text size, theme, Uncle Sam’s voice, music', icon: 'gear' },
   ];
   return (
     <div className="menu">
       <MenuScene />
-      {/* The first screen: the choices on the left, the scene on the right, the debt ticking in the corner. */}
+      {/* The first screen: the choices on the left, the scene behind, who you are and this year's deficit on the right. */}
       <div className="menu-top">
         <header className="menu-head">
           <div className="eyebrow">A civic game about the federal budget</div>
           <h1 className="menu-title">Help Uncle Sam <span>Balance the Budget</span></h1>
         </header>
-        <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} levels, ${j.medals.length} medals`}>
-          <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
-          <span className="mp-text">
-            <strong>{name || 'Your record'}</strong>
-            <span className="mp-rank">{rank.name}</span>
-          </span>
-          <span className="mp-stats" aria-hidden="true"><span>★ {stars}</span><span>{done.length}/{STOPS.length}</span><span><MenuIcon id="medal" size={14} /> {j.medals.length}</span></span>
-        </a>
-        {/* Uncle Sam greets the player right under the title, in the menu itself, so nothing covers it. */}
-        <div className="menu-sam">
-          <SamSays inline compact mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
-            {byName(greeting, name)}
-          </SamSays>
+        <div className="menu-tr">
+          <button type="button" className="menu-toggle" aria-pressed={music} onClick={() => setMusicWanted(!music)} aria-label={music ? 'Music: on. Turn it off' : 'Music: off. Turn it on'} title={music ? 'Music: on' : 'Music: off'}>
+            <MenuIcon id={music ? 'music' : 'music-off'} size={20} />
+          </button>
+          <button type="button" className="menu-toggle" aria-pressed={sound} onClick={() => setAmbienceWanted(!sound)} aria-label={sound ? 'Sounds of the Mall: on. Turn them off' : 'Sounds of the Mall: off. Turn them on'} title={sound ? 'Sounds of the Mall: on' : 'Sounds of the Mall: off'}>
+            <MenuIcon id={sound ? 'wind' : 'mute'} size={20} />
+          </button>
+          <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} levels, ${j.medals.length} medals`}>
+            <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
+            <span className="mp-text">
+              <strong>{name || 'Your record'}</strong>
+              <span className="mp-rank">{rank.name}</span>
+            </span>
+            <span className="mp-stats" aria-hidden="true"><span>★ {stars}</span><span>{done.length}/{STOPS.length}</span><span><MenuIcon id="medal" size={14} /> {j.medals.length}</span></span>
+          </a>
         </div>
         <nav className="menu-main" aria-label="Main menu">
           <MenuItem {...primary} primary />
           {items.map((x) => <MenuItem key={x.href} {...x} />)}
         </nav>
-        <div className="menu-clock"><DebtClock compact /></div>
+        <div className="menu-deficit"><DeficitClock /></div>
       </div>
-      {/* Just below: what's happening in Washington today, and what's new in the game. */}
-      <section className="menu-live" aria-label="Live from Washington">
-        <Today />
-          <section className="card menu-whatsnew" aria-labelledby="whatsnew-t">
+      {/* Just below: what's new in the game, and the small things. */}
+      <section className="menu-live" aria-label="What’s new">
+        <section className="card menu-whatsnew" aria-labelledby="whatsnew-t">
           <span className="stat-label" id="whatsnew-t">What’s new</span>
           {NEWS.map((x) => (
             <a key={x.title} className="today-row" href={x.href}>
@@ -136,26 +148,24 @@ export default function Journey() {
       <footer className="menu-foot">
         <nav className="menu-corner" aria-label="More">
           <a href="#record"><MenuIcon id="record" size={16} /> Your record</a>
-          <a href="#settings"><MenuIcon id="gear" size={16} /> Settings</a>
           <a href="#results"><MenuIcon id="chart" size={16} /> How everyone played</a>
+          <a href="#clock"><MenuIcon id="clock" size={16} /> The debt clock</a>
         </nav>
         <div className="menu-corner menu-corner-right">
-          <button type="button" className="menu-sound" aria-pressed={sound} onClick={() => setAmbienceWanted(!sound)}>
-            <MenuIcon id={sound ? 'sound' : 'mute'} size={16} /> {sound ? 'Sounds of the Mall: on' : 'Sounds of the Mall: off'}
-          </button>
           <a href="#sources"><MenuIcon id="doc" size={16} /> Sources &amp; methods</a>
           <span className="small muted">Official data from the Treasury, CBO, Census, and SSA{retrieved ? `, updated ${shortDate(retrieved.slice(0, 10))}` : ''}</span>
         </div>
       </footer>
-      {/* On phones the same first choice also sits in the bar at the bottom, in reach of a thumb. */}
-      <ActionBar label="Play" className="menu-bar">
-        <a className="btn btn-primary btn-lg" href={primary.href}>{next ? (fresh ? 'Start level 1' : `Continue: level ${next.n}, ${next.title}`) : 'See your Budget Story'}</a>
-      </ActionBar>
+      {/* Uncle Sam in his usual place at the bottom, standing on the Today strip. */}
+      <SamSays mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
+        {byName(greeting, name)}
+      </SamSays>
+      <TodayStrip />
     </div>
   );
 }
 
-type MenuIconId = 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back';
+type MenuIconId = 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock';
 const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
   play: <><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" /></>,
   story: <><rect x="6" y="3" width="12" height="18" rx="2" /><path d="M9 7h6M9 10.5h6M9 14h3.5" /></>,
@@ -171,6 +181,10 @@ const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
   sound: <><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></>,
   mute: <><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path d="m16 9.5 5 5M21 9.5l-5 5" /></>,
   back: <path d="M14.5 5.5 8 12l6.5 6.5" />,
+  music: <><path d="M9 18V5.5l10-2V16" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></>,
+  'music-off': <><path d="M9 18V5.5l10-2V16" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /><path d="M3.5 3.5l17 17" /></>,
+  wind: <><path d="M3 9h11a3 3 0 1 0-3-3" /><path d="M3 13h15a3 3 0 1 1-3 3" /><path d="M3 17h6" /></>,
+  clock: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 2" /></>,
 };
 export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{MENU_PATHS[id]}</svg>;
@@ -318,21 +332,36 @@ export function RecordPage() {
   );
 }
 
+/** The main menu's music and soundscape. */
+function MenuSoundSettings() {
+  const music = useMusicWanted();
+  const sound = useAmbienceWanted();
+  return (
+    <section className="card" aria-labelledby="menu-sound-t">
+      <h2 className="section-title" id="menu-sound-t">On the main menu</h2>
+      <label className="switch"><input type="checkbox" checked={music} onChange={(e) => setMusicWanted(e.target.checked)} /> Music: a soft loop, quieter while Uncle Sam talks</label>
+      <label className="switch"><input type="checkbox" checked={sound} onChange={(e) => setAmbienceWanted(e.target.checked)} /> Sounds of the Mall: wind and birdsong, or crickets at night</label>
+      <p className="small muted">Both play only on the main menu, start with your first tap or key there, and stop when you leave.</p>
+    </section>
+  );
+}
+
 /** Settings, as a page of their own (also in the top bar). */
 export function SettingsPage() {
   return (
     <>
       <PageHead eyebrow="Settings" title="Settings" lede="Make the game comfortable to read and hear. These are saved in this browser." />
       <div className="card"><InstallButton /><ReadingSettings /></div>
+      <MenuSoundSettings />
     </>
   );
 }
 
-/** Something new every day, for players coming back: today's Daily Dollar and People's Budget move. */
+/** Something new every day, along the bottom of the menu: deadlines, today's Daily Dollar, and the People's Budget move. */
 const EDITION_ABOUT: Record<ThemeId, string> = { budget: 'All about the budget', tax: 'All about taxes', shutdown: 'All about what Congress funds each year', debt: 'All about the debt' };
 const inDays = (n: number) => (n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`);
 
-function Today() {
+function TodayStrip() {
   const key = todayKey();
   const played = loadResults()[key];
   const right = played?.filter(Boolean).length ?? 0;
@@ -342,29 +371,47 @@ function Today() {
   const due = nextDeadline(key, 45);
   const clock = useDebtClock();
   const limitWatch = clock.monthsLeft != null && clock.monthsLeft < 6;
+  // The items, once: each a link, in one line.
+  const items: { href: string; title: string; body: string; news?: boolean }[] = [];
+  if (due && due.kind === 'shutdown') items.push({ href: '#process', news: true, title: `Shutdown watch: funding runs out ${due.days === 0 ? 'at midnight tonight' : `after ${longDate(due.date)}`} (${inDays(due.days)})`, body: `${due.what}${theme?.id === 'shutdown' ? '' : ' The week before, the Daily Dollar is about what Congress pays for each year.'}` });
+  if (limitWatch) items.push({ href: '#clock', news: true, title: `Debt limit watch: ${clock.monthsLeft! < 1 ? 'less than a month' : `about ${Math.round(clock.monthsLeft!)} month${Math.round(clock.monthsLeft!) === 1 ? '' : 's'}`} of room left`, body: `Uncle Sam can borrow about ${moneyWords(clock.room!, 0)} more before he reaches the legal limit. Then the Treasury’s workarounds buy a little time, and Congress has to act.` });
+  items.push({ href: '#daily', title: `The Daily Dollar #${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''}`, body: `${played && played.length >= ROUNDS ? `You got ${right} of ${ROUNDS}. The next one is ready in ${untilNext()}.` : theme ? `${EDITION_ABOUT[theme.id]} this week. Today’s puzzle: five calls, about a minute.` : 'Today’s puzzle is ready: five higher-or-lower calls, about a minute.'}${upcoming ? ` Coming up: ${upcoming.name}, ${span(upcoming)}.` : ''}` });
+  if (backendOn()) items.push({ href: '#peoples', title: 'The People’s Budget', body: 'Your one move for today: push one card in or out of everyone’s budget.' });
+  for (const x of NEWS) items.push({ href: x.href, title: `New: ${x.title}`, body: x.body });
+  // Like a news channel's crawl: one line, right to left, looping without a seam (the line is
+  // drawn twice). Its speed stays the same whatever its length. It pauses under the pointer, on
+  // keyboard focus, or with the pause button; with less motion asked for, it holds still and
+  // scrolls by hand.
+  const set = useRef<HTMLSpanElement>(null);
+  const run = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const el = set.current, r = run.current;
+    if (!el || !r) return;
+    const fit = () => r.style.setProperty('--ticker-s', `${Math.max(20, el.offsetWidth / 70).toFixed(1)}s`);
+    fit();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, []);
+  const line = (copy: boolean) => (
+    <span className="ticker-set" ref={copy ? undefined : set} aria-hidden={copy || undefined}>
+      {items.map((x) => (
+        <a key={x.href + x.title} className={'ticker-item' + (x.news ? ' today-news' : '')} href={x.href} tabIndex={copy ? -1 : undefined}>
+          <strong>{x.title}</strong> <span>{x.body}</span>
+        </a>
+      ))}
+    </span>
+  );
   return (
-    <section className="card today" aria-label="Today">
-      <span className="stat-label">Today</span>
-      {due && due.kind === 'shutdown' && (
-        <a className="today-row today-news" href="#process">
-          <strong>Shutdown watch: funding runs out {due.days === 0 ? 'at midnight tonight' : `after ${longDate(due.date)}`} ({inDays(due.days)})</strong>
-          <span className="small muted">{due.what}{theme?.id === 'shutdown' ? '' : ' The week before, the Daily Dollar is about what Congress pays for each year.'}</span>
-        </a>
-      )}
-      {limitWatch && (
-        <a className="today-row today-news" href="#clock">
-          <strong>Debt limit watch: {clock.monthsLeft! < 1 ? 'less than a month' : `about ${Math.round(clock.monthsLeft!)} month${Math.round(clock.monthsLeft!) === 1 ? '' : 's'}`} of room left</strong>
-          <span className="small muted">Uncle Sam can borrow about {moneyWords(clock.room!, 0)} more before he reaches the legal limit. After that, the Treasury’s workarounds buy a little time, and then Congress has to act. See the debt clock.</span>
-        </a>
-      )}
-      <a className="today-row" href="#daily">
-        <strong>The Daily Dollar #{dayNumber(key)}{theme ? ` · ${editionName(theme)}` : ''}</strong>
-        <span className="small muted">{played && played.length >= ROUNDS ? `You got ${right} of ${ROUNDS}. The next one is ready in ${untilNext()}.` : theme ? `${EDITION_ABOUT[theme.id]} this week. Today’s puzzle is ready: five calls, about a minute.` : 'Today’s puzzle is ready: five higher-or-lower calls, about a minute.'}{upcoming ? ` Coming up: ${upcoming.name}, ${span(upcoming)}.` : ''}</span>
-      </a>
-      {backendOn() && <a className="today-row" href="#peoples">
-        <strong>The People’s Budget</strong>
-        <span className="small muted">Your one move for today: push one card in or out of everyone’s budget.</span>
-      </a>}
+    <section className="menu-strip ticker" aria-label="Today" data-paused={paused || undefined}>
+      <span className="strip-label" aria-hidden="true">Today</span>
+      <div className="ticker-window">
+        <div className="ticker-run" ref={run}>{line(false)}{line(true)}</div>
+      </div>
+      <button type="button" className="ticker-pause" aria-pressed={paused} aria-label={paused ? 'Run the news line' : 'Pause the news line'} onClick={() => setPaused(!paused)}>
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">{paused ? <path d="M3.5 2v10l8-5z" fill="currentColor" /> : <path d="M3.5 2h2.5v10H3.5zM8 2h2.5v10H8z" fill="currentColor" />}</svg>
+      </button>
     </section>
   );
 }

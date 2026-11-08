@@ -200,7 +200,7 @@ function DefaultActions({ route }: { route: Route }) {
   const j = useJourney();
   const chapter = CHAPTER_LEVEL[route];
   const next = STOPS.find((s) => !j.done.includes(s.id) && isUnlocked(s.id, j.done, j.settings.freeRoam));
-  if (route === 'og-card') return null;
+  if (route === 'og-card' || route === 'journey') return null;
   let action: JSX.Element;
   if (chapter) {
     const l = STOP_BY_ID[chapter];
@@ -263,7 +263,8 @@ function Shell() {
   const Page = PAGES[route];
   return (
     <>
-      <StatusBar route={route} />
+      {/* The main menu is a screen of its own: no top bar, no action bar. */}
+      {route !== 'journey' && <StatusBar route={route} />}
       <main className="main" id="main">
         <div className="page" key={route} data-route={route}>
           {/* Every page off the main menu leads straight back to it (levels have the top bar). */}

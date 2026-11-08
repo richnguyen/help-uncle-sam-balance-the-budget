@@ -18,26 +18,41 @@ The site opens as a civic game: **Help Uncle Sam balance the budget.** Uncle Sam
 American with a very big household who spends more than he brings in. The player is his
 budget adviser.
 
-- **The main menu** (`#journey`, the first screen) is a hub. Each choice leads to its own page,
-  and every page leads back with one tap ("Main menu", top left; in a level, the top bar's Main
-  menu button). The layout follows how people scan a screen: the big choices on the left, biggest
-  first (Continue or Start the game, then Levels, Play together, the Daily Dollar, the field
-  guide), each with an icon, a title and one line; the player's record (rank, stars, levels,
-  medals) in the top-right corner; the live debt clock in the bottom-right; Today's deadlines and
-  What's new just below; and Your record, Settings, How everyone played, Sources & methods and
-  the data's date in the bottom corners. Choices light up, slide and show an arrow under the
-  pointer or keyboard focus, and press in on a tap. Behind it all is an illustrated National Mall
+- **The main menu** (`#journey`, the first screen) is a hub, and a screen of its own: no top
+  bar and no action bar. Each choice leads to its own page, and every page leads back with one
+  tap ("Main menu", top left; in a level, the top bar's Main menu button). The layout follows how
+  people scan a screen: the big choices on the left, biggest first (Continue or Start the game,
+  then Levels, Play together, the Daily Dollar, the field guide, Settings), each with an icon, a
+  title and one line; in the top-right corner, the music and sound switches and the player's
+  record (rank, stars, levels, medals), with this year's deficit running under them; What's new
+  and the small links (Your record, How everyone played, the debt clock, Sources & methods, the
+  data's date) below the first screen. Choices light up, slide and show an arrow under the
+  pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player from his usual
+  dock at the bottom, standing on the **Today line**: a single-line news crawl (shutdown watch,
+  debt-limit watch, the Daily Dollar, the People's Budget, what's new) that runs right to left
+  without a seam, pauses under the pointer, on focus or with its pause button, and holds still
+  (scrollable by hand) for people who ask for less motion.
+- **This year's deficit, running** (`DeficitClock.tsx`, on the main menu): the federal deficit
+  for the fiscal year so far in red, with spending (blue) and revenue (green) beside it. It
+  starts from the Treasury's Monthly Treasury Statement for this fiscal year when there is one
+  (otherwise zero on Oct. 1) and adds the past twelve months' pace, second by second, labeled as
+  an estimate. Under it, a year at a time: every person's share of a year's new debt, how much
+  the debt grows in a year, and the year's interest cost (the Treasury's gross interest expense
+  on the public debt, not the budget's net interest). The debt clock (`#clock`) uses the same
+  annual figures.
+- **The main menu's scene and sound.** Behind the menu is an illustrated National Mall
   (`MenuScene.tsx`, drawn for the game): the Washington Monument with its ring of flags, the
   Capitol and its reflecting pool, a golden morning in the light theme and a floodlit night in
   the dark. Clouds drift, birds cross, flags wave, the pool shimmers, people stroll, and the
   layers shift a few pixels with the pointer; it holds still for people who ask for less motion,
-  and stops when the tab is hidden or the scene is off screen. "Sounds of the Mall"
-  (`ambience.ts`, synthesized, nothing to download) adds wind and birdsong, or crickets at night;
-  it's off until turned on, remembered, and plays only on the menu. Uncle Sam greets the player
-  from inside the menu, under the title. On phones the scene is a banner with the title in its
-  sky, the choices follow, and the first choice also sits in the bottom bar. The road map, the
-  record (fact cards, ballot, medals, certificates) and Settings are pages of their own
-  (`#levels`, `#record`, `#settings`).
+  and stops when the tab is hidden or the scene is off screen. **Music** (`music.ts`): an
+  original, synthesized loop (16 bars in F major at 72 beats a minute: a warm pad, a soft bass,
+  a music-box melody, a quiet arpeggio and an echo), on unless switched off, starting with the
+  first tap or key, ducking under Uncle Sam's voice. **Sounds of the Mall** (`ambience.ts`):
+  wind and birdsong, or crickets at night, off until switched on. Both play only on the menu,
+  are remembered, and have switches in Settings too. On phones the scene is a banner with the
+  title in its sky, and the choices follow. The road map, the record (fact cards, ballot,
+  medals, certificates) and Settings are pages of their own (`#levels`, `#record`, `#settings`).
 - **Ten levels on one road map.** Chapters explain one part of the budget each: his paycheck,
   his bills, back home, the structural gap, the credit card (debt), who writes the budget
   (Congress and the laws that moved deficits), and keeping his promises (Social Security).
@@ -244,10 +259,11 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   passes a new stopgap. The road map's Today card counts down to the next funding deadline, and
   shows a **debt limit watch** when the room left under the limit is under six months at the
   past year's pace.
-- **The debt clock** (`#clock`, on the road map, and on the debt chapter): the Treasury's Debt to
-  the Penny, carried forward second by second at the pace of the past twelve months, each
-  person's and household's share, the interest cost per second, what has been added since the
-  page opened, and the legal debt limit with the room left (Daily Treasury Statement, Table
+- **The debt clock** (`#clock`, and on the debt chapter): the Treasury's Debt to the Penny,
+  carried forward second by second at the pace of the past twelve months, with each person's and
+  household's share of it; a year at a time, each person's and household's share of a year's new
+  debt, how much the debt grows in a year, and the year's interest cost (gross interest expense
+  on the public debt); what has been added since the page opened, and the legal debt limit with the room left (Daily Treasury Statement, Table
   III-C). The site fetches the latest figures from the Treasury's Fiscal Data API when it opens
   and every half hour after that; the ticking part is labeled as an estimate. (Other debt clocks,
   such as usdebtclock.org, publish their own estimates with no data feed; this one uses only the

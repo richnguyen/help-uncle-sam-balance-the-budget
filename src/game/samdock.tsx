@@ -67,7 +67,8 @@ function useActionBarHeight() {
     let ro: ResizeObserver | null = null;
     let current: Element | null = null;
     const measure = () => {
-      const bar = [...document.querySelectorAll('.actionbar')].find((e) => getComputedStyle(e).display !== 'none' && getComputedStyle(e).position === 'fixed') ?? null;
+      // He stands on the action bar, or on the main menu's Today strip.
+      const bar = [...document.querySelectorAll('.actionbar, .menu-strip')].find((e) => getComputedStyle(e).display !== 'none' && getComputedStyle(e).position === 'fixed') ?? null;
       if (bar !== current) {
         ro?.disconnect();
         current = bar;

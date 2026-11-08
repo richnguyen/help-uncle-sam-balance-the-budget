@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { PageHead } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
 import { budget, debt, HH, POP } from '../data';
-import { bucketYear } from '../lib/derive';
 import { dateLabel, dollars, money, moneyWords } from '../lib/format';
 import { useLive } from '../lib/live';
 import { shareCard, SITE_URL } from './share';
@@ -34,12 +33,15 @@ export function useDebtClock() {
   const span = (Date.parse(base.date) - Date.parse(ago.date)) / 1000;
   const perSecond = span > 0 ? (base.total - ago.total) / span : 0;
   const limit = live.limit ?? debt.limit ?? null;
-  const interestPerSecond = bucketYear(budget.latestFY).y.netInterest / YEAR;
+  // Interest: the Treasury's gross interest expense on the public debt for the latest full fiscal
+  // year (it includes interest credited to trust funds; the budget's "net interest" leaves that out).
+  const gross = debt.interestByFY.at(-1)!;
+  const interestPerSecond = gross.gross / YEAR;
   const t0 = endOfDay(base.date);
   const at = (now: number) => base.total + perSecond * Math.max(0, (now - t0) / 1000);
   const room = limit ? limit.limit - limit.subject : null;
   const monthsLeft = room != null && perSecond > 0 ? room / perSecond / (30.44 * 86400) : null;
-  return { base, ago, perSecond, interestPerSecond, limit, room, monthsLeft, at, live: !!live.debt, interestFY: budget.latestFY };
+  return { base, ago, perSecond, perYear: perSecond * YEAR, interestPerSecond, interestPerYear: gross.gross, limit, room, monthsLeft, at, live: !!live.debt, interestFY: gross.fy };
 }
 export type DebtClockModel = ReturnType<typeof useDebtClock>;
 
@@ -54,7 +56,7 @@ let lastStep = 0;
 function clearBand() {
   const top = document.querySelector('.appbar')?.getBoundingClientRect().bottom ?? 0;
   let bottom = window.innerHeight;
-  for (const bar of document.querySelectorAll<HTMLElement>('.actionbar')) {
+  for (const bar of document.querySelectorAll<HTMLElement>('.actionbar, .menu-strip')) {
     const cs = getComputedStyle(bar);
     if (cs.display !== 'none' && cs.position === 'fixed') bottom = Math.min(bottom, bar.getBoundingClientRect().top);
   }
@@ -88,7 +90,7 @@ function watch(s: Sub) {
 }
 
 /** A number that ticks on its own, written straight into the page (see the shared clock above). */
-function Tick({ value, digits = 0, prefix = '$' }: { value: (now: number) => number; digits?: number; prefix?: string }) {
+export function Tick({ value, digits = 0, prefix = '$' }: { value: (now: number) => number; digits?: number; prefix?: string }) {
   const el = useRef<HTMLSpanElement>(null);
   const fn = useRef(value);
   fn.current = value;
@@ -133,11 +135,13 @@ export function DebtClock({ compact = false }: { compact?: boolean }) {
       <p className="small muted clock-src">
         Treasury’s count on {dateLabel(c.base.date)}: {money(c.base.total)}{c.live ? ' (fetched live)' : ''}. Since then, an estimate at the pace of the past 12 months.
       </p>
+      <p className="small clock-each">That’s about <strong><Tick value={(n) => c.at(n) / POP} /></strong> for every person in America{compact ? '' : <>, and <strong><Tick value={(n) => c.at(n) / HH} /></strong> for every household</>}.</p>
+      {/* A year at a time: what the debt adds, each person's share of that, and the interest bill. */}
       <div className="clock-grid">
-        <div className="clock-stat"><span className="stat-label">Every person’s share</span><strong><Tick value={(n) => c.at(n) / POP} /></strong></div>
-        {!compact && <div className="clock-stat"><span className="stat-label">Every household’s share</span><strong><Tick value={(n) => c.at(n) / HH} /></strong></div>}
-        <div className="clock-stat"><span className="stat-label">Growing by</span><strong>{dollars(c.perSecond)}</strong><span className="small muted">a second, on average</span></div>
-        {!compact && <div className="clock-stat"><span className="stat-label">Interest costs</span><strong>{dollars(c.interestPerSecond)}</strong><span className="small muted">a second (FY{c.interestFY} net interest)</span></div>}
+        <div className="clock-stat"><span className="stat-label">Every person’s share</span><strong>{dollars(c.perYear / POP)}</strong><span className="small muted">a year: their part of a year’s new debt</span></div>
+        {!compact && <div className="clock-stat"><span className="stat-label">Every household’s share</span><strong>{dollars(c.perYear / HH)}</strong><span className="small muted">a year: its part of a year’s new debt</span></div>}
+        <div className="clock-stat"><span className="stat-label">Growing by</span><strong>{moneyWords(c.perYear, 2)}</strong><span className="small muted">a year, at the past 12 months’ pace</span></div>
+        {!compact && <div className="clock-stat"><span className="stat-label">Interest costs</span><strong>{moneyWords(c.interestPerYear, 2)}</strong><span className="small muted">a year (FY{c.interestFY} interest expense on the public debt, gross)</span></div>}
       </div>
       <p className="clock-since">Since you opened this page, the debt grew <strong><Tick value={since} /></strong>{!compact && <>, and interest cost <strong><Tick value={interestSince} /></strong></>}.</p>
       {!compact && c.limit && c.room != null && (
@@ -179,7 +183,8 @@ export default function ClockPage() {
           <li><strong>The starting point</strong> is the Treasury’s Debt to the Penny: total public debt outstanding, posted for each business day. The site fetches the latest count when it opens and every half hour after that.</li>
           <li><strong>The ticking</strong> is an estimate: the change over the past twelve months, spread evenly over every second. Real borrowing comes in lumps (auctions, tax days, benefit payments), so the next official count can land a little above or below.</li>
           <li><strong>The debt limit</strong> comes from the Daily Treasury Statement (Table III-C), which counts slightly less debt than the total: a few kinds of debt don’t count toward the limit.</li>
-          <li><strong>Interest</strong> is the government’s net interest for FY{budget.latestFY}, spread evenly over the year.</li>
+          <li><strong>Interest</strong> is the Treasury’s gross interest expense on the public debt for FY{debt.interestByFY.at(-1)?.fy}, from its Interest Expense dataset. It includes the interest credited to trust funds such as Social Security’s, which the budget’s smaller “net interest” figure leaves out.</li>
+          <li><strong>Every person’s share</strong> and <strong>every household’s share</strong> are a year’s new debt (the past twelve months) divided by the population and the number of households.</li>
         </ul>
         <p className="small">Other debt clocks use their own estimates and formulas. This one uses the Treasury’s published figures only; the sources are in <a href="#sources">Sources &amp; methods</a>.</p>
       </section>
