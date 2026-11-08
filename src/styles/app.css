@@ -691,8 +691,6 @@ html[data-text="larger"] { font-size: 125%; }
 
 /* ---------- journey hub ---------- */
 .journey { display: flex; flex-direction: column; gap: 40px; }
-.journey-hero { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 24px; align-items: end; }
-.journey-copy { display: flex; flex-direction: column; gap: 18px; }
 .journey-progress { display: flex; flex-direction: column; gap: 12px; }
 .jp-rank { display: flex; flex-direction: column; gap: 2px; }
 .jp-rank strong { font-family: var(--font-display); font-size: 1.9rem; line-height: 1; text-transform: uppercase; font-weight: 800; }
@@ -701,7 +699,6 @@ html[data-text="larger"] { font-size: 125%; }
 .jp-bar > span[data-desk="true"] { flex: 1.4; }
 .jp-bar > span[data-done="true"] { background: var(--accent); box-shadow: none; }
 .jp-bar > span[data-done="true"][data-desk="true"] { background: var(--gold); }
-@media (max-width: 900px) { .journey-hero { grid-template-columns: minmax(0, 1fr); } }
 
 .roadmap { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; position: relative; }
 .stop { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr) 92px; gap: 14px; align-items: center; padding: 12px 0; }
@@ -1565,7 +1562,6 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
   .samdock .samdock-inner, .samdock[data-shown] .samdock-inner { transform: none !important; transition: opacity 0.15s ease, visibility 0s linear 0.15s !important; }
   .samdock[data-shown] .samdock-inner { transition: opacity 0.15s ease !important; }
 }
-.journey-skip { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; }
 
 /* ---------- Uncle Sam acts ----------
    Breathing and glances while he waits, eyes on his words while he speaks, a small reaction to
@@ -1702,6 +1698,8 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 .duel-round-win { font-size: 0.8125rem; font-weight: 700; color: var(--accent); }
 .duel-round[data-winner="them"] .duel-round-win { color: var(--ink-2); }
 .duel-round[data-winner="tie"] .duel-round-win { color: var(--muted); }
+.duel-tiebreak { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.duel-tiebreak .duel-sides > div { background: var(--surface); }
 .duel-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .duel-sides > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
 .duel-sides > div[data-win] { background: var(--accent-wash); box-shadow: inset 0 0 0 2px var(--accent); }
@@ -1759,3 +1757,213 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 .popup-pfy { width: min(100%, 760px); }
 .popup-pfy .popup-body { display: block; }
 .pfy-details { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- the main menu ---------- */
+/* The scene's colors: a golden morning, and a floodlit night for the dark theme. */
+.menu-scene {
+  --ms-s1: #93b9dc; --ms-s2: #cbd8e3; --ms-s3: #f1d6b2; --ms-s4: #f6deb4;
+  --ms-glow-0: rgba(255, 238, 196, 0.95); --ms-glow-1: rgba(255, 214, 150, 0.42); --ms-glow-2: rgba(255, 214, 150, 0);
+  --ms-sun: #fff5dc; --ms-cloud: rgba(255, 255, 255, 0.8); --ms-cloud-shade: rgba(210, 186, 168, 0.32);
+  --ms-far: #b5afc4; --ms-wall: #8f8aa8; --ms-wall-shade: #7b7696; --ms-wall-side: #847f9f; --ms-cols: #a29db9;
+  --ms-window: #7a7594; --ms-dome: #958fb0; --ms-dome-side: #87829f; --ms-ribs: #a7a2bd; --ms-rim: #ffe1ae;
+  --ms-obelisk: #9b95b1; --ms-obelisk-side: #8a849f; --ms-obelisk-line: #aaa4be;
+  --ms-mid: #5d7266; --ms-lawn-0: #7e9963; --ms-lawn-1: #5f7a4b; --ms-path: #d9cdb3; --ms-person: #3c4742;
+  --ms-pool-edge: #cbc2aa; --ms-reflect: rgba(143, 138, 168, 0.38); --ms-shimmer: rgba(255, 255, 255, 0.75);
+  --ms-flag-red: #c0392b; --ms-flag-blue: #2c4a8a; --ms-pole: #6f6a86; --ms-bird: #4a4f63;
+  --ms-star: 0; --ms-moon: #f3ecd8; --ms-moon-cut: #0a1226;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .menu-scene {
+    --ms-s1: #060b18; --ms-s2: #0d1730; --ms-s3: #1b2546; --ms-s4: #2e2b4d;
+    --ms-glow-0: rgba(150, 140, 200, 0.35); --ms-glow-1: rgba(120, 110, 170, 0.16); --ms-glow-2: rgba(120, 110, 170, 0);
+    --ms-sun: transparent; --ms-cloud: rgba(140, 150, 190, 0.14); --ms-cloud-shade: rgba(0, 0, 0, 0.12);
+    --ms-far: #161e33; --ms-wall: #cfc8b8; --ms-wall-shade: #a7a091; --ms-wall-side: #b8b1a2; --ms-cols: #e8e2d4;
+    --ms-window: #ffcf73; --ms-dome: #ece6d7; --ms-dome-side: #cfc8b8; --ms-ribs: #dbd4c5; --ms-rim: rgba(255, 255, 255, 0.55);
+    --ms-obelisk: #d8d1c1; --ms-obelisk-side: #b2ab9c; --ms-obelisk-line: #c5beae;
+    --ms-mid: #0b1322; --ms-lawn-0: #0e1b17; --ms-lawn-1: #09130f; --ms-path: #1c2520; --ms-person: #030605;
+    --ms-pool-edge: #28314a; --ms-reflect: rgba(236, 230, 215, 0.22); --ms-shimmer: rgba(255, 226, 160, 0.5);
+    --ms-flag-red: #a8352a; --ms-flag-blue: #2a3f72; --ms-pole: #8d8a80; --ms-bird: transparent; --ms-star: 1;
+  }
+}
+:root[data-theme="dark"] .menu-scene {
+  --ms-s1: #060b18; --ms-s2: #0d1730; --ms-s3: #1b2546; --ms-s4: #2e2b4d;
+  --ms-glow-0: rgba(150, 140, 200, 0.35); --ms-glow-1: rgba(120, 110, 170, 0.16); --ms-glow-2: rgba(120, 110, 170, 0);
+  --ms-sun: transparent; --ms-cloud: rgba(140, 150, 190, 0.14); --ms-cloud-shade: rgba(0, 0, 0, 0.12);
+  --ms-far: #161e33; --ms-wall: #cfc8b8; --ms-wall-shade: #a7a091; --ms-wall-side: #b8b1a2; --ms-cols: #e8e2d4;
+  --ms-window: #ffcf73; --ms-dome: #ece6d7; --ms-dome-side: #cfc8b8; --ms-ribs: #dbd4c5; --ms-rim: rgba(255, 255, 255, 0.55);
+  --ms-obelisk: #d8d1c1; --ms-obelisk-side: #b2ab9c; --ms-obelisk-line: #c5beae;
+  --ms-mid: #0b1322; --ms-lawn-0: #0e1b17; --ms-lawn-1: #09130f; --ms-path: #1c2520; --ms-person: #030605;
+  --ms-pool-edge: #28314a; --ms-reflect: rgba(236, 230, 215, 0.22); --ms-shimmer: rgba(255, 226, 160, 0.5);
+  --ms-flag-red: #a8352a; --ms-flag-blue: #2a3f72; --ms-pole: #8d8a80; --ms-bird: transparent; --ms-star: 1;
+}
+.ms-s1 { stop-color: var(--ms-s1); } .ms-s2 { stop-color: var(--ms-s2); } .ms-s3 { stop-color: var(--ms-s3); } .ms-s4 { stop-color: var(--ms-s4); }
+.ms-glow-0 { stop-color: var(--ms-glow-0); } .ms-glow-1 { stop-color: var(--ms-glow-1); } .ms-glow-2 { stop-color: var(--ms-glow-2); }
+.ms-lawn-0 { stop-color: var(--ms-lawn-0); } .ms-lawn-1 { stop-color: var(--ms-lawn-1); }
+.ms-sun-core { fill: var(--ms-sun); }
+.ms-cloud { fill: var(--ms-cloud); } .ms-cloud-shade { fill: var(--ms-cloud-shade); }
+.ms-far { fill: var(--ms-far); }
+.ms-wall { fill: var(--ms-wall); } .ms-wall-shade { fill: var(--ms-wall-shade); } .ms-wall-side { fill: var(--ms-wall-side); }
+.ms-cols { stroke: var(--ms-cols); stroke-width: 2.2; } .ms-windows { fill: var(--ms-window); }
+.ms-dome { fill: var(--ms-dome); } .ms-dome-side { fill: var(--ms-dome-side); }
+.ms-ribs { fill: none; stroke: var(--ms-ribs); stroke-width: 1.6; } .ms-rim { fill: none; stroke: var(--ms-rim); stroke-width: 2.4; }
+.ms-obelisk { fill: var(--ms-obelisk); } .ms-obelisk-side { fill: var(--ms-obelisk-side); } .ms-obelisk-line { stroke: var(--ms-obelisk-line); stroke-width: 1.4; }
+.ms-mid { fill: var(--ms-mid); }
+.ms-path { fill: var(--ms-path); } .ms-person { fill: var(--ms-person); }
+.ms-pool-edge { fill: none; stroke: var(--ms-pool-edge); stroke-width: 3; } .ms-reflect { fill: var(--ms-reflect); }
+.ms-shimmer line { stroke: var(--ms-shimmer); stroke-width: 2.4; stroke-linecap: round; opacity: 0.4; }
+.ms-flag-red { fill: var(--ms-flag-red); } .ms-flag-blue { fill: var(--ms-flag-blue); }
+.ms-pole line, .ms-pole-line { stroke: var(--ms-pole); stroke-width: 1.6; }
+.ms-bird { fill: none; stroke: var(--ms-bird); stroke-width: 2.2; stroke-linecap: round; }
+.ms-stars circle { fill: #fff; opacity: calc(var(--ms-star) * 0.8); }
+.ms-moon circle { fill: var(--ms-moon); } .ms-moon circle.ms-moon-cut { fill: var(--ms-moon-cut); }
+.ms-moon { opacity: var(--ms-star); }
+
+/* Where things sit when nothing moves (and for people who ask for less motion). */
+.ms-drift { transform: translateX(var(--x)); }
+.ms-walker { transform: translateX(var(--x)); }
+.ms-walker-back { transform: translateX(var(--x)) scaleX(-1); }
+.ms-birds { transform: translate(1260px, 250px); }
+.ms-par { transition: transform 0.6s ease-out; }
+.ms-par-sky { transform: translate(calc(var(--px, 0) * -4px), calc(var(--py, 0) * -2px)); }
+.ms-par-far { transform: translate(calc(var(--px, 0) * -7px), calc(var(--py, 0) * -3px)); }
+.ms-par-mid { transform: translate(calc(var(--px, 0) * -11px), calc(var(--py, 0) * -4px)); }
+.ms-par-near { transform: translate(calc(var(--px, 0) * -18px), calc(var(--py, 0) * -6px)); }
+
+/* The motion. */
+.ms-drift { animation: ms-drift 220s linear infinite; }
+@keyframes ms-drift { from { transform: translateX(-300px); } to { transform: translateX(1900px); } }
+.ms-birds { animation: ms-birds 48s linear infinite; }
+@keyframes ms-birds { 0% { transform: translate(1760px, 290px); opacity: 1; } 50% { transform: translate(-160px, 180px); opacity: 1; } 50.1%, 100% { transform: translate(-160px, 180px); opacity: 0; } }
+.ms-bird { transform-box: fill-box; transform-origin: center; animation: ms-flap 0.42s ease-in-out infinite alternate; }
+@keyframes ms-flap { from { transform: scaleY(1); } to { transform: scaleY(-0.35); } }
+.ms-flag { animation: ms-wave 1.5s ease-in-out infinite alternate; }
+@keyframes ms-wave { from { transform: skewY(-7deg) scaleX(0.9); } to { transform: skewY(5deg) scaleX(1); } }
+.ms-sway { animation: ms-sway 6.5s ease-in-out infinite alternate; }
+@keyframes ms-sway { from { transform: rotate(-1.1deg); } to { transform: rotate(1.1deg); } }
+.ms-walker { animation: ms-walk 80s linear infinite; }
+.ms-walker-back { animation-name: ms-walk-back; }
+@keyframes ms-walk { from { transform: translateX(-60px); } to { transform: translateX(1660px); } }
+@keyframes ms-walk-back { from { transform: translateX(1660px) scaleX(-1); } to { transform: translateX(-60px) scaleX(-1); } }
+.ms-step path { transform-box: fill-box; transform-origin: top center; animation: ms-legs 0.45s ease-in-out infinite alternate; }
+.ms-step path + path { animation-direction: alternate-reverse; }
+@keyframes ms-legs { from { transform: rotate(16deg); } to { transform: rotate(-16deg); } }
+.ms-shimmer line { animation: ms-shim 4.2s ease-in-out infinite; }
+.ms-shimmer line:nth-child(2n) { animation-delay: -1.4s; } .ms-shimmer line:nth-child(3n) { animation-delay: -2.8s; }
+@keyframes ms-shim { 0%, 100% { opacity: 0.15; transform: translateX(0); } 50% { opacity: 0.9; transform: translateX(16px); } }
+.ms-sun-glow { transform-origin: 1000px 430px; animation: ms-pulse 9s ease-in-out infinite alternate; }
+@keyframes ms-pulse { from { transform: scale(1); opacity: 0.85; } to { transform: scale(1.07); opacity: 1; } }
+.ms-stars circle { animation: ms-twinkle 3.4s ease-in-out infinite alternate; }
+@keyframes ms-twinkle { from { opacity: calc(var(--ms-star) * 0.25); } to { opacity: calc(var(--ms-star) * 0.95); } }
+.menu-scene[data-paused] *, .menu-scene[data-offscreen] * { animation-play-state: paused !important; }
+
+/* The layout: the scene behind everything, full width; the menu on the left. */
+.main { overflow-x: clip; }
+.menu { position: relative; isolation: isolate; margin-top: -24px; padding-top: 24px; }
+.menu-scene { position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); overflow: hidden; pointer-events: none; }
+.menu-scene-svg { display: block; width: 100%; height: 100%; }
+.menu-scene::after { content: ""; position: absolute; inset: 0; background:
+  linear-gradient(90deg, color-mix(in srgb, var(--paper) 86%, transparent) 0%, color-mix(in srgb, var(--paper) 64%, transparent) 30%, transparent 52%),
+  linear-gradient(0deg, var(--paper) 0%, color-mix(in srgb, var(--paper) 70%, transparent) 9%, transparent 24%); }
+.page[data-route="journey"] { max-width: none; padding-inline: clamp(0px, 3vw, 48px); }
+.menu-top { position: relative; display: grid; grid-template-columns: minmax(340px, 460px) minmax(0, 1fr) minmax(260px, 300px); grid-template-areas: "head . profile" "sam . ." "nav . clock"; grid-template-rows: auto auto 1fr; gap: 16px 28px; min-height: calc(100svh - 84px); padding: 16px 0 12px; }
+.menu-clock { grid-area: clock; align-self: end; min-width: 0; }
+.menu-clock .clock { gap: 6px; padding: 14px 16px; background: color-mix(in srgb, var(--surface) 86%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+/* In the corner, the clock is a widget: the ticking number and how much it grew since you came; the rest is on its page. */
+.menu-clock .clock-src, .menu-clock .clock-grid, .menu-clock .clock-limit, .menu-clock .sb-actions { display: none; }
+.menu-clock .clock-num { font-size: clamp(1.45rem, 2.1vw, 1.9rem); }
+.menu-clock .clock-since { margin: 0; font-size: 0.8125rem; }
+.menu-clock .clock-head { flex-wrap: wrap; gap: 2px 10px; }
+.menu-live { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 14px; align-items: start; margin-top: 22px; }
+.menu-live > * { margin: 0; }
+.menu-head { grid-area: head; display: flex; flex-direction: column; gap: 8px; }
+.menu-sam { grid-area: sam; }
+.menu-sam .samsays { gap: 10px; }
+.menu-sam .bubble { background: color-mix(in srgb, var(--surface) 90%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.menu-sam .bubble-text { font-size: 0.9375rem; line-height: 1.45; }
+/* On a wide screen the menu itself is the way forward, so its bar steps aside (phones keep it). */
+@media (min-width: 901px) {
+  .actionbar.menu-bar { display: none; }
+  .menu-scene { bottom: auto; height: max(620px, calc(100svh - 58px)); }
+}
+/* The news stays short: two lines per item, the rest a tap away. */
+.menu-live .today-row .small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.menu-title { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(2.3rem, 4.6vw, 4.2rem); line-height: 0.9; letter-spacing: 0.004em; text-transform: uppercase; color: var(--ink);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--paper) 55%, transparent), 0 0 26px color-mix(in srgb, var(--paper) 75%, transparent); }
+.menu-title span { display: block; color: var(--accent); }
+.menu-head .eyebrow { text-shadow: 0 0 12px var(--paper); }
+
+/* The big choices: an icon, a title, a line about it; they light up under the pointer. */
+.menu-main { grid-area: nav; display: flex; flex-direction: column; gap: 10px; align-self: start; }
+.menu-item { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 16px 12px 12px; border-radius: 14px; color: var(--ink); text-decoration: none;
+  background: color-mix(in srgb, var(--surface) 84%, transparent); -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
+  box-shadow: 0 0 0 1px var(--ring), 0 2px 10px rgba(17, 27, 22, 0.06); transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease; }
+.menu-item::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 0 4px 4px 0; background: var(--accent); transform: scaleY(0); transition: transform 0.18s ease; }
+.mi-icon { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 12px; background: var(--accent-wash); color: var(--accent); transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease; }
+.mi-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mi-title { font-family: var(--font-display); font-weight: 800; font-size: 1.55rem; line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; }
+.mi-sub { font-size: 0.875rem; line-height: 1.35; color: var(--ink-2); }
+.mi-go { font-size: 1.8rem; line-height: 1; color: var(--accent); opacity: 0.35; transform: translateX(-4px); transition: opacity 0.16s ease, transform 0.16s ease; }
+.menu-item-primary { padding: 16px 18px 16px 14px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, black), 0 8px 26px color-mix(in srgb, var(--accent) 34%, transparent); }
+.menu-item-primary .mi-icon { width: 62px; height: 62px; background: color-mix(in srgb, var(--accent-ink) 16%, transparent); color: var(--accent-ink); }
+.menu-item-primary .mi-title { font-size: 2.15rem; }
+.menu-item-primary .mi-sub { color: color-mix(in srgb, var(--accent-ink) 86%, transparent); }
+.menu-item-primary .mi-go { color: var(--accent-ink); opacity: 0.85; }
+.menu-item-primary::before { background: var(--accent-ink); }
+@media (hover: hover) {
+  .menu-item:hover { transform: translateX(5px); background-color: var(--surface); box-shadow: 0 0 0 2px var(--accent), 0 8px 24px color-mix(in srgb, var(--accent) 26%, transparent); }
+  .menu-item:hover::before { transform: scaleY(1); }
+  .menu-item:hover .mi-icon { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .menu-item:hover .mi-go { opacity: 1; transform: none; }
+  .menu-item-primary:hover { background-color: color-mix(in srgb, var(--accent) 86%, white); box-shadow: 0 0 0 2px var(--accent-ink), 0 0 0 5px var(--accent), 0 10px 30px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .menu-item-primary:hover .mi-icon { background: var(--accent-ink); color: var(--accent); }
+}
+.menu-item:focus-visible { outline: none; transform: translateX(5px); box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--accent); }
+.menu-item:focus-visible::before { transform: scaleY(1); }
+.menu-item:active { transform: translateX(5px) scale(0.985); transition-duration: 0.06s; }
+
+/* Who you are, in the top-right corner. */
+.menu-profile { grid-area: profile; justify-self: end; align-self: start; display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 999px; color: var(--ink); text-decoration: none;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 0 0 1px var(--ring); transition: box-shadow 0.16s ease, transform 0.16s ease; }
+.mp-badge { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--gold); color: #fff; }
+.mp-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.mp-text strong { font-size: 0.9375rem; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-rank { font-size: 0.75rem; color: var(--ink-2); }
+.mp-stats { display: flex; gap: 10px; font-size: 0.8125rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mp-stats span { display: inline-flex; align-items: center; gap: 3px; }
+@media (hover: hover) { .menu-profile:hover { box-shadow: 0 0 0 2px var(--accent); transform: translateY(-1px); } }
+.menu-profile:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--accent); }
+
+/* News, just below the first screen. */
+.menu-whatsnew { display: flex; flex-direction: column; gap: 6px; }
+
+/* The small things, in the bottom corners. */
+.menu-foot { display: flex; margin-top: 18px; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 4px 24px; }
+.menu-corner { display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; }
+.menu-corner-right { justify-content: flex-end; text-align: right; }
+.menu-corner a, .menu-sound { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font: inherit; font-size: 0.875rem; color: var(--ink-2); text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; }
+.menu-corner a:hover, .menu-sound:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.menu-sound[aria-pressed="true"] { color: var(--accent); font-weight: 700; }
+
+/* Back to the main menu, from any page off it. */
+.backlink { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; min-height: 44px; margin: -14px 0 -30px; font-size: 0.875rem; font-weight: 600; color: var(--ink-2); text-decoration: none; }
+.backlink:hover, .backlink:focus-visible { color: var(--accent); }
+
+/* Phones and tablets: the scene is a banner with the title in its sky; then the choices. */
+@media (max-width: 900px) {
+  .menu-scene { bottom: auto; height: 310px; }
+  .menu-scene::after { background: linear-gradient(0deg, var(--paper) 0%, color-mix(in srgb, var(--paper) 55%, transparent) 14%, transparent 34%); }
+  .menu-top { display: flex; flex-direction: column; gap: 12px; min-height: 0; padding-top: 4px; }
+  .menu-clock { margin-top: 4px; }
+  .page[data-route="journey"] { padding-inline: 0; }
+  .menu-head { min-height: 262px; padding-right: 96px; }
+  .menu-sam { margin-top: -6px; }
+  .menu-title { font-size: clamp(2.1rem, 9.6vw, 3rem); }
+  .menu-profile { position: absolute; top: 0; right: 0; padding: 6px; gap: 6px; }
+  .menu-profile .mp-text { display: none; }
+  .menu-profile .mp-stats { flex-direction: column; gap: 0; padding-right: 6px; font-size: 0.75rem; }
+  .menu-profile .mp-badge { width: 34px; height: 34px; }
+  .menu-item-primary .mi-title { font-size: 1.9rem; }
+  .menu-foot { flex-direction: column; align-items: flex-start; }
+  .menu-corner-right { justify-content: flex-start; text-align: left; }
+}
+@media (max-width: 380px) { .mi-title { font-size: 1.35rem; } .mi-icon { width: 44px; height: 44px; } }

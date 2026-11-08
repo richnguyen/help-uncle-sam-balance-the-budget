@@ -120,6 +120,8 @@ const pct1 = (x: number) => `${(x * 100).toFixed(1)}%`;
  * Round 1, the debt: whose plan leaves it lower by the last projection year (debt held by the
  * public, next to the economy). Round 2, the economy: whose steepest year is gentler. Round 3,
  * the balance: whose split between new taxes and spending cuts is closer to even. Best of three.
+ * Even after three rounds, the tie-breaker: the plan that does the job with fewer policy cards
+ * wins. The same number of cards is a true tie.
  */
 export function duelRounds(mine: DuelPlan, theirs: DuelPlan) {
   const a = assessDuel(mine), b = assessDuel(theirs);
@@ -131,6 +133,9 @@ export function duelRounds(mine: DuelPlan, theirs: DuelPlan) {
     { id: 'balance', title: 'The balance', question: 'Whose plan splits the load more evenly?', mine: splitLabel(a), theirs: splitLabel(b), winner: pick(off(a), off(b), 0.02), why: 'How close the split between new taxes and spending cuts is to half and half, counting the cards and the across-the-board changes.' },
   ];
   const won = rounds.filter((r) => r.winner === 'me').length, lost = rounds.filter((r) => r.winner === 'them').length;
-  const outcome: 'won' | 'tied' | 'lost' = won > lost ? 'won' : won === lost ? 'tied' : 'lost';
-  return { rounds, outcome, score: `${won}–${lost}`, mine: a, theirs: b, balanced: { mine: a.met, theirs: b.met } };
+  const cards = { mine: mine.ids.length, theirs: theirs.ids.length };
+  // The tie-breaker decides only when the rounds come out even.
+  const tiebreak: RoundWinner | null = won !== lost ? null : cards.mine === cards.theirs ? 'tie' : cards.mine < cards.theirs ? 'me' : 'them';
+  const outcome: 'won' | 'tied' | 'lost' = won > lost || tiebreak === 'me' ? 'won' : won < lost || tiebreak === 'them' ? 'lost' : 'tied';
+  return { rounds, outcome, score: `${won}–${lost}`, tiebreak, cards, mine: a, theirs: b, balanced: { mine: a.met, theirs: b.met } };
 }

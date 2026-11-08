@@ -21,6 +21,8 @@ const SOUNDS: Record<Sound, { wave: OscillatorType; notes: Note[] }> = {
 const VOLUME = 0.07;
 
 let ctx: AudioContext | null = null;
+/** The one audio context the game's sounds share (the menu's ambience uses it too). */
+export const audioContext = () => audio();
 function audio(): AudioContext | null {
   if (ctx) return ctx;
   const AC = typeof window !== 'undefined' ? (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext) : undefined;

@@ -42,7 +42,7 @@ import DuelPage, { DuelsPage } from './game/Duel';
 import { activeDuel, DUEL_LEVEL, loadDuels } from './game/duel';
 import { activeRoom } from './game/rooms';
 import { JourneyProvider, useJourney } from './game/state';
-import Journey from './game/Journey';
+import Journey, { LevelsPage, MenuIcon, RecordPage, SettingsPage } from './game/Journey';
 import LevelPage from './game/LevelPage';
 import { DESK, isUnlocked, LEVELS, STOP_BY_ID, STOPS } from './game/levels';
 import { FIELD_GUIDE, REFERENCE } from './game/nav';
@@ -101,6 +101,9 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['teach', 'For teachers'],
   ['duel', 'A level 10 duel'],
   ['duels', 'Your duels'],
+  ['levels', 'The road map'],
+  ['record', 'Your record'],
+  ['settings', 'Settings'],
   ...STOPS.map((l) => [l.id, `Level ${l.n}: ${l.title}`]),
 ]);
 
@@ -150,6 +153,9 @@ const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   teach: () => <Teach />,
   duel: ({ param }) => <DuelPage key={param ?? ''} param={param} />,
   duels: () => <DuelsPage />,
+  levels: () => <LevelsPage />,
+  record: () => <RecordPage />,
+  settings: () => <SettingsPage />,
 };
 
 function DeskPage({ id }: { id: string }) {
@@ -259,7 +265,11 @@ function Shell() {
     <>
       <StatusBar route={route} />
       <main className="main" id="main">
-        <div className="page" key={route}>
+        <div className="page" key={route} data-route={route}>
+          {/* Every page off the main menu leads straight back to it (levels have the top bar). */}
+          {route !== 'journey' && !route.startsWith('level-') && route !== 'og-card' && (
+            <a className="backlink" href="#journey"><MenuIcon id="back" size={16} /> Main menu</a>
+          )}
           <ChapterBanner route={route} />
           <Suspense fallback={<p className="small muted page-loading" role="status">Loading…</p>}>
             <Page param={param} />

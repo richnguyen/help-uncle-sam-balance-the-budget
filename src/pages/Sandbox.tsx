@@ -374,8 +374,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     <div className="sb-block sb-next">
       <strong>Level {desk.n} complete.</strong>
       <div className="sb-actions">
-        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary" href="#journey">See your certificate</a>}
-        <a className="btn" href="#journey">Road map</a>
+        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
+        <a className="btn" href="#levels">Road map</a>
       </div>
     </div>
   ) : null;

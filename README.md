@@ -18,6 +18,26 @@ The site opens as a civic game: **Help Uncle Sam balance the budget.** Uncle Sam
 American with a very big household who spends more than he brings in. The player is his
 budget adviser.
 
+- **The main menu** (`#journey`, the first screen) is a hub. Each choice leads to its own page,
+  and every page leads back with one tap ("Main menu", top left; in a level, the top bar's Main
+  menu button). The layout follows how people scan a screen: the big choices on the left, biggest
+  first (Continue or Start the game, then Levels, Play together, the Daily Dollar, the field
+  guide), each with an icon, a title and one line; the player's record (rank, stars, levels,
+  medals) in the top-right corner; the live debt clock in the bottom-right; Today's deadlines and
+  What's new just below; and Your record, Settings, How everyone played, Sources & methods and
+  the data's date in the bottom corners. Choices light up, slide and show an arrow under the
+  pointer or keyboard focus, and press in on a tap. Behind it all is an illustrated National Mall
+  (`MenuScene.tsx`, drawn for the game): the Washington Monument with its ring of flags, the
+  Capitol and its reflecting pool, a golden morning in the light theme and a floodlit night in
+  the dark. Clouds drift, birds cross, flags wave, the pool shimmers, people stroll, and the
+  layers shift a few pixels with the pointer; it holds still for people who ask for less motion,
+  and stops when the tab is hidden or the scene is off screen. "Sounds of the Mall"
+  (`ambience.ts`, synthesized, nothing to download) adds wind and birdsong, or crickets at night;
+  it's off until turned on, remembered, and plays only on the menu. Uncle Sam greets the player
+  from inside the menu, under the title. On phones the scene is a banner with the title in its
+  sky, the choices follow, and the first choice also sits in the bottom bar. The road map, the
+  record (fact cards, ballot, medals, certificates) and Settings are pages of their own
+  (`#levels`, `#record`, `#settings`).
 - **Ten levels on one road map.** Chapters explain one part of the budget each: his paycheck,
   his bills, back home, the structural gap, the credit card (debt), who writes the budget
   (Congress and the laws that moved deficits), and keeping his promises (Social Security).
@@ -53,7 +73,7 @@ budget adviser.
     history on citizenship, responsibility, the future or the economy, and a preview of the next
     level.
   - Adviser titles and a copyable "budget ballot".
-- **One top bar, no side panel.** Left: "Your journey" (the road map). Middle: the current level
+- **One top bar, no side panel.** Right end: "Main menu". Middle: the current level
   and the ten-level track; hovering it lists every level to jump to, plus the field-guide
   chapters. Then stars and accomplishments (medals and budget-desk badges). Right: Continue,
   Uncle Sam's voice switch, Glossary, Methods (sources & methods) and Settings.
@@ -145,7 +165,7 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   picks (in settings, or on the Daily Dollar's finished screen). Sent with Web Push by a Supabase
   Edge Function that Cron runs hourly; no account or email. On iPhone it needs the game on the home
   screen first. Setup: [`supabase/README.md`](supabase/README.md#daily-dollar-reminders-web-push).
-- **Something new each day.** Returning players see a "Today" card on the road map: today's
+- **Something new each day.** Players see a "Today" card on the main menu: today's
   Daily Dollar (or when the next one is ready) and, on the public site, their People's Budget
   move.
 
@@ -190,7 +210,8 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   by the public as a share of GDP in the last projection year, lower wins), **the economy** (the
   steepest single-year tightening, gentler wins), and **the balance** (new taxes against spending
   cuts over the projection, cards and across-the-board changes alike, closer to half and half
-  wins). The reveal shows what each plan does on its own and the cards they share. The friend
+  wins). Even after three rounds, the tie-breaker: the plan with fewer policy cards wins; the
+  same number is a true tie. The reveal shows what each plan does on its own and the cards they share. The friend
   sends a reply link (`/p/duel-back/?duelr=…`, both plans) back; the host sees the same rounds
   from their side. One invite goes to many friends: each reply is its own head-to-head, and the
   Duels page lists every one next to your plan, with "See the rounds" and "Rematch". Everything
@@ -354,7 +375,7 @@ estimates and labels them as the President's budget.
 ## Code map
 
 - `src/game/` the game layer: `levels.tsx` (level content; every figure and quiz answer is computed
-  from the data), `LevelPage.tsx` (step wizard), `Journey.tsx` (road map), `Celebrate.tsx`
+  from the data), `LevelPage.tsx` (step wizard), `Journey.tsx` (the main menu, the road map, your record), `Celebrate.tsx`
   (level-complete card), `StatusBar.tsx`, `LawExplorer.tsx`, `quotes.ts`, `state.tsx` (progress
   and settings), `voice.tsx` (speech: voice choice, mood prosody), `UncleSam.tsx` (character),
   `haptics.ts` and `sfx.ts` (vibration and sound feedback), `resume.ts` (reopening the installed

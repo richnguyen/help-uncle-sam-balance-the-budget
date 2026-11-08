@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { Stars } from '../components/game';
-import { Section } from '../components/ui';
+import { PageHead, Section } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
-import { budget } from '../data';
+import { budget, SOURCES } from '../data';
 import { moneyWords } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
 import { useVotes } from '../lib/votes';
 import { LevelIcon, LockIcon } from './icons';
 import { diffKey, isUnlocked, LEVELS, MAX_STARS, rankFor, STOPS, unlockText } from './levels';
 import { dayNumber, editionName, loadResults, longDate, nextDeadline, nextTheme, ROUNDS, span, type ThemeId, themeFor, todayKey, untilNext } from './daily';
-import { useDebtClock } from './DebtClock';
+import { DebtClock, useDebtClock } from './DebtClock';
 import { backendOn } from '../lib/backend';
 import { MEDALS } from './medals';
 import { GAME_NAME, SITE_URL } from './share';
@@ -19,8 +19,8 @@ import { ReadingSettings } from './Settings';
 import { InstallButton } from './install';
 import { useJourney } from './state';
 import { useMyName } from './plans';
-import { DebtClock } from './DebtClock';
-import { TogetherCards } from './Together';
+import { MenuScene } from './MenuScene';
+import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
 import { SamSays, UncleSam } from './UncleSam';
 
 export { LockIcon } from './icons';
@@ -32,10 +32,19 @@ const pillFor = (d: string) => (d === 'Easy' ? 'pill-ok' : d === 'Medium' ? 'pil
 // it (a name can't be recorded ahead of time).
 const byName = (line: string, name: string) => (!name ? line : /^Welcome back/.test(line) ? line.replace(/^Welcome back/, `Welcome back, ${name}`) : /^We did it, partner/.test(line) ? line.replace('partner', name) : line);
 
-export default function Journey() {
+// The main menu: one screen to start from and come back to. Big choices on the left, in the
+// order players want them (carry on, pick a level, play with others, today's puzzle, read); who
+// you are in the top-right corner; live numbers on the right; small things in the bottom
+// corners. Every choice leads to its own page, and every page leads back here.
+const NEWS = [
+  { date: '2026-11-08', title: 'Duel a friend on level 10', body: 'Two plans built blind, three rounds, and fewer cards breaks a tie.', href: '#together' },
+  { date: '2026-11-07', title: 'The debt clock is live', body: 'Ticking from the Treasury’s own count, with the room left under the debt limit.', href: '#clock' },
+];
+const shortDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const retrieved = SOURCES.map((x) => x.retrieved).filter(Boolean).sort().at(-1);
+
+function useProgress() {
   const j = useJourney();
-  const name = useMyName();
-  const votes = useVotes();
   const done = STOPS.filter((s) => j.done.includes(s.id));
   const next = STOPS.find((s) => !j.done.includes(s.id) && isUnlocked(s.id, j.done, j.settings.freeRoam)) ?? null;
   const minutesLeft = STOPS.filter((s) => !j.done.includes(s.id)).reduce((a, s) => a + s.minutes, 0);
@@ -44,7 +53,27 @@ export default function Journey() {
   const rank = rankFor(done.length);
   const finished = done.length === STOPS.length;
   const fresh = !j.started && done.length === 0;
+  return { j, done, next, minutesLeft, total, stars, rank, finished, fresh };
+}
+
+const isDark = () => { const t = document.documentElement.dataset.theme; return t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches); };
+
+export default function Journey() {
+  const { j, done, next, stars, rank, finished, fresh } = useProgress();
+  const name = useMyName();
   const T = budget.receiptsByFY[String(budget.latestFY)]?.reduce((s, r) => s + r.amount, 0) ?? 0;
+  const key = todayKey();
+  const played = loadResults()[key];
+  const theme = themeFor(key);
+  const sound = useAmbienceWanted();
+  // The soundscape plays only here, and only once the player asked for it.
+  useEffect(() => {
+    if (!sound) return;
+    const go = () => { if (!document.hidden) startAmbience(isDark()); else stopAmbience(); };
+    go();
+    document.addEventListener('visibilitychange', go);
+    return () => { document.removeEventListener('visibilitychange', go); stopAmbience(); };
+  }, [sound]);
 
   const greeting = finished
     ? JOURNEY_LINES.finished
@@ -53,43 +82,128 @@ export default function Journey() {
       : next && hard(next.difficulty)
         ? JOURNEY_LINES.hardNext(rank.name.toLowerCase(), next.n)
         : JOURNEY_LINES.back(rank.name.toLowerCase());
+  const primary = next
+    ? { href: '#' + next.id, title: fresh ? 'Start the game' : 'Continue', sub: `Level ${next.n}: ${next.title} · about ${next.minutes} min`, icon: 'play' as const }
+    : { href: '#story', title: 'Your Budget Story', sub: 'Your plans and your budget personality, as cards to share', icon: 'story' as const };
+  const items: { href: string; title: string; sub: string; icon: MenuIconId }[] = [
+    { href: '#levels', title: 'Levels', sub: `The road map · ${done.length} of ${STOPS.length} done · ★ ${stars} of ${MAX_STARS}`, icon: 'map' },
+    { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
+    { href: '#daily', title: 'The Daily Dollar', sub: played && played.length >= ROUNDS ? `#${dayNumber(key)} done: ${played.filter(Boolean).length} of ${ROUNDS} · next in ${untilNext()}` : `#${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''} · five calls, about a minute`, icon: 'daily' },
+    { href: '#overview', title: 'Field guide', sub: 'Every chapter in full, no game needed', icon: 'book' },
+  ];
   return (
-    <div className="journey">
-      <section className="journey-hero">
-        <div className="journey-copy">
+    <div className="menu">
+      <MenuScene />
+      {/* The first screen: the choices on the left, the scene on the right, the debt ticking in the corner. */}
+      <div className="menu-top">
+        <header className="menu-head">
           <div className="eyebrow">A civic game about the federal budget</div>
-          <h1 className="page-title">Help Uncle Sam balance the budget</h1>
-          <SamSays mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} size={150} auto say={greeting}>
+          <h1 className="menu-title">Help Uncle Sam <span>Balance the Budget</span></h1>
+        </header>
+        <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} levels, ${j.medals.length} medals`}>
+          <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
+          <span className="mp-text">
+            <strong>{name || 'Your record'}</strong>
+            <span className="mp-rank">{rank.name}</span>
+          </span>
+          <span className="mp-stats" aria-hidden="true"><span>★ {stars}</span><span>{done.length}/{STOPS.length}</span><span><MenuIcon id="medal" size={14} /> {j.medals.length}</span></span>
+        </a>
+        {/* Uncle Sam greets the player right under the title, in the menu itself, so nothing covers it. */}
+        <div className="menu-sam">
+          <SamSays inline compact mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
             {byName(greeting, name)}
           </SamSays>
-          <ActionBar label="Play">
-            {next ? <a className="btn btn-primary btn-lg" href={'#' + next.id}>{fresh ? 'Start level 1' : `Continue: level ${next.n}, ${next.title}`}</a> : <a className="btn btn-primary btn-lg" href="#story">See your Budget Story</a>}
-            {next && j.plans && Object.keys(j.plans).length > 0 && <a className="btn" href="#story">Your Budget Story</a>}
-          </ActionBar>
-          <a className="small journey-skip" href="#overview">Skip the game and read the guide</a>
         </div>
-        <div className="card journey-progress" aria-label="Your progress">
-          <div className="jp-rank">
-            <span className="stat-label">Your title</span>
-            <strong>{rank.name}</strong>
-          </div>
-          <div className="jp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={STOPS.length} aria-valuenow={done.length} aria-label={`${done.length} of ${STOPS.length} levels done`}>
-            {STOPS.map((s) => <span key={s.id} data-done={j.done.includes(s.id)} data-desk={s.kind === 'desk'} />)}
-          </div>
-          <div className="small"><strong>{done.length} of {STOPS.length}</strong> levels · <strong>★ {stars}</strong> of {MAX_STARS} stars · {finished ? 'all done' : `about ${minutesLeft} of ${total} minutes left`}</div>
-          <p className="small muted">Easy levels explain one part of the budget in a few short steps, a couple of questions, and one vote. Every few levels comes a hard one at the budget desk, where you fix the budget yourself. The full chapters and original documents are always one click away.</p>
-        </div>
+        <nav className="menu-main" aria-label="Main menu">
+          <MenuItem {...primary} primary />
+          {items.map((x) => <MenuItem key={x.href} {...x} />)}
+        </nav>
+        <div className="menu-clock"><DebtClock compact /></div>
+      </div>
+      {/* Just below: what's happening in Washington today, and what's new in the game. */}
+      <section className="menu-live" aria-label="Live from Washington">
+        <Today />
+          <section className="card menu-whatsnew" aria-labelledby="whatsnew-t">
+          <span className="stat-label" id="whatsnew-t">What’s new</span>
+          {NEWS.map((x) => (
+            <a key={x.title} className="today-row" href={x.href}>
+              <strong>{x.title}</strong>
+              <span className="small muted"><time dateTime={x.date}>{shortDate(x.date)}</time> · {x.body}</span>
+            </a>
+          ))}
+        </section>
       </section>
+      <footer className="menu-foot">
+        <nav className="menu-corner" aria-label="More">
+          <a href="#record"><MenuIcon id="record" size={16} /> Your record</a>
+          <a href="#settings"><MenuIcon id="gear" size={16} /> Settings</a>
+          <a href="#results"><MenuIcon id="chart" size={16} /> How everyone played</a>
+        </nav>
+        <div className="menu-corner menu-corner-right">
+          <button type="button" className="menu-sound" aria-pressed={sound} onClick={() => setAmbienceWanted(!sound)}>
+            <MenuIcon id={sound ? 'sound' : 'mute'} size={16} /> {sound ? 'Sounds of the Mall: on' : 'Sounds of the Mall: off'}
+          </button>
+          <a href="#sources"><MenuIcon id="doc" size={16} /> Sources &amp; methods</a>
+          <span className="small muted">Official data from the Treasury, CBO, Census, and SSA{retrieved ? `, updated ${shortDate(retrieved.slice(0, 10))}` : ''}</span>
+        </div>
+      </footer>
+      {/* On phones the same first choice also sits in the bar at the bottom, in reach of a thumb. */}
+      <ActionBar label="Play" className="menu-bar">
+        <a className="btn btn-primary btn-lg" href={primary.href}>{next ? (fresh ? 'Start level 1' : `Continue: level ${next.n}, ${next.title}`) : 'See your Budget Story'}</a>
+      </ActionBar>
+    </div>
+  );
+}
 
-      {!fresh && <Today />}
-      <DebtClock compact />
+type MenuIconId = 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back';
+const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
+  play: <><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" /></>,
+  story: <><rect x="6" y="3" width="12" height="18" rx="2" /><path d="M9 7h6M9 10.5h6M9 14h3.5" /></>,
+  map: <><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5z" /><path d="M9 4v13.5M15 6.5V20" /></>,
+  together: <><circle cx="8.5" cy="8.5" r="3" /><circle cx="16.5" cy="9.5" r="2.5" /><path d="M3 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14 14.3c.8-.4 1.6-.6 2.5-.6 2.2 0 4 1.5 4.5 4.3" /></>,
+  daily: <><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 9.5h17M8 3v4M16 3v4" /><path d="M12 12.5v5M10 14h3.2a1.3 1.3 0 0 1 0 2.6H10.6" /></>,
+  book: <><path d="M4 5.5C6.5 4.3 9.5 4.3 12 6c2.5-1.7 5.5-1.7 8-.5V19c-2.5-1.2-5.5-1.2-8 .5-2.5-1.7-5.5-1.7-8-.5z" /><path d="M12 6v13.5" /></>,
+  record: <><circle cx="12" cy="9" r="5.5" /><path d="m9 13.8-1.5 6.7L12 18l4.5 2.5-1.5-6.7" /><path d="m12 6.6.8 1.6 1.7.2-1.3 1.2.4 1.7-1.6-.9-1.6.9.4-1.7-1.3-1.2 1.7-.2z" /></>,
+  medal: <><circle cx="12" cy="14" r="6" /><path d="M8.5 3h7L13 9h-2z" /></>,
+  gear: <><circle cx="12" cy="12" r="3" /><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" /></>,
+  chart: <><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" /></>,
+  doc: <><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 12h6M9 15.5h6" /></>,
+  sound: <><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></>,
+  mute: <><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path d="m16 9.5 5 5M21 9.5l-5 5" /></>,
+  back: <path d="M14.5 5.5 8 12l6.5 6.5" />,
+};
+export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{MENU_PATHS[id]}</svg>;
+}
 
-      <Section id="together" title="Play together" sub="With your class or club, your group chat, or a few friends. Nothing to sign up for.">
-        <TogetherCards compact />
-        <p className="small"><a href="#together">All the ways to play together</a> · <a href="#teach">For teachers: a ready lesson plan</a>{backendOn() ? <> · <a href="#peoples">The People’s Budget</a></> : null}</p>
-      </Section>
+function MenuItem({ href, title, sub, icon, primary = false }: { href: string; title: string; sub: string; icon: MenuIconId; primary?: boolean }) {
+  return (
+    <a className={'menu-item' + (primary ? ' menu-item-primary' : '')} href={href}>
+      <span className="mi-icon"><MenuIcon id={icon} size={primary ? 30 : 24} /></span>
+      <span className="mi-text"><span className="mi-title">{title}</span><span className="mi-sub">{sub}</span></span>
+      <span className="mi-go" aria-hidden="true">›</span>
+    </a>
+  );
+}
 
-      <Section id="map" title="The road map" sub="Ten levels. Easy chapters build up to three hard budget-desk levels, so a tough level is always followed by a breather.">
+/** The road map, as its own page: every level, with progress at the top. */
+export function LevelsPage() {
+  const { j, done, next, minutesLeft, total, stars, rank, finished } = useProgress();
+  return (
+    <div className="journey">
+      <PageHead eyebrow="Levels" title="The road map" lede="Ten levels. Easy chapters build up to three hard budget-desk levels, so a tough level is always followed by a breather." />
+      <div className="card journey-progress" aria-label="Your progress">
+        <div className="jp-rank">
+          <span className="stat-label">Your title</span>
+          <strong>{rank.name}</strong>
+        </div>
+        <div className="jp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={STOPS.length} aria-valuenow={done.length} aria-label={`${done.length} of ${STOPS.length} levels done`}>
+          {STOPS.map((s) => <span key={s.id} data-done={j.done.includes(s.id)} data-desk={s.kind === 'desk'} />)}
+        </div>
+        <div className="small"><strong>{done.length} of {STOPS.length}</strong> levels · <strong>★ {stars}</strong> of {MAX_STARS} stars · {finished ? 'all done' : `about ${minutesLeft} of ${total} minutes left`}</div>
+        <p className="small muted">Easy levels explain one part of the budget in a few short steps, a couple of questions, and one vote. Every few levels comes a hard one at the budget desk, where you fix the budget yourself. The full chapters and original documents are always one click away.</p>
+      </div>
+      <Section id="map" title="Every level">
         <ol className="roadmap">
           {STOPS.map((s) => {
             const isDone = j.done.includes(s.id);
@@ -114,7 +228,21 @@ export default function Journey() {
           })}
         </ol>
       </Section>
+      {j.plans && Object.keys(j.plans).length > 0 && <p className="small"><a href="#story">Your Budget Story</a>: your plans and your budget personality, as cards to share.</p>}
+      <ActionBar label="Play">
+        {next ? <a className="btn btn-primary" href={'#' + next.id}>{done.length ? `Continue: level ${next.n}, ${next.title}` : 'Start level 1'}</a> : <a className="btn btn-primary" href="#story">See your Budget Story</a>}
+      </ActionBar>
+    </div>
+  );
+}
 
+/** Your record: fact cards, the ballot, medals, and certificates. */
+export function RecordPage() {
+  const { j, stars, finished } = useProgress();
+  const votes = useVotes();
+  return (
+    <div className="journey">
+      <PageHead eyebrow="Your record" title="Your record" lede="What you’ve learned, how you voted, and what you’ve earned. Saved in this browser only." />
       <Section id="facts" title="Your fact cards" sub="Every chapter you finish adds a card of what you learned, with the source. Share any of them.">
         <div className="factcards">
           {LEVELS.map((l) => {
@@ -186,13 +314,17 @@ export default function Journey() {
           </div>
         )}
       </Section>
-
-      <Section id="settings" title="Reading settings" sub="Make the game comfortable to read. These are saved in this browser.">
-        <div className="card"><InstallButton /><ReadingSettings /></div>
-      </Section>
-
-      <p className="fineprint-link small">Every level’s full chapter and the original government documents behind its numbers are listed in <a href="#sources">Sources &amp; methods</a>.</p>
     </div>
+  );
+}
+
+/** Settings, as a page of their own (also in the top bar). */
+export function SettingsPage() {
+  return (
+    <>
+      <PageHead eyebrow="Settings" title="Settings" lede="Make the game comfortable to read and hear. These are saved in this browser." />
+      <div className="card"><InstallButton /><ReadingSettings /></div>
+    </>
   );
 }
 

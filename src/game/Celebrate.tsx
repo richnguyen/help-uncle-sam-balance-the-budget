@@ -92,7 +92,7 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
                   : <span data-primary-wrap><ShareButton text={text} url={url} label={`Send it back to ${challenge.by}`} className="btn btn-primary btn-lg" kind="plan" onShare={onShare} /></span>}
                 {newcomer && <a className="btn" href={'#' + STOPS[0].id} onClick={onClose}>Start from level 1: how the budget works</a>}
                 {challenge.outcome !== 'lost' && <button type="button" className="btn" onClick={onClose}>Keep improving</button>}
-                {!newcomer && <a className="btn" href="#journey" onClick={onClose}>Road map</a>}
+                {!newcomer && <a className="btn" href="#levels" onClick={onClose}>Road map</a>}
               </div>
             </>
           ) : newcomer ? (
@@ -122,7 +122,7 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
                   ? <a className="btn btn-primary btn-lg" data-primary href={'#' + next.id} onClick={onClose}>Play level {next.n}</a>
                   : <a className="btn btn-primary btn-lg" data-primary href="#story" onClick={onClose}>See your Budget Story</a>}
                 {!next && <a className="btn" href="#results" onClick={onClose}>How everyone played</a>}
-                <a className="btn" href="#journey" onClick={onClose}>Road map</a>
+                <a className="btn" href="#levels" onClick={onClose}>Road map</a>
                 <button type="button" className="btn" onClick={onClose}>Stay here</button>
               </div>
             </>

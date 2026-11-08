@@ -54,6 +54,10 @@ const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeL
 export function MapIcon({ size = 18 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5 9 4.5l6 2 5-2v13l-5 2-6-2-5 2z" {...stroke} /><path d="M9 4.5v13M15 6.5v13" {...stroke} /></svg>;
 }
+/** The main menu: four tiles, a hub. */
+export function HubIcon({ size = 18 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" {...stroke} /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" {...stroke} /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" {...stroke} /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" {...stroke} /></svg>;
+}
 export function BookIcon({ size = 18 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h10.5A3.5 3.5 0 0 1 19 8v11.5H8.5A3.5 3.5 0 0 1 5 16z" {...stroke} /><path d="M5 16a3.5 3.5 0 0 1 3.5-3.5H19M9 8h6" {...stroke} /></svg>;
 }

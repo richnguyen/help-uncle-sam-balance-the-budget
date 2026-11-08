@@ -163,7 +163,7 @@ export default function MyShare() {
         <p className="small muted">An estimate: {tax.year} IRS rates, the standard deduction, and wages as your only income. The same salary as on level 1 and your tax receipt.</p>
       </section>
       <MyShareCard wages={w.wages} status={w.status} />
-      <ActionBar label="Next step"><a className="btn btn-primary" href="#together">Play it with friends</a><a className="btn" href="#journey">Road map</a></ActionBar>
+      <ActionBar label="Next step"><a className="btn btn-primary" href="#together">Play it with friends</a><a className="btn" href="#levels">Road map</a></ActionBar>
     </>
   );
 }

@@ -19,6 +19,12 @@ import { SamSays } from './UncleSam';
 const them = (name?: string) => name || 'your friend';
 const Them = (name?: string) => name || 'Your friend';
 const flip = (score: string) => score.split('–').reverse().join('–');
+type Result = ReturnType<typeof duelRounds>;
+/** "Your plan wins 2–1", "Rich’s plan wins on fewer cards", "Tied 1–1". */
+const headline = (r: Result, theirName?: string) => {
+  const how = r.tiebreak && r.tiebreak !== 'tie' ? 'on fewer cards' : null;
+  return r.outcome === 'tied' ? `Tied ${r.score}` : r.outcome === 'won' ? `Your plan wins ${how ?? r.score}` : `${Them(theirName)}’s plan wins ${how ?? flip(r.score)}`;
+};
 const winnerLabel = (w: 'me' | 'them' | 'tie', theirName?: string) => (w === 'tie' ? 'Even' : w === 'me' ? 'Your plan wins' : `${Them(theirName)}’s plan wins`);
 const sameName = (a?: string, b?: string) => !!a && !!b && cleanName(a).toLowerCase() === cleanName(b).toLowerCase();
 const levers = (lv: Levers) => LEVERS.filter((l) => lv[l.id]).map((l) => `${l.label} ${lv[l.id] > 0 ? '+' : ''}${lv[l.id]}%`);
@@ -51,8 +57,8 @@ function Rounds({ mine, theirs, theirName }: { mine: DuelPlan; theirs: DuelPlan;
   return (
     <>
       <section className="card duel-score" aria-live="polite">
-        <strong className="duel-score-num">{r.outcome === 'tied' ? `Tied ${r.score}` : r.outcome === 'won' ? `Your plan wins ${r.score}` : `${Them(theirName)}’s plan wins ${flip(r.score)}`}</strong>
-        <span className="small muted">Best of three rounds. Plans are compared, never people.</span>
+        <strong className="duel-score-num">{headline(r, theirName)}</strong>
+        <span className="small muted">{r.tiebreak && r.tiebreak !== 'tie' ? `Even at ${r.score} after three rounds, so the tie-breaker decides: fewer cards wins.` : 'Best of three rounds; if they come out even, fewer cards wins.'} Plans are compared, never people.</span>
         <span className="small duel-balanced">
           {r.balanced.mine && r.balanced.theirs ? 'Both plans balance the budget.' : `${r.balanced.mine ? 'Your plan balances the budget' : 'Your plan doesn’t balance the budget yet'}; ${r.balanced.theirs ? `${them(theirName)}’s does` : `${them(theirName)}’s doesn’t yet`}.`}
         </span>
@@ -72,6 +78,20 @@ function Rounds({ mine, theirs, theirName }: { mine: DuelPlan; theirs: DuelPlan;
             <p className="small muted">{x.why}</p>
           </li>
         ))}
+        {r.tiebreak && (
+          <li className="card duel-round duel-tiebreak" data-winner={r.tiebreak}>
+            <div className="duel-round-head">
+              <span className="stat-label">Tie-breaker · Fewer cards</span>
+              <span className="duel-round-win">{winnerLabel(r.tiebreak, theirName)}</span>
+            </div>
+            <strong className="duel-round-q">The rounds came out even. Whose plan does the job with fewer cards?</strong>
+            <div className="duel-sides">
+              <div data-win={r.tiebreak === 'me' || undefined}><span className="small muted">You</span><strong className="num">{r.cards.mine} card{r.cards.mine === 1 ? '' : 's'}</strong></div>
+              <div data-win={r.tiebreak === 'them' || undefined}><span className="small muted">{col}</span><strong className="num">{r.cards.theirs} card{r.cards.theirs === 1 ? '' : 's'}</strong></div>
+            </div>
+            <p className="small muted">{r.tiebreak === 'tie' ? 'The same number of cards: a true tie.' : 'Policy cards played. Fewer moves for the same job wins.'}</p>
+          </li>
+        )}
       </ol>
       <section className="card duel-cards">
         <h2 className="section-title">How the two plans differ</h2>
@@ -113,7 +133,7 @@ export default function DuelPage({ param }: { param: string | null }) {
       <>
         <PageHead eyebrow="Level 10 duel" title="This duel link looks incomplete" />
         <SamSays mood="worried" auto>{DUEL_LINES.broken}</SamSays>
-        <ActionBar label="Next step"><a className="btn btn-primary" href="#duels">Your duels</a><a className="btn" href="#journey">Road map</a></ActionBar>
+        <ActionBar label="Next step"><a className="btn btn-primary" href="#duels">Your duels</a><a className="btn" href="#journey">Main menu</a></ActionBar>
       </>
     );
   }
@@ -125,7 +145,8 @@ export default function DuelPage({ param }: { param: string | null }) {
     const theirName = iAmGuest ? d.hostName : d.guestName;
     const r = duelRounds(mine, theirs);
     const back: Duel = { id: d.id, role: 'guest', host: d.host, hostName: d.hostName, guest: d.guest, guestName: name || d.guestName, at: '' };
-    const backText = `${name ? `${name} here. ` : ''}I played your level 10 duel: ${r.outcome === 'won' ? `my plan wins ${r.score}` : r.outcome === 'tied' ? `we tied ${r.score}` : `your plan wins ${flip(r.score)}`}. See the three rounds:`;
+    const how = r.tiebreak && r.tiebreak !== 'tie' ? 'on fewer cards' : null;
+    const backText = `${name ? `${name} here. ` : ''}I played your level 10 duel: ${r.outcome === 'won' ? `my plan wins ${how ?? r.score}` : r.outcome === 'tied' ? `we tied ${r.score}` : `your plan wins ${how ?? flip(r.score)}`}. See the three rounds:`;
     const sendBack = <ShareButton text={backText} url={replyLink(back)} label={`Send it to ${them(d.hostName)}`} className="btn btn-primary" kind="plan" />;
     return (
       <>
@@ -188,6 +209,7 @@ function Invite({ d }: { d: NonNullable<ReturnType<typeof readDuelParam>> }) {
           <li><strong>The economy.</strong> Whose plan goes easier on it in its steepest year.</li>
           <li><strong>The balance.</strong> Whose split between new taxes and spending cuts is closer to even.</li>
         </ol>
+        <p className="small">Even after three rounds? The plan with fewer policy cards wins.</p>
         <p className="small">{Them(d.hostName)}’s plan: <span className="duel-sealed">sealed</span>, {sealed.met ? 'and it balances the budget' : 'still short of balancing the budget'}. You see it only after you reveal yours.</p>
         <button type="button" className="btn btn-primary btn-lg bar-dup" onClick={accept}>{label}</button>
         <span className="small muted">Opens level 10 right away · about 10 minutes · no sign-up</span>
@@ -257,7 +279,7 @@ function DuelList({ duels, title }: { duels: Duel[]; title: string }) {
             <li key={k} className="duel-row" data-outcome={r.outcome}>
               <div>
                 <strong>You vs. {Them(theirName)}</strong>
-                <span className="small muted"> · {r.outcome === 'won' ? `your plan won ${r.score}` : r.outcome === 'tied' ? `tied ${r.score}` : `their plan won ${flip(r.score)}`} · {new Date(x.at).toLocaleDateString()}</span>
+                <span className="small muted"> · {r.outcome === 'tied' ? `tied ${r.score}` : `${r.outcome === 'won' ? 'your' : 'their'} plan won ${r.tiebreak && r.tiebreak !== 'tie' ? `on fewer cards (${r.score})` : r.outcome === 'won' ? r.score : flip(r.score)}`} · {new Date(x.at).toLocaleDateString()}</span>
               </div>
               <span className="duel-row-actions">
                 <a className="btn" href={resultHash(x)}>See the rounds</a>

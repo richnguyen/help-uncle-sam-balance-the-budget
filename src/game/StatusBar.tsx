@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BrandMark } from '../components/Guilloche';
 import { BADGES, loadProgress } from '../lib/game';
-import { AwardIcon, BookIcon, CaretIcon, DocIcon, GearIcon, LevelIcon, LockIcon, MapIcon, SpeakerIcon } from './icons';
+import { AwardIcon, BookIcon, CaretIcon, DocIcon, GearIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
 import { isUnlocked, MAX_STARS, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { FIELD_GUIDE } from './nav';
@@ -73,7 +73,7 @@ export function StatusBar({ route }: { route: string }) {
   return (
     <header className="appbar" ref={bar} aria-label="Game bar">
       <div className="ab-inner">
-        <a className="ab-brand" href="#journey" aria-label="Help Uncle Sam Balance the Budget: your journey"><BrandMark /></a>
+        <a className="ab-brand" href="#journey" aria-label="Help Uncle Sam Balance the Budget: main menu"><BrandMark /></a>
 
         <Pop id="levels" open={open} setOpen={setOpen} hover className="ab-levels" button={(p) => (
           <div className="ab-levelbar">
@@ -134,7 +134,7 @@ export function StatusBar({ route }: { route: string }) {
           <ul className="stb-pop-list">
             {BADGES.map((b) => <li key={b.id} data-got={desk.includes(b.id)}><AwardIcon size={14} /><span><strong>{b.name}</strong><span className="small muted"> {b.desc}</span></span></li>)}
           </ul>
-          <a className="small" href="#journey">Certificates and fact cards are on the road map</a>
+          <a className="small" href="#record">Certificates and fact cards are in Your record</a>
         </Pop>
 
         <div className="ab-right">
@@ -156,7 +156,7 @@ export function StatusBar({ route }: { route: string }) {
             <div className="ab-panel-head"><strong>Settings</strong><span className="small muted">Saved in this browser</span></div>
             <ReadingSettings />
           </Pop>
-          <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined}><MapIcon /><span className="ab-label">Your journey</span></a>
+          <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
         </div>
       </div>
     </header>
