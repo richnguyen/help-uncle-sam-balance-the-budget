@@ -1,22 +1,22 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useJourney } from './state';
-import { UncleSam } from './UncleSam';
 import { type Mood, useNarrator } from './voice';
 
-// Uncle Sam always speaks from the same place: just above the action bar at the bottom of the
-// screen, over whatever is behind him. Pages say what he says with <SamSays> (see UncleSam.tsx),
-// which hands its line to this dock instead of drawing him in the page. Each new line slides him
-// in from the left; tapping him, tapping elsewhere, or Continue on a level step slides him back
-// out of view. A small handle at the edge brings him back to read the line again.
+// Uncle Sam lives in the top bar, in the middle, all the time (see samhud.tsx); on the main menu,
+// which has no top bar, he stands above its buttons. Pages say what he says with <SamSays> (see
+// UncleSam.tsx), which hands its line here instead of drawing him in the page; the latest line to
+// arrive is the one he says. His words run across the strip under the bar at his own pace, and
+// he reads them aloud when his voice is on. Nothing pops up over the page.
 
 interface Line { owner: string; mood: Mood; node: ReactNode; text: string; auto: boolean; delay: number; seq: number }
 interface Dock {
   line: Line | null;
-  shown: boolean;
+  /** Goes up each time the line should play: a new line, or the player asking to hear it again. */
+  play: number;
   present: (l: Omit<Line, 'seq'>) => void;
   clear: (owner: string) => void;
-  hide: () => void;
-  show: () => void;
+  /** Say the line again: aloud when his voice is on, and across the strip either way. */
+  replay: () => void;
 }
 
 const Ctx = createContext<Dock | null>(null);
@@ -25,11 +25,11 @@ export const useSamDock = () => useContext(Ctx);
 export function SamDockProvider({ children }: { children: ReactNode }) {
   const { settings } = useJourney();
   const n = useNarrator();
-  // Every SamSays on the screen, by owner; the latest line to arrive is the one shown.
+  // Every SamSays on the screen, by owner; the latest line to arrive is the one he says.
   const lines = useRef(new Map<string, Line>());
   const seq = useRef(0);
   const [line, setLine] = useState<Line | null>(null);
-  const [shown, setShown] = useState(false);
+  const [play, setPlay] = useState(0);
   const pick = () => [...lines.current.values()].sort((a, b) => b.seq - a.seq)[0] ?? null;
 
   const present = useCallback((l: Omit<Line, 'seq'>) => {
@@ -38,16 +38,20 @@ export function SamDockProvider({ children }: { children: ReactNode }) {
     const next = { ...l, seq: ++seq.current };
     lines.current.set(l.owner, next);
     setLine(next);
-    setShown(true);
+    setPlay((p) => p + 1);
   }, []);
   const clear = useCallback((owner: string) => {
     if (!lines.current.delete(owner)) return;
-    const top = pick();
-    setLine(top);
-    if (!top) setShown(false);
+    setLine(pick());
   }, []);
-  const hide = useCallback(() => { setShown(false); n.stop(); }, [n]);
-  const show = useCallback(() => setShown(true), []);
+  const lineRef = useRef(line);
+  lineRef.current = line;
+  const replay = useCallback(() => {
+    const l = lineRef.current;
+    if (!l) return;
+    setPlay((p) => p + 1);
+    if (settings.narration && n.supported && l.text) n.speak(l.owner, l.text, l.mood);
+  }, [settings.narration, n]);
 
   // He reads each new line aloud (when his voice is on and the browser allows it).
   useEffect(() => {
@@ -56,101 +60,38 @@ export function SamDockProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [line?.seq, settings.narration, n.supported]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const value = useMemo(() => ({ line, shown, present, clear, hide, show }), [line, shown, present, clear, hide, show]);
+  const value = useMemo(() => ({ line, play, present, clear, replay }), [line, play, present, clear, replay]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-/** Keep --abh (the action bar's height) current, so the dock sits right on top of the bar. */
-function useActionBarHeight() {
+/**
+ * Keeps two sizes current for the layout: --abh, the bottom action bar's height (the person check
+ * sits above it), and --hud-h, the top bar's height (pinned boards, panels and scrolling clear it).
+ */
+export function useBarHeights() {
   useEffect(() => {
     const root = document.documentElement;
-    let ro: ResizeObserver | null = null;
-    let current: Element | null = null;
-    const measure = () => {
-      // He stands on the action bar, or on the main menu's Today strip.
-      const bar = [...document.querySelectorAll('.actionbar, .menu-strip')].find((e) => getComputedStyle(e).display !== 'none' && getComputedStyle(e).position === 'fixed') ?? null;
-      if (bar !== current) {
-        ro?.disconnect();
-        current = bar;
-        if (bar && typeof ResizeObserver !== 'undefined') { ro = new ResizeObserver(measure); ro.observe(bar); }
-      }
-      root.style.setProperty('--abh', `${bar ? Math.round(bar.getBoundingClientRect().height) : 0}px`);
+    const watched = new Map<string, { el: Element | null; ro: ResizeObserver | null }>();
+    const track = (name: string, el: Element | null) => {
+      const cur = watched.get(name);
+      if (cur?.el === el) return;
+      cur?.ro?.disconnect();
+      const ro = el && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+      if (el) ro?.observe(el);
+      watched.set(name, { el, ro });
     };
+    function measure() {
+      const bar = [...document.querySelectorAll('.actionbar, .menu-strip')].find((e) => getComputedStyle(e).display !== 'none' && getComputedStyle(e).position === 'fixed') ?? null;
+      const hud = document.querySelector('.appbar');
+      track('bar', bar);
+      track('hud', hud);
+      root.style.setProperty('--abh', `${bar ? Math.round(bar.getBoundingClientRect().height) : 0}px`);
+      root.style.setProperty('--hud-h', `${hud ? Math.round(hud.getBoundingClientRect().height) : 0}px`);
+    }
     measure();
     const mo = new MutationObserver(() => requestAnimationFrame(measure));
     mo.observe(document.body, { childList: true, subtree: true });
     window.addEventListener('resize', measure);
-    return () => { mo.disconnect(); ro?.disconnect(); window.removeEventListener('resize', measure); };
+    return () => { mo.disconnect(); watched.forEach((w) => w.ro?.disconnect()); window.removeEventListener('resize', measure); };
   }, []);
-}
-
-export function SamDockView({ route }: { route: string }) {
-  const dock = useSamDock()!;
-  const n = useNarrator();
-  const box = useRef<HTMLDivElement>(null);
-  useActionBarHeight();
-  const { line, shown, hide, show } = dock;
-  const speaking = !!line && n.speakingId === line.owner;
-  // How tall he stands while he's up (--samh), so a pop-up can sit above him instead of under him.
-  useEffect(() => {
-    const root = document.documentElement;
-    const inner = box.current?.querySelector<HTMLElement>('.samdock-inner');
-    if (!shown || !line || !inner) { root.style.setProperty('--samh', '0px'); return; }
-    const set = () => root.style.setProperty('--samh', `${Math.round(inner.getBoundingClientRect().height)}px`);
-    set();
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(set) : null;
-    ro?.observe(inner);
-    return () => { ro?.disconnect(); root.style.setProperty('--samh', '0px'); };
-  }, [shown, !!line]); // eslint-disable-line react-hooks/exhaustive-deps
-  // He waves hello only on the first line after sliding in; each later line gets just a reaction.
-  const [enterSeq, setEnterSeq] = useState<number | null>(null);
-  useEffect(() => {
-    if (!shown || !line) { setEnterSeq(null); return; }
-    setEnterSeq((cur) => (cur == null ? line.seq : cur));
-  }, [shown, line?.seq]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // A tap anywhere slides him away and stops his voice, so it skips his line: the step's button
-  // then reads Continue. Only a level step's own buttons decide for themselves (their first tap
-  // is the skip), and the switch that turns his voice on.
-  useEffect(() => {
-    if (!shown) return;
-    const away = (e: PointerEvent) => {
-      const t = e.target as Element | null;
-      if (!t || box.current?.contains(t) || t.closest('.samdock-peek, [data-sam-keep] button, [data-sam-keep] a, .ab-panel, .stb-voice')) return;
-      hide();
-    };
-    window.addEventListener('pointerdown', away, true);
-    return () => window.removeEventListener('pointerdown', away, true);
-  }, [shown, hide]);
-
-  if (route === 'og-card') return null;
-  // A tap on his glass pane or his words slides him away too (but not on the links and buttons in them).
-  const onPane = (e: React.MouseEvent) => { if (!(e.target as Element).closest('button, a, .term, input, select')) hide(); };
-  return (
-    <>
-      <div className="samdock" data-shown={(shown && !!line) || undefined} ref={box} aria-hidden={!(shown && line) || undefined}>
-        {line && (
-          <div className="samsays samdock-inner" data-speaking={speaking || undefined} data-mood={line.mood} onClick={onPane}>
-            <button type="button" className="samdock-avatar" onClick={hide} aria-label="Slide Uncle Sam away" tabIndex={shown ? 0 : -1}>
-              <UncleSam key={line.seq} mood={line.mood} size={120} speaking={speaking} greet={enterSeq == null || enterSeq === line.seq} />
-            </button>
-            <div className="bubble">
-              <div className="bubble-name">Uncle Sam{speaking && <span className="bubble-live" aria-hidden="true"><i /><i /><i /></span>}</div>
-              <div className="bubble-text" aria-live="polite">{line.node}</div>
-              {n.supported && line.text && (
-                <button type="button" className="link-btn bubble-listen" tabIndex={shown ? 0 : -1} onClick={() => (speaking ? n.stop(line.owner) : n.speak(line.owner, line.text, line.mood))} aria-pressed={speaking}>
-                  {speaking ? 'Stop' : 'Listen'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      {line && !shown && (
-        <button type="button" className="samdock-peek" onClick={show} aria-label="Bring Uncle Sam back">
-          <UncleSam mood={line.mood} size={34} />
-        </button>
-      )}
-    </>
-  );
 }

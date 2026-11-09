@@ -27,8 +27,9 @@ budget adviser.
   "Campaign 3"); a tap opens the road map (`#levels`) at that campaign; in the top-right corner, the music and sound switches and the player's
   record (rank, stars, missions, medals), with this year's deficit running under them. Nothing
   else: no corner links and no data line. Choices light up, slide and show an arrow under the
-  pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player from his usual
-  dock at the bottom, standing on the **Headlines line**: a single-line news crawl (shutdown
+  pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player close up, standing
+  right on top of the menu buttons at the right with a plain speech bubble (no glass pane). At the
+  bottom runs the **Headlines line**: a single-line news crawl (shutdown
   watch, debt-limit watch, official announcements about spending and taxes, the Daily Dollar,
   the People's Budget, and what's new in the game) that runs right to left without a seam, pauses under the pointer, on focus or with its pause
   button, and holds still (scrollable by hand) for people who ask for less motion.
@@ -66,11 +67,10 @@ budget adviser.
 - **The field guide** (`#guide`, from the main menu): every chapter in full, each with the level
   it goes with (read chapters are marked), and Sources & methods and the glossary inside it.
   Every chapter's banner links back to the field guide and to Sources & methods.
-- **Uncle Sam speaks from one spot.** Every line, the level-complete pop-up's cheer included,
-  comes from his dock at the bottom (the pop-up moves up so it sits above him). A tap anywhere
-  slides him away, stops his voice and skips his line: a level step's button then reads
-  Continue (or what the step needs) instead of "Skip this narrative". Only the step's own
-  buttons decide for themselves.
+- **Uncle Sam lives in the top bar.** Every line, the level-complete pop-up's cheer included,
+  comes from him in the middle of the top bar, and nothing pops up over the page: a step's
+  Continue always moves on, and Back always goes back. (The pop-up opens under the bar, so he
+  cheers from his usual place.)
 - **Three campaigns, sixteen missions.** Each campaign has one goal and ends at a budget desk:
   (1) stop the debt from outgrowing the economy (8 missions), (2) cut the deficit to 3% of GDP
   (5 missions), (3) balance the budget (3 missions). Missions are numbered Campaign · Mission
@@ -123,10 +123,13 @@ budget adviser.
     history on citizenship, responsibility, the future or the economy, and a preview of the next
     level.
   - Adviser titles and a copyable "budget ballot".
-- **One top bar, no side panel.** Right end: "Main menu". Middle: the current mission
-  ("Mission 1.5") and the sixteen-mission track, with a gap where each campaign starts; hovering
-  it lists every mission by campaign, plus the field-guide chapters. Then stars and accomplishments (medals and budget-desk badges). Right: Continue,
-  Uncle Sam's voice switch, Glossary, Methods (sources & methods) and Settings.
+- **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): a little taller, so each
+  side holds two rows (with no box around them), and Uncle Sam stands in the middle, always there:
+  half his body showing, right on the bar's bottom edge. Left: the current mission ("Mission 1.5") and your title, then the sixteen-mission track,
+  with a gap where each campaign starts; hovering it lists every mission by campaign, plus the
+  field-guide chapters. Right: stars, accomplishments (medals and budget-desk badges) and Main
+  menu; then Uncle Sam's voice switch, Glossary, Methods (sources & methods) and Settings (on
+  phones, the glossary and methods are inside Settings). Under it all runs his speech strip.
 - **Settings** (top bar): text size, light/dark theme, voice choice, vibration, and free roam to
   unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
@@ -173,17 +176,22 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   page. On phones its buttons fill the bar, in reach of a thumb; on wide screens they line up with
   the right edge of the page's column. The celebration opens as a sheet from the bottom with its
   next step pinned in reach.
-- **Uncle Sam in one place.** He always speaks from the same spot: standing on the action bar at
-  the bottom left, on a full-width band of frosted glass that blurs the page behind him so it doesn't compete
-  with his words (`src/game/samdock.tsx`; pages say his lines with `<SamSays>`, which hands them
-  to the dock). Each new line slides him in from the left. On a level
-  step with something to see or do (a chart, a quiz, a slider, a vote), the main button reads
-  **Skip this narrative** while he speaks and slides him out of view; then it reads Continue and
-  moves on. On a step that is only his words, Skip this narrative moves straight on in one tap.
-  Back brings him back first, then goes to the previous step. A new line, such as a quiz answer,
-  a reaction on the budget desk or a Daily Dollar result, slides him back in; tapping him or
-  anywhere else slides him away, and a small handle at the left edge brings him back. Only the
-  level-complete pop-up keeps him inside it.
+- **Uncle Sam's speech strip** (`src/game/samhud.tsx`). When he speaks, his line runs right to
+  left across the strip under the top bar at the pace he speaks it, so the word he is saying
+  passes right under him; words he has said dim, words to come stay bright. With his voice on, the strip follows the recording word for word (the narrator reports
+  how far into the line he is, from the clip's own clock); with it off, it runs at his usual pace,
+  timed from the same recordings. Then the line settles in place, and a tap on the strip or on him
+  runs it again (and says it, when his voice is on). On a page with no line of his own, the strip
+  names where you are. Pages say his lines with `<SamSays>`, which hands them to him
+  (`src/game/samdock.tsx`); screen readers hear each line once. With less motion asked for, the
+  line simply sits still.
+- **Uncle Sam reacts, and has habits.** Every player action that gives feedback (`useHaptics`)
+  makes him react from the top bar: a nod for a card or a step, a thumbs-up for a right answer, a
+  scratch of the head and a question mark for a miss, a hat tip for a vote, a jump with his hat in
+  the air for a win, a salute for a medal. While he waits (every 9 to 17 seconds, never while he
+  speaks) he does one of his American habits: waves a little flag, tips his hat, checks his
+  pocket watch, flips a quarter, whistles a tune, or salutes. With less motion asked for, he
+  holds still.
 - **Uncle Sam acts.** He is the main character, so he is never a still picture: he breathes,
   blinks and glances around while he waits, and looks toward his words while he speaks. Each mood
   has its own hands (a wave hello, then a hand that talks along with him; a hand on his heart when

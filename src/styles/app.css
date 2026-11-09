@@ -89,7 +89,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--hud-h, 120px) + 12px); }
 /* ↑ Jumps into view (next step, a plan, a deep link) stop below the pinned top bar, not under it. */
 body {
   margin: 0;
@@ -826,7 +826,7 @@ html[data-text="larger"] { font-size: 125%; }
 .lawx-track { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .lawx-track > span { display: block; height: 100%; border-radius: 999px; }
 .lawx-val { font-weight: 650; font-size: 0.875rem; min-width: 64px; text-align: right; }
-.lawx-detail { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: var(--radius); background: var(--surface-2); position: sticky; top: 72px; }
+.lawx-detail { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: var(--radius); background: var(--surface-2); position: sticky; top: calc(var(--hud-h, 120px) + 16px); }
 .lawx-title { font-size: var(--step-1); line-height: 1.3; }
 .lawx-effect { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .lawx-effect .num { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1; color: var(--div-pos); }
@@ -1057,7 +1057,7 @@ html.modal-open { overflow: hidden; }
 .tb-side .vmeter-col { height: 100px; }
 .tb-side .vmeter-value { font-size: 0.75rem; }
 .tb-side .stat-label { font-size: 0.6875rem; }
-@media (min-width: 901px) { .topboard { position: sticky; top: 64px; z-index: 25; } }
+@media (min-width: 901px) { .topboard { position: sticky; top: calc(var(--hud-h, 120px) + 8px); z-index: 25; } }
 /* stars, with what earns each one on hover */
 .starpop { position: relative; }
 .starpop-btn { border: 0; background: transparent; padding: 2px 4px; border-radius: 8px; cursor: help; }
@@ -1439,7 +1439,7 @@ html.modal-open { overflow: hidden; }
 @media (max-width: 640px) {
   .page { gap: 28px; }
   /* Toasts drop in under the top bar, clear of the action bar at the bottom. */
-  .toasts { top: calc(64px + env(safe-area-inset-top, 0px)); bottom: auto; left: 12px; right: 12px; align-items: center; }
+  .toasts { top: calc(var(--hud-h, 104px) + 8px); bottom: auto; left: 12px; right: 12px; align-items: center; }
 
   /* Level steps: a smaller title and Uncle Sam beside his words, then the step's action bar. */
   .level-head .page-title { font-size: clamp(1.9rem, 9vw, 2.4rem); }
@@ -1546,91 +1546,7 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
   .plan-bar-row { flex: 1 1 auto; max-width: 420px; margin-right: auto; }
 }
 
-/* ---------- Uncle Sam's dock ----------
-   He always speaks from the same place: standing on the action bar at the bottom left, over
-   whatever is behind him. Each new line slides him in from the left; Continue (or a tap on him,
-   or anywhere else) slides him back out, and the handle at the edge brings him back.
-   He and his words sit on a pane of frosted glass, so the page behind doesn't compete with them. */
-:root { --abh: 0px; }
-.samdock {
-  position: fixed; z-index: 45; bottom: var(--abh); left: 0; right: 0;
-  display: flex; pointer-events: none;
-}
-.samdock .samdock-inner {
-  display: flex; flex-direction: row; align-items: flex-end; gap: 0; width: 100%; pointer-events: auto;
-  will-change: transform; backface-visibility: hidden;
-  padding: 12px max(12px, env(safe-area-inset-right, 0px)) 0 max(6px, env(safe-area-inset-left, 0px));
-  cursor: pointer;
-  border-radius: 0;
-  background: color-mix(in srgb, var(--paper) 60%, transparent);
-  -webkit-backdrop-filter: blur(22px) saturate(1.1); backdrop-filter: blur(22px) saturate(1.1);
-  border: 0; border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
-  box-shadow: 0 -14px 32px -20px rgba(0, 0, 0, 0.4), inset 0 1px 0 color-mix(in srgb, var(--surface) 88%, #fff);
-  transform: translateX(calc(-100% - 40px)); opacity: 0; visibility: hidden;
-  transition: transform 0.36s cubic-bezier(0.4, 0, 0.7, 0.2), opacity 0.3s ease 0.06s, visibility 0s linear 0.36s;
-}
-.samdock[data-shown] .samdock-inner {
-  transform: none; opacity: 1; visibility: visible;
-  transition: transform 0.44s cubic-bezier(0.2, 0.9, 0.25, 1.06), opacity 0.2s ease, visibility 0s;
-}
-.samdock-avatar {
-  flex: none; display: block; padding: 0; margin: 0 -4px 0 0; border: 0; background: transparent; cursor: pointer;
-  line-height: 0; border-radius: 12px 12px 0 0; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
-}
-.samdock-avatar .sam { width: 116px; height: auto; display: block; }
-.samdock .bubble {
-  flex: 1; margin: 0 0 16px; max-width: 600px; max-height: min(36vh, 280px); overflow-y: auto; overscroll-behavior: contain;
-  padding: 12px 16px; cursor: pointer;
-  box-shadow: 0 0 0 1px var(--ring), 0 14px 34px -8px rgba(0, 0, 0, 0.32);
-}
-.samdock .samdock-inner .bubble::before { left: -9px; bottom: 26px; top: auto; transform: rotate(45deg); }
-.samdock .bubble-text { font-size: var(--step-0); line-height: 1.5; }
-.samdock .samsays[data-speaking] .bubble { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, var(--ring)), 0 14px 34px -8px rgba(0, 0, 0, 0.32); }
-/* The handle that brings him back: his head, peeking in from the left edge. */
-.samdock-peek {
-  position: fixed; z-index: 45; left: 0; bottom: calc(var(--abh) + 12px);
-  display: grid; place-items: center; width: 52px; height: 56px; padding: 0 4px 0 0; border: 0; cursor: pointer;
-  border-radius: 0 28px 28px 0; background: var(--surface); box-shadow: 0 0 0 1px var(--ring), 0 8px 20px -6px rgba(0, 0, 0, 0.3);
-  animation: peek-in 0.3s ease 0.25s both; overflow: hidden;
-}
-.samdock-peek .sam { width: 34px; height: auto; margin-top: 10px; }
-@keyframes peek-in { from { transform: translateX(-100%); } to { transform: none; } }
-html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
-/* A finished level's pop-up: Uncle Sam stays in his usual spot at the bottom, in front of it. */
-html.modal-open.celebrate-open .samdock { display: flex; z-index: 95; bottom: 0; }
-html.modal-open.celebrate-open .samdock-peek { display: none; }
-/* The pop-up waits a moment before it moves (when he slides in or away), so a tap that sends him
-   away still lands on the button under the finger. */
-html.celebrate-open .celebrate-scrim { padding-bottom: calc(var(--samh, 0px) + 16px); transition: padding-bottom 0.3s ease 0.45s; }
-/* It shrinks to fit the room above him and scrolls inside, so its top (and its close button) never goes off screen. */
-html.celebrate-open .celebrate { max-height: calc(100vh - 32px - var(--samh, 0px)); transition: max-height 0.3s ease 0.45s; }
-@media (max-width: 900px) {
-  html.celebrate-open .celebrate-scrim { padding-bottom: var(--samh, 0px); }
-  html.celebrate-open .celebrate { max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - var(--samh, 0px)); }
-}
-/* Without frosted glass (older browsers), a nearly solid pane does the same job. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .samdock .samdock-inner { background: color-mix(in srgb, var(--paper) 94%, transparent); }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .samdock .samdock-inner { background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; }
-}
-@media (min-width: 901px) {
-  /* The pane runs the full width; Uncle Sam and his words line up with the page's column. */
-  .samdock .samdock-inner { padding: 16px max(24px, calc((100vw - 1120px) / 2 + 24px)) 0 max(12px, calc((100vw - 1120px) / 2 + 12px)); }
-  .samdock-avatar .sam { width: 140px; }
-  .samdock .bubble { margin-bottom: 22px; padding: 14px 18px; }
-  .samdock .bubble-text { font-size: var(--step-1); }
-  .samdock .samdock-inner .bubble::before { bottom: 30px; }
-}
-@media (max-width: 380px) {
-  .samdock-avatar .sam { width: 100px; }
-  .samdock .bubble-text { font-size: 0.9375rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .samdock .samdock-inner, .samdock[data-shown] .samdock-inner { transform: none !important; transition: opacity 0.15s ease, visibility 0s linear 0.15s !important; }
-  .samdock[data-shown] .samdock-inner { transition: opacity 0.15s ease !important; }
-}
+:root { --abh: 0px; --hud-h: 120px; }
 
 /* ---------- Uncle Sam acts ----------
    Breathing and glances while he waits, eyes on his words while he speaks, a small reaction to
@@ -2188,3 +2104,164 @@ html.celebrate-open .celebrate { max-height: calc(100vh - 32px - var(--samh, 0px
   .mc-camp { padding: 7px 6px; }
   .mc-k { font-size: 0.625rem; letter-spacing: 0.03em; }
 }
+
+
+/* ---------- the top bar as a game HUD: two rows a side, Uncle Sam in the middle ----------
+   Each side holds two rows, with no box around them; Uncle Sam stands between them, half his
+   body showing, right on the bar's bottom edge, always there; the strip under it all carries his
+   words, running at the pace he speaks them. */
+.hud { padding-top: env(safe-area-inset-top, 0px); }
+.hud-inner { position: relative; z-index: 1; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; padding-block: 4px 0; }
+.hud .ab-pop, .hud-side, .hud-rows { position: static; }
+.hud-side { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0 0 4px; }
+.hud-right { flex-direction: column; align-items: stretch; justify-content: center; gap: 4px; }
+.hud-row { display: flex; align-items: center; gap: 4px; min-height: 34px; min-width: 0; }
+.hud-right .hud-row { justify-content: flex-end; }
+.hud .ab-levels { flex: 1 1 auto; min-width: 0; }
+.hud .ab-levelbar.hud-rows { flex-direction: column; align-items: stretch; gap: 4px; }
+.hud-left .ab-brand .brand-mark { width: 40px; height: 40px; }
+.hud-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8125rem; color: var(--ink-2); }
+.hud .ab-levelbar .stb-track { display: flex; flex: 1 1 auto; max-width: none; min-width: 0; padding: 0 6px 0 8px; }
+.hud .ab-level .stb-k { display: inline; }
+.hud .ab-stars { display: inline-flex; align-items: center; gap: 3px; padding: 0 8px; }
+.hud .ab-journey { margin-left: 4px; }
+/* Pop-up panels hang from the bar's bottom edge, below the strip. */
+.hud .ab-panel { top: calc(100% + 6px); right: max(12px, calc((100% - 1240px) / 2 + 16px)); }
+.hud .ab-levels .ab-panel { left: max(12px, calc((100% - 1240px) / 2 + 16px)); right: auto; }
+@media (max-width: 1060px) { .hud-right .ab-btn:not(.ab-journey) .ab-label { display: none; } }
+@media (max-width: 860px) { .hud .ab-journey .ab-label { display: none; } }
+
+/* Uncle Sam: half his body, standing right on the bar's bottom edge (no frame around him). */
+.hud-center { position: relative; display: flex; align-items: flex-end; justify-content: center; align-self: end; }
+.sam-portrait { display: block; position: relative; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; }
+.sam-portrait:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--accent); }
+.sam-portrait-hud .sam-portrait-frame { display: block; }
+.sam-portrait-hud .sam { display: block; width: 76px; height: auto; }
+
+/* The strip under the bar: his words run right to left, the one he's saying right under him. */
+.sam-strip { position: relative; height: 30px; overflow: hidden; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 72%, var(--paper)); }
+.sam-strip-tag { position: absolute; z-index: 2; top: 50%; left: max(12px, calc((100% - 1240px) / 2 + 16px)); transform: translateY(-50%); display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px; border-radius: 999px; background: #23406e; color: #fbfaf6; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+.sam-strip-tag .bubble-live i { background: #fbfaf6; height: 7px; }
+.sam-strip-view { position: absolute; inset: 0; display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: var(--ink); text-align: left; cursor: pointer; overflow: hidden; }
+.sam-strip-view:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.sam-strip[data-state="running"] .sam-strip-view {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, rgba(0, 0, 0, 0.5) 28%, rgba(0, 0, 0, 0.6) 49.6%, #000 50.4%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 9%, rgba(0, 0, 0, 0.5) 28%, rgba(0, 0, 0, 0.6) 49.6%, #000 50.4%, #000 95%, transparent 100%); }
+.sam-strip-run { position: absolute; left: 0; top: 0; line-height: 30px; white-space: nowrap; font-size: 0.9375rem; font-weight: 500; will-change: transform; }
+.sam-strip-still, .sam-strip-caption { position: absolute; top: 0; left: calc(max(12px, (100% - 1240px) / 2 + 16px) + 96px); right: calc(max(12px, (100% - 1240px) / 2 + 16px) + 26px); line-height: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sam-strip-still { font-size: 0.9375rem; color: var(--ink-2); }
+.sam-strip-caption { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.sam-strip-again { position: absolute; top: 0; right: max(12px, calc((100% - 1240px) / 2 + 16px)); line-height: 30px; font-size: 1rem; color: var(--accent); }
+.sam-strip-view:hover .sam-strip-still { color: var(--ink); }
+
+@media (max-width: 760px) {
+  .hud-inner { gap: 6px; padding-block: 3px 0; }
+  .hud-side { padding: 0 0 3px; gap: 6px; }
+  .hud-right { gap: 1px; }
+  .hud .ab-levelbar.hud-rows { gap: 1px; }
+  .hud-row { min-height: 30px; gap: 1px; }
+  .hud .ab-btn, .hud .ab-icon, .hud .stb-acc-btn { height: 30px; }
+  .sam-strip-tag { display: none; }
+  .hud-left .ab-brand .brand-mark { width: 30px; height: 30px; }
+  .hud .ab-level { padding: 3px 4px; gap: 5px; }
+  .hud .ab-level .stb-icon { width: 24px; height: 24px; }
+  .hud .ab-levelbar .stb-track { padding: 0 2px; gap: 2px; }
+  .hud .ab-ref { display: none; } /* the glossary and methods are in Settings on phones */
+  .hud .ab-stars { padding: 0 4px; }
+  .hud .ab-panel { position: fixed; top: calc(var(--hud-h, 104px) + 6px); }
+  .sam-portrait-hud .sam { width: 58px; }
+  .sam-strip { height: 28px; }
+  .sam-strip-run, .sam-strip-still, .sam-strip-caption, .sam-strip-again { line-height: 28px; }
+  .sam-strip-run, .sam-strip-still { font-size: 0.875rem; }
+  .sam-strip-still, .sam-strip-caption { left: 12px; right: 30px; }
+}
+@media (max-width: 420px) { .hud .ab-stars { display: inline-flex; } .hud .ab-stars .ab-hide-sm { display: none; } }
+
+/* The achievement pop-up opens under the bar, so Uncle Sam cheers from his usual place. */
+html.celebrate-open .appbar { z-index: 96; }
+html.celebrate-open .celebrate-scrim { padding-top: calc(var(--hud-h, 120px) + 12px); }
+html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 28px); }
+@media (max-width: 760px) {
+  html.celebrate-open .celebrate-scrim { padding: calc(var(--hud-h, 104px) + 8px) 0 0; }
+  html.celebrate-open .celebrate { max-height: calc(100dvh - var(--hud-h, 104px) - 8px); }
+}
+
+/* ---------- the main menu: Uncle Sam close up, right on top of the buttons ---------- */
+.menu-sam { position: relative; z-index: 0; display: flex; align-items: flex-end; justify-content: flex-end; gap: 6px; margin-bottom: -18px; }
+.menu-continue { z-index: 1; }
+.menu-sam-bubble { position: relative; flex: 0 1 auto; max-width: 300px; margin-bottom: 44px; padding: 10px 14px 9px; border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--ring), 0 6px 18px rgba(17, 27, 22, 0.12); }
+.menu-sam-bubble::after { content: ""; position: absolute; right: -7px; bottom: 16px; width: 14px; height: 14px; background: var(--surface); transform: rotate(45deg); box-shadow: 1px -1px 0 0 var(--ring); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.menu-sam-text { margin: 0; font-size: 0.9375rem; line-height: 1.45; }
+.menu-sam-listen { margin-top: 4px; font-size: 0.8125rem; }
+.menu-sam[data-speaking] .menu-sam-bubble { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, var(--ring)), 0 6px 18px rgba(17, 27, 22, 0.12); }
+.sam-portrait-menu { flex: none; border-radius: 0; }
+.sam-portrait-menu .sam-portrait-frame { display: block; width: 124px; }
+.sam-portrait-menu .sam { display: block; width: 124px; height: auto; }
+@media (max-width: 560px) {
+  .menu-sam-bubble { max-width: none; flex: 1 1 auto; margin-bottom: 46px; }
+  .menu-sam-text { font-size: 0.875rem; }
+  .sam-portrait-menu .sam-portrait-frame { width: 100px; }
+  .sam-portrait-menu .sam { width: 100px; }
+  .menu-sam { margin-bottom: -14px; }
+  .menu-sam-bubble { margin-bottom: 36px; }
+}
+
+/* ---------- Uncle Sam's acts: reactions to the player, and his idle habits ---------- */
+.sam .sam-act, .sam .sam-act * { transform-box: view-box; }
+.sam[data-act-arm] .sam-wave, .sam[data-act-arm] .sam-explain, .sam[data-act-arm] .sam-thumb, .sam[data-act-arm] .sam-wring,
+.sam[data-act-arm] .sam-hands-up, .sam[data-act-arm] .sam-arms { opacity: 0 !important; }
+.sam .sam-act-arm { animation: sam-arm 1.5s ease-in-out 1 both; }
+.sam[data-act="oops"] .sam-act-arm { animation-duration: 1.5s; }
+.sam[data-act="hattip"] .sam-act-arm, .sam[data-act="salute"] .sam-act-arm { animation-duration: 1.7s; }
+.sam[data-act="cheer"] .sam-act-arm { animation-duration: 2s; }
+.sam[data-act="flag"] .sam-act-arm { animation-duration: 2.6s; }
+.sam[data-act="watch"] .sam-act-arm { animation-duration: 2.8s; }
+.sam[data-act="coin"] .sam-act-arm { animation-duration: 2.1s; }
+@keyframes sam-arm { 0% { opacity: 0; transform: translateY(18px); } 14%, 86% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(18px); } }
+/* a nod, a glance */
+.sam[data-act="nod"] .sam-head { animation: sam-act-nod 0.9s ease-in-out 1; }
+@keyframes sam-act-nod { 0%, 50%, 100% { transform: none; } 25% { transform: translateY(1.6px) rotate(0.6deg); } 75% { transform: translateY(1.2px); } }
+.sam[data-act="glance"] .sam-pupils { animation: sam-act-glance 0.8s ease-in-out 1; }
+@keyframes sam-act-glance { 0%, 100% { transform: none; } 30%, 70% { transform: translateX(2px); } }
+/* thumbs-up: brows up */
+.sam[data-act="thumbs"] .sam-brows { animation: sam-brow 0.75s ease-in-out 2; }
+/* a miss: shake of the head, a scratch, a question mark */
+.sam[data-act="oops"] .sam-head { animation: sam-fret 0.75s ease-in-out 2; }
+.sam .sam-scratch circle { transform-box: fill-box; animation: sam-scratch 0.22s ease-in-out 6 alternate; }
+@keyframes sam-scratch { from { transform: translateY(0); } to { transform: translateY(-2px) translateX(1px); } }
+.sam .sam-q { animation: sam-q 1.5s ease both; }
+@keyframes sam-q { 0% { opacity: 0; transform: translateY(6px); } 25%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+/* a hat tip (a vote, or just to say hello) */
+.sam[data-act="hattip"] .sam-hat { transform-box: view-box; transform-origin: 60px 60px; animation: sam-hattip 1.7s ease-in-out 1; }
+.sam .sam-tipglove { animation: sam-tipglove 1.7s ease-in-out 1; }
+@keyframes sam-hattip { 0%, 100% { transform: none; } 28%, 68% { transform: translate(3px, -9px) rotate(-9deg); } }
+@keyframes sam-tipglove { 0%, 100% { transform: none; } 28%, 68% { transform: translate(2px, -8px); } }
+/* a cheer: a jump, the hat up */
+.sam[data-act="cheer"] .sam-figure { animation: sam-r-cheer 1s ease-out 2; }
+.sam[data-act="cheer"] .sam-hat { transform-box: view-box; transform-origin: 60px 60px; animation: sam-hatjump 1s ease-out 2; }
+@keyframes sam-hatjump { 0%, 70%, 100% { transform: none; } 30% { transform: translateY(-12px) rotate(8deg); } }
+.sam[data-act="cheer"] .sam-act .sam-spark path { transform-box: fill-box; transform-origin: center; animation: sam-twinkle 0.8s ease-in-out infinite; }
+/* a salute */
+.sam[data-act="salute"] .sam-head { animation: sam-act-proud 1.7s ease-in-out 1; }
+@keyframes sam-act-proud { 0%, 100% { transform: none; } 30%, 75% { transform: translateY(-1px) rotate(-1deg); } }
+/* a little flag, waving */
+.sam .sam-flag { transform-box: fill-box; transform-origin: 100% 50%; animation: sam-flag 0.45s ease-in-out infinite alternate; }
+@keyframes sam-flag { from { transform: skewY(-7deg) scaleX(0.92); } to { transform: skewY(6deg) scaleX(1); } }
+.sam[data-act="flag"] .sam-head { animation: sam-sway 1.3s ease-in-out 2; }
+@keyframes sam-sway { 0%, 100% { transform: none; } 30% { transform: rotate(-2deg); } 70% { transform: rotate(2deg); } }
+/* checking his pocket watch */
+.sam[data-act="watch"] .sam-pupils { animation: sam-look-down 2.8s ease-in-out 1; }
+@keyframes sam-look-down { 0%, 100% { transform: none; } 20%, 80% { transform: translate(1.4px, 2.2px); } }
+.sam .sam-watch-hand { transform-origin: 78px 106px; animation: sam-tick 2.8s steps(8) 1; }
+@keyframes sam-tick { to { transform: rotate(240deg); } }
+/* flipping a quarter */
+.sam .sam-coin { transform-origin: 92px 104px; animation: sam-coin 1.2s cubic-bezier(0.3, 0.6, 0.4, 1) 0.35s 1 both; }
+@keyframes sam-coin { 0%, 100% { transform: none; } 25% { transform: translateY(-22px) scaleX(0.15); } 50% { transform: translateY(-40px); } 75% { transform: translateY(-22px) scaleX(0.15); } }
+.sam[data-act="coin"] .sam-pupils { animation: sam-look-up 1.2s ease-in-out 0.35s 1; }
+@keyframes sam-look-up { 0%, 100% { transform: none; } 50% { transform: translate(1.2px, -2.4px); } }
+/* whistling a tune */
+.sam[data-act="whistle"] .sam-mouth-rest, .sam[data-act="whistle"] .sam-mouth-talk { opacity: 0 !important; }
+.sam[data-act="whistle"] .sam-head { animation: sam-sway 1.4s ease-in-out 2; }
+.sam .sam-note { opacity: 0; transform-origin: 74px 100px; animation: sam-note 1.7s ease-out both; }
+@keyframes sam-note { 0% { opacity: 0; transform: scale(0.6); } 20% { opacity: 0.9; } 100% { opacity: 0; transform: translate(24px, -40px) rotate(14deg); } }
+.sam[data-crop] .sam-think { display: none; }

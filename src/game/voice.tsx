@@ -50,6 +50,17 @@ export function speakable(t: string) {
 }
 export const toSentences = (t: string) => sentences(speakable(t));
 
+/** Characters a second when there is no recording to time a sentence by (about 165 words a minute). */
+const CHARS_PER_SEC = 15;
+/** How long each sentence of a line takes him to say, in seconds: from its recording, or his usual pace. */
+function sentenceSeconds(parts: string[], mood: Mood) {
+  return parts.map((p) => (MANIFEST[keyOf(p)]?.[3] ?? p.length / CHARS_PER_SEC) / RATE[mood]);
+}
+/** How long Uncle Sam takes to say a line, in seconds, at his own pace (voice on or off). */
+export function lineSeconds(text: string, mood: Mood = 'happy') {
+  return sentenceSeconds(toSentences(text), mood).reduce((a, b) => a + b, 0);
+}
+
 /** Which recording bank a page's lines live in (scripts/voice/collect.mjs uses the same rule). */
 export const DESK_LEVELS = ['level-5', 'level-8', 'level-10'];
 export const bankFor = (route: string) => (DESK_LEVELS.includes(route) ? 'desk' : /^level-[a-z0-9]+$/.test(route) ? route : 'common');
@@ -156,6 +167,8 @@ interface Narrator {
   stop: (id?: string) => void;
   /** Browsers allow sound only after the person has interacted with the page. */
   canAutoplay: () => boolean;
+  /** How far into the line he is (0–1, by characters), many times a second while he speaks. */
+  onProgress: (f: (id: string, p: number) => void) => () => void;
 }
 
 const Ctx = createContext<Narrator | null>(null);
@@ -179,6 +192,12 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
   const retry = useRef<(() => void) | null>(null);
   const speakRef = useRef<(id: string, text: string, mood?: Mood) => void>(() => {});
   const recorded = hasRecordings && settings.voice === 'auto';
+  // Where he is in the line: which sentence, when it started, and how long each one takes.
+  const plan = useRef<{ chars: number[]; secs: number[]; k: number; t0: number }>({ chars: [], secs: [], k: 0, t0: 0 });
+  const progSubs = useRef(new Set<(id: string, p: number) => void>());
+  const onProgress = useCallback((f: (id: string, p: number) => void) => { progSubs.current.add(f); return () => { progSubs.current.delete(f); }; }, []);
+  const tellProgress = useCallback((p: number) => { const id = current.current; if (id) progSubs.current.forEach((f) => f(id, p)); }, []);
+  const atSentence = useCallback((k: number) => { plan.current.k = k; plan.current.t0 = performance.now(); }, []);
 
   // ---- the mouth: follows the recording's loudness, or the device voice's words ----
   const mouthSubs = useRef(new Set<(n: number) => void>());
@@ -201,6 +220,15 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
     let flutter = 0;
     const tick = (now: number) => {
       const a = audio.current;
+      // How far along the line he is: the recording's own clock, or his usual pace for a device voice.
+      const pl = plan.current;
+      const total = pl.chars.reduce((x, y) => x + y, 0);
+      if (total) {
+        const k = Math.min(pl.k, pl.chars.length - 1);
+        const before = pl.chars.slice(0, k).reduce((x, y) => x + y, 0);
+        const frac = env.current && a && a.duration > 0 && !a.paused ? a.currentTime / a.duration : (now - pl.t0) / 1000 / (pl.secs[k] || 1);
+        tellProgress(Math.min(1, (before + Math.min(1, Math.max(0, frac)) * pl.chars[k]) / total));
+      }
       if (env.current && a && !a.paused) {
         const e = env.current;
         setMouth(Number(e[Math.min(e.length - 1, Math.floor(a.currentTime * ENV_FPS))] ?? 0));
@@ -212,7 +240,7 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
     };
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); setMouth(0); };
-  }, [speakingId, setMouth]);
+  }, [speakingId, setMouth, tellProgress]);
 
   useEffect(() => {
     if (hasRecordings) {
@@ -251,7 +279,7 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
     if (synth) window.speechSynthesis.cancel();
   }, [synth]);
 
-  const finish = useCallback((my: number) => { if (token.current === my) { current.current = null; setSpeakingId(null); } }, []);
+  const finish = useCallback((my: number) => { if (token.current === my) { tellProgress(1); current.current = null; setSpeakingId(null); } }, [tellProgress]);
 
   const stop = useCallback((id?: string) => {
     if (id && current.current !== id) return;
@@ -275,13 +303,14 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
         setTimeout(() => setMouth(1), 90);
         setTimeout(() => setMouth(0), 190);
       };
+      u.onstart = () => atSentence(k);
       if (voice) u.voice = voice;
       u.lang = voice?.lang ?? 'en-US';
       u.rate = RATE[mood];
       if (k === parts.length - 1) { u.onend = () => finish(my); u.onerror = () => finish(my); }
       s.speak(u);
     });
-  }, [synth, voice, finish, setMouth]);
+  }, [synth, voice, finish, setMouth, atSentence]);
 
   const speak = useCallback((id: string, text: string, mood: Mood = 'happy') => {
     const parts = toSentences(text);
@@ -289,6 +318,7 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
     halt();
     const my = ++token.current;
     current.current = id;
+    plan.current = { chars: parts.map((x) => x.length), secs: sentenceSeconds(parts, mood), k: 0, t0: performance.now() };
     setSpeakingId(id);
     const keys = parts.map(keyOf);
     const a = audio.current;
@@ -298,9 +328,10 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
         let url: string | null = null;
         try { url = await clipUrl(keys[k]); } catch { url = null; }
         if (token.current !== my) return;
-        if (!url) { speakDevice(my, parts.slice(k), mood); return; } // recordings unreachable
+        if (!url) { plan.current = { ...plan.current, chars: plan.current.chars.slice(k), secs: plan.current.secs.slice(k) }; speakDevice(my, parts.slice(k), mood); return; } // recordings unreachable
         a.src = url;
         a.playbackRate = RATE[mood];
+        atSentence(k);
         env.current = MANIFEST[keys[k]][4] ?? null;
         const ok = await new Promise<boolean>((res) => {
           a.onended = () => res(true);
@@ -319,7 +350,7 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
       }
       finish(my);
     })();
-  }, [recorded, speakDevice, halt, finish]);
+  }, [recorded, speakDevice, halt, finish, atSentence]);
 
   speakRef.current = speak;
 
@@ -338,7 +369,7 @@ export function NarrationProvider({ children }: { children: ReactNode }) {
 
   const using = recorded ? 'Uncle Sam’s recorded voice' : voice ? `${voice.name}, a voice on this device` : 'no voice available';
   return (
-    <Ctx.Provider value={{ supported: hasRecordings || synth, recorded, voices, voice, speakingId, using, speak, stop, canAutoplay }}>
+    <Ctx.Provider value={{ supported: hasRecordings || synth, recorded, voices, voice, speakingId, using, speak, stop, canAutoplay, onProgress }}>
       <MouthContext.Provider value={subscribeMouth}>{children}</MouthContext.Provider>
     </Ctx.Provider>
   );

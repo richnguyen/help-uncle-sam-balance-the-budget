@@ -50,7 +50,7 @@ export type DebtClockModel = ReturnType<typeof useDebtClock>;
 
 // Every ticking number on the page shares one clock, four times a second (once a second with
 // reduced motion). A number changes only while it is in the clear part of the screen: on screen,
-// below the top bar, and above the action bar and Uncle Sam's frosted glass. Digits changing
+// below the top bar, and above the action bar. Digits changing
 // behind frosted glass make the glass shimmer, so under it they hold still until scrolled clear.
 type Sub = { el: HTMLElement; value: () => (now: number) => number; fmt: (v: number) => string; drawn: boolean };
 const subs = new Set<Sub>();
@@ -63,8 +63,6 @@ function clearBand() {
     const cs = getComputedStyle(bar);
     if (cs.display !== 'none' && cs.position === 'fixed') bottom = Math.min(bottom, bar.getBoundingClientRect().top);
   }
-  const glass = document.querySelector('.samdock[data-shown] .samdock-inner');
-  if (glass) bottom = Math.min(bottom, glass.getBoundingClientRect().top);
   return { top, bottom };
 }
 function step() {

@@ -36,8 +36,100 @@ function useMouth(svg: React.RefObject<SVGSVGElement | null>, speaking: boolean)
   }, [speaking, mouth, svg]);
 }
 
-/** `greet`: he waves hello (happy mood) — on by default; the dock turns it off after his first line. */
-export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, greet = true }: { mood?: Mood; size?: number; title?: string; speaking?: boolean; greet?: boolean }) {
+/**
+ * Something he does for a moment: a reaction to what the player just did (a nod, a thumbs-up, a
+ * scratch of the head, a hat tip, a cheer, a salute) or, while he waits, one of his idle habits
+ * (waving a little flag, checking his pocket watch, flipping a quarter, whistling a tune).
+ */
+export type SamAct = 'nod' | 'glance' | 'thumbs' | 'oops' | 'hattip' | 'cheer' | 'salute' | 'flag' | 'watch' | 'coin' | 'whistle';
+/** Acts that use his right (or left) arm, so the mood's own hands step aside while they play. */
+const ARM_ACTS = new Set<SamAct>(['thumbs', 'oops', 'hattip', 'cheer', 'salute', 'flag', 'watch', 'coin']);
+const GLOVE = { fill: C.white, stroke: '#d9d5ca', strokeWidth: 0.9 };
+const SLEEVE = { fill: 'none', stroke: C.navy, strokeWidth: 10, strokeLinecap: 'round' as const };
+
+function ActLayer({ act }: { act: SamAct }) {
+  switch (act) {
+    case 'thumbs': return (
+      <g className="sam-act-arm">
+        <path d="M100 150 q6 -26 -6 -52" {...SLEEVE} />
+        <rect x="86" y="88" width="13" height="12" rx="4" {...GLOVE} />
+        <rect x="90" y="79" width="4.6" height="11" rx="2.3" {...GLOVE} />
+      </g>
+    );
+    case 'oops': return (
+      <g className="sam-act-arm sam-scratch">
+        <path d="M20 150 q-12 -36 10 -76" {...SLEEVE} />
+        <circle cx="31" cy="73" r="6.2" {...GLOVE} />
+        <text x="88" y="76" className="sam-q" fontSize="16" fontWeight="700" fill="var(--muted)">?</text>
+      </g>
+    );
+    case 'hattip': return (
+      <g className="sam-act-arm sam-tiphand">
+        <path d="M100 150 q14 -44 -8 -88" {...SLEEVE} />
+        <ellipse className="sam-tipglove" cx="91" cy="61" rx="7" ry="5.6" {...GLOVE} />
+      </g>
+    );
+    case 'cheer': return (
+      <g className="sam-act-arm">
+        <path d="M30 136 q-12 -18 -6 -56 M90 136 q12 -18 6 -56" {...SLEEVE} strokeWidth="11" />
+        <circle cx="24" cy="78" r="6.5" {...GLOVE} />
+        <circle cx="96" cy="78" r="6.5" {...GLOVE} />
+        <g className="sam-spark" fill={C.gold}>
+          {[[24, 56, 1], [96, 52, 1], [30, 32, 0.7], [92, 30, 0.8]].map(([x, y, k], i) => <path key={i} transform={`translate(${x} ${y}) scale(${k})`} d="M0 -6 L1.6 -1.6 L6 0 L1.6 1.6 L0 6 L-1.6 1.6 L-6 0 L-1.6 -1.6z" />)}
+        </g>
+      </g>
+    );
+    case 'salute': return (
+      <g className="sam-act-arm">
+        <path d="M100 150 q16 -34 -12 -72" {...SLEEVE} />
+        <ellipse cx="83" cy="75" rx="10" ry="3.8" transform="rotate(-26 83 75)" {...GLOVE} />
+      </g>
+    );
+    case 'flag': return (
+      <g className="sam-act-arm">
+        <path d="M104 150 q4 -26 -8 -44" {...SLEEVE} />
+        <line x1="96" y1="106" x2="98" y2="56" stroke="#8a6a3a" strokeWidth="1.8" strokeLinecap="round" />
+        <g className="sam-flag">
+          {[0, 1, 2, 3, 4, 5].map((r) => <rect key={r} x="82" y={57 + r * 1.9} width="15.5" height="1.9" fill={r % 2 ? C.white : C.red} />)}
+          <rect x="90.5" y="57" width="7" height="5.7" fill={C.navy} />
+          <circle cx="92.3" cy="58.8" r="0.5" fill={C.white} /><circle cx="95.3" cy="58.8" r="0.5" fill={C.white} /><circle cx="93.8" cy="60.9" r="0.5" fill={C.white} />
+        </g>
+        <circle cx="96" cy="104" r="6" {...GLOVE} />
+      </g>
+    );
+    case 'watch': return (
+      <g className="sam-act-arm">
+        <path d="M70 122 q-6 6 -14 6" fill="none" stroke={C.gold} strokeWidth="1.2" strokeDasharray="1.6 1.4" />
+        <path d="M102 150 q0 -22 -16 -38" {...SLEEVE} />
+        <circle cx="78" cy="106" r="7" fill={C.gold} />
+        <circle cx="78" cy="106" r="5.2" fill={C.white} />
+        <path className="sam-watch-hand" d="M78 106 v-3.6 M78 106 h2.6" stroke={C.line} strokeWidth="0.9" strokeLinecap="round" />
+        <circle cx="86" cy="111" r="6" {...GLOVE} />
+      </g>
+    );
+    case 'coin': return (
+      <g className="sam-act-arm">
+        <path d="M102 150 q4 -22 -8 -36" {...SLEEVE} />
+        <ellipse className="sam-coin" cx="92" cy="104" rx="4.4" ry="4.4" fill={C.gold} stroke="#a8862f" strokeWidth="0.8" />
+        <circle cx="93" cy="112" r="6" {...GLOVE} />
+      </g>
+    );
+    case 'whistle': return (
+      <g className="sam-notes" fill="var(--muted)">
+        {[0, 1, 2].map((k) => <g key={k} className="sam-note" style={{ animationDelay: `${k * 0.55}s` }}><ellipse cx="74" cy="100" rx="2.6" ry="2" transform="rotate(-20 74 100)" /><path d="M76.2 99.4 v-8.5 q3 1 4.5 3.2" fill="none" stroke="var(--muted)" strokeWidth="1.1" /></g>)}
+      </g>
+    );
+    default: return null;
+  }
+}
+
+/** How much of him shows: half his body (the top bar, and anywhere else), or head and shoulders,
+ * close up (the main menu). */
+type Crop = 'full' | 'bust';
+const VIEW: Record<Crop, [number, number, number, number]> = { full: [0, 0, 120, 150], bust: [16, 0, 88, 126] };
+
+/** `greet`: he waves hello (happy mood) — on by default. `act`: what he's doing right now. */
+export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, greet = true, crop = 'full', act = null }: { mood?: Mood; size?: number; title?: string; speaking?: boolean; greet?: boolean; crop?: Crop; act?: SamAct | null }) {
   const svg = useRef<SVGSVGElement>(null);
   useMouth(svg, speaking);
   const brows: Record<Mood, string> = {
@@ -62,7 +154,8 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
   const tongue = <ellipse cx="60" cy="108.2" rx="3.6" ry="1.5" fill="#c75b54" />;
   const closedEyes = mood === 'happy' || mood === 'proud' || mood === 'cheering';
   return (
-    <svg ref={svg} className="sam" data-mood={mood} data-speaking={speaking || undefined} width={size} height={size * (150 / 120)} viewBox="0 0 120 150" role="img" aria-label={title ?? `Uncle Sam, looking ${mood}${speaking ? ', speaking' : ''}`}>
+    <svg ref={svg} className="sam" data-mood={mood} data-speaking={speaking || undefined} data-act={act ?? undefined} data-act-arm={(act && ARM_ACTS.has(act)) || undefined} data-crop={crop === 'full' ? undefined : crop}
+      width={size} height={size * (VIEW[crop][3] / VIEW[crop][2])} viewBox={VIEW[crop].join(' ')} role="img" aria-label={title ?? `Uncle Sam, looking ${mood}${speaking ? ', speaking' : ''}`}>
       {/* A new mood re-draws him, so each one starts with its own small reaction. */}
       <g className="sam-figure" key={mood}>
       <g className="sam-breath">
@@ -113,6 +206,7 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
         <g className="sam-m sam-m2" opacity="0"><path d="M51 102 q9 10 18 0 q-9 3 -18 0z" fill={C.line} />{tongue}</g>
         <g className="sam-m sam-m3" opacity="0"><ellipse cx="60" cy="105.5" rx="6" ry="7" fill={C.line} />{tongue}</g>
         {mood === 'worried' && <path className="sam-sweat" d="M89 70 q4 6 0 9 q-4 -3 0 -9z" fill="#9cc3e6" />}
+        {act === 'whistle' && <ellipse className="sam-pucker" cx="62" cy="104.5" rx="2.6" ry="3.2" fill={C.line} />}
         <g className="sam-hat" transform={HAT[mood]}>
           <ellipse cx="60" cy="61" rx="38" ry="7" fill={C.navy} />
           <path d="M38 60 l4 -50 q18 -6 36 0 l4 50z" fill={C.white} />
@@ -185,6 +279,7 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
           ))}
         </g>
       )}
+      {act && <g className="sam-act" key={act}><ActLayer act={act} /></g>}
       </g>
     </svg>
   );
@@ -200,9 +295,9 @@ export const plain = (n: ReactNode): string => {
 };
 
 /**
- * Uncle Sam says a line. He speaks from his dock, the fixed spot just above the action bar (see
- * samdock.tsx), so he's always in the same place; this hands the line to the dock. With `auto`, he
- * reads it aloud when it appears. `inline` draws him in the page instead (the celebration card).
+ * Uncle Sam says a line. He lives in the top bar (and, on the main menu, above its buttons): this
+ * hands the line to him (see samdock.tsx and samhud.tsx), and his words run across the strip
+ * under the bar. With `auto`, he reads it aloud when it appears. `inline` draws him in the page.
  */
 export function SamSays(props: { mood?: Mood; children: ReactNode; size?: number; compact?: boolean; auto?: boolean; delay?: number; say?: string; inline?: boolean }) {
   const dock = useSamDock();

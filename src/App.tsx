@@ -54,7 +54,7 @@ import { NarrationProvider, prefetchVoice, useNarrator } from './game/voice';
 import { earnedMedals, MEDALS } from './game/medals';
 import { useHaptics } from './game/haptics';
 import { noteLevel } from './game/resume';
-import { SamDockProvider, SamDockView } from './game/samdock';
+import { SamDockProvider, useBarHeights } from './game/samdock';
 import { Toasts, useToasts } from './components/game';
 import { ActionBar } from './components/ActionBar';
 
@@ -270,10 +270,11 @@ function Shell() {
     document.title = route === 'journey' ? 'Help Uncle Sam Balance the Budget' : `${TITLE[route] ?? ''} · Help Uncle Sam Balance the Budget`;
   }, [route]);
   const Page = PAGES[route];
+  useBarHeights();
   return (
     <>
       {/* The main menu is a screen of its own: no top bar, no action bar. */}
-      {route !== 'journey' && <StatusBar route={route} />}
+      {route !== 'journey' && <StatusBar route={route} title={TITLE[route]} />}
       <main className="main" id="main">
         <div className="page" key={route} data-route={route}>
           {/* Every page off the main menu leads straight back to it (levels have the top bar). */}
@@ -289,7 +290,6 @@ function Shell() {
           </footer>
         </div>
       </main>
-      <SamDockView route={route} />
       <DefaultActions route={route} />
       <MedalWatcher />
     </>

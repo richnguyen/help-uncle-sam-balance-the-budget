@@ -27,6 +27,7 @@ import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
 import { SamSays, UncleSam } from './UncleSam';
+import { SamMenuSpot } from './samhud';
 
 export { LockIcon } from './icons';
 
@@ -128,6 +129,8 @@ export default function Journey() {
           </a>
         </div>
         <nav className="menu-main" aria-label="Main menu">
+          {/* Uncle Sam, close up, right on top of the buttons, with what he has to say. */}
+          <SamMenuSpot />
           <div className="menu-continue">
             <MenuItem {...primary} primary />
             <CampaignChips />
@@ -136,7 +139,7 @@ export default function Journey() {
         </nav>
         <div className="menu-deficit"><DeficitClock /></div>
       </div>
-      {/* Uncle Sam in his usual place at the bottom, standing on the Headlines line. */}
+      {/* What Uncle Sam says here (he stands above the buttons). */}
       <SamSays mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
         {byName(greeting, name)}
       </SamSays>

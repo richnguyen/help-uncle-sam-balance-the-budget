@@ -338,7 +338,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   // On level 10 the board's coach also gives the opening line, since the board comes first.
   // A friend's challenge opens with a short line, so the cards come sooner on a phone.
   const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : special && !met && prog <= 0.001 ? (duel ? { mood: 'happy' as Mood, line: DUEL_LINES.playing } : challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
-  // Uncle Sam coaches from his dock above the action bar (samdock.tsx), so he's always in one place.
+  // Uncle Sam coaches from the top bar (samhud.tsx): his line runs across the strip under it.
   const coachBlock = desk ? <SamSays mood={said.mood} auto={party == null && !(met && !wasMet.current)} delay={special ? 300 : 900}>{said.line}</SamSays> : null;
   const progressBlock = (
     <div aria-live="polite" className="sb-progress">
