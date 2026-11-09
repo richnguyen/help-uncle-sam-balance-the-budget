@@ -36,8 +36,8 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
     buzz('win');
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', k);
-    document.documentElement.classList.add('modal-open');
-    return () => { window.removeEventListener('keydown', k); document.documentElement.classList.remove('modal-open'); };
+    document.documentElement.classList.add('modal-open', 'celebrate-open');
+    return () => { window.removeEventListener('keydown', k); document.documentElement.classList.remove('modal-open', 'celebrate-open'); };
   }, [onClose]); // eslint-disable-line react-hooks/exhaustive-deps
   const say = line ?? CHEER[stars];
   const fact = factFor(stop);
@@ -59,7 +59,8 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
             {[1, 2, 3].map((k) => <span key={k} className="cstar" data-on={k <= stars} style={{ animationDelay: `${0.15 + k * 0.18}s` }}>★</span>)}
           </div>
           <div className="celebrate-badge"><span className="stat-label">Certificate earned</span><strong>{stop.badge}</strong></div>
-          <SamSays mood="cheering" compact auto delay={350} inline>{say}</SamSays>
+          {/* Uncle Sam cheers from his usual spot at the bottom, like everywhere else. */}
+          <SamSays mood="cheering" auto delay={350}>{say}</SamSays>
           <figure className="celebrate-quote">
             <blockquote>“{stop.quote.text}”</blockquote>
             <figcaption>— {stop.quote.who}, <span className="muted">{stop.quote.where}</span></figcaption>

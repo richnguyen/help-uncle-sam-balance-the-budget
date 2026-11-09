@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { budget, debt } from '../data';
+import { type NewsItem, parseCongressFeed } from '../game/news';
 
 // Standalone build only: refresh the headline numbers straight from the Treasury Fiscal Data API
 // in the visitor's browser, when the page opens and again every half hour while it stays open
@@ -15,6 +16,8 @@ export interface LiveState {
   debtYearAgo?: { date: string; total: number };
   limit?: { date: string; limit: number; subject: number };
   mts?: { date: string; fy: number; receiptsFYTD: number; outlaysFYTD: number; deficitFYTD: number; interestFYTD?: number };
+  /** Spending and tax bills on the Senate and House floors today, and sent to the President (Congress.gov). */
+  news?: NewsItem[];
   fetchedAt?: number;
 }
 
@@ -64,6 +67,10 @@ async function fetchLive(): Promise<LiveState> {
   const limit = amt('Statutory Debt Limit');
   const subject = amt('Debt Held by the Public') + amt('Intragovernmental Holdings') - amt('Debt Not Subject to Limit') + amt('Other Debt Subject to Limit');
   if (limit > 0 && subject > 0) out.limit = { date: day[0].record_date, limit, subject };
+  // Congress.gov's floor feeds allow a browser to read them; a miss leaves the baked news alone.
+  const feeds: [string, string][] = [['Senate floor', 'senate-floor-today'], ['House floor', 'house-floor-today'], ['Sent to the President', 'presented-to-president']];
+  const got = await Promise.all(feeds.map(([source, f]) => fetch(`https://www.congress.gov/rss/${f}.xml`).then((r) => (r.ok ? r.text() : '')).then((x) => (x ? parseCongressFeed(x, source) : [])).catch(() => [] as NewsItem[])));
+  out.news = got.flat();
   return out;
 }
 

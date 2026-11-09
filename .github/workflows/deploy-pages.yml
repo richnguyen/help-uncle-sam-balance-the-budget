@@ -1,4 +1,6 @@
-# Builds the standalone site and publishes it to GitHub Pages on every push to main.
+# Builds the standalone site and publishes it to GitHub Pages on every push to main, and every
+# three hours so the main menu's Headlines line carries the latest official announcements
+# about spending and taxes (scripts/fetch-news.mjs; a failed fetch keeps the news in the repo).
 # The standalone build refreshes the national debt and the latest monthly Treasury
 # figures live in each visitor's browser; everything else uses the data in src/data/.
 #
@@ -9,6 +11,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '23 */3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -30,6 +34,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Fetch the latest official news
+        run: node scripts/fetch-news.mjs || echo "News fetch failed; building with the news already in the repo."
       - run: npm run build
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5

@@ -42,7 +42,7 @@ export function useDeficitClock(now = new Date()) {
 /** The menu's widget: the deficit in red, spending in blue and revenue in green beside it. */
 export function DeficitClock() {
   const c = useDeficitClock();
-  // A year at a time, the same figures as the debt clock: a year's new debt, each person's share of it, and the interest bill.
+  // A year at a time, the same figures as the debt clock: each person's share of the deficit, a year's new debt, and the interest bill.
   const d = useDebtClock();
   return (
     <section className="card deficit" aria-label={`The federal deficit, fiscal year ${c.fy} so far`}>
@@ -58,7 +58,7 @@ export function DeficitClock() {
       <p className="sr-only">So far this fiscal year, the government has spent about {moneyWords(c.spendAt(Date.now()), 2)} and taken in about {moneyWords(c.revAt(Date.now()), 2)}, a deficit of about {moneyWords(c.deficitAt(Date.now()), 2)}.</p>
       <div className="deficit-yearhead">Each year, at the past 12 months’ pace</div>
       <dl className="deficit-year">
-        <div><dt>Every person’s share</dt><dd>{dollars(d.perYear / POP)}</dd></div>
+        <div><dt>Every person’s share of the deficit</dt><dd>{dollars(c.deficitYear / POP)}</dd></div>
         <div><dt>The debt grows by</dt><dd>{moneyWords(d.perYear, 2)}</dd></div>
         <div><dt>Interest costs</dt><dd>{moneyWords(d.interestPerYear, 2)}</dd></div>
       </dl>

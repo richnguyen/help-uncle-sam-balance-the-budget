@@ -24,20 +24,29 @@ budget adviser.
   people scan a screen: the big choices on the left, biggest first (Continue or Start the game,
   then Levels, Play together, the Daily Dollar, the field guide, Settings), each with an icon, a
   title and one line; in the top-right corner, the music and sound switches and the player's
-  record (rank, stars, levels, medals), with this year's deficit running under them; What's new
-  and the small links (Your record, How everyone played, the debt clock, Sources & methods, the
-  data's date) below the first screen. Choices light up, slide and show an arrow under the
+  record (rank, stars, levels, medals), with this year's deficit running under them. Nothing
+  else: no corner links and no data line. Choices light up, slide and show an arrow under the
   pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player from his usual
-  dock at the bottom, standing on the **Today line**: a single-line news crawl (shutdown watch,
-  debt-limit watch, the Daily Dollar, the People's Budget, what's new) that runs right to left
-  without a seam, pauses under the pointer, on focus or with its pause button, and holds still
-  (scrollable by hand) for people who ask for less motion.
+  dock at the bottom, standing on the **Headlines line**: a single-line news crawl (shutdown
+  watch, debt-limit watch, official announcements about spending and taxes, the Daily Dollar,
+  the People's Budget, and what's new in the game) that runs right to left without a seam, pauses under the pointer, on focus or with its pause
+  button, and holds still (scrollable by hand) for people who ask for less motion.
+- **Official news on the Headlines line** (`scripts/fetch-news.mjs` → `src/data/generated/news.json`,
+  `src/game/news.ts`): the White House's presidential actions about taxes, tariffs, spending, the
+  budget or the debt; CBO's latest cost estimates and reports; and, from Congress.gov, spending
+  and tax bills on the Senate and House floors that day and bills sent to the President. Each
+  item carries its source, its time in Eastern time ("3 hr ago", "Yesterday, 4:12 PM ET", "Fri,
+  Nov 6, 2:00 PM ET"), the source's own headline, and a link to the official page. Other White
+  House releases are left out, because many are political messaging and the game doesn't take
+  sides. The Pages workflow fetches the feeds and redeploys every three hours (a failed fetch
+  keeps the news in the repo); on the public site the browser also reads Congress.gov's floor
+  feeds live. Items older than three weeks drop off. `npm run news` refreshes the file locally.
 - **This year's deficit, running** (`DeficitClock.tsx`, on the main menu): the federal deficit
   for the fiscal year so far in red, with spending (blue) and revenue (green) beside it. It
   starts from the Treasury's Monthly Treasury Statement for this fiscal year when there is one
   (otherwise zero on Oct. 1) and adds the past twelve months' pace, second by second, labeled as
-  an estimate. Under it, a year at a time: every person's share of a year's new debt, how much
-  the debt grows in a year, and the year's interest cost (the Treasury's gross interest expense
+  an estimate. Under it, a year at a time: every person's share of the deficit (the past twelve
+  months' deficit divided by the population), how much the debt grows in a year, and the year's interest cost (the Treasury's gross interest expense
   on the public debt, not the budget's net interest). The debt clock (`#clock`) uses the same
   annual figures.
 - **The main menu's scene and sound.** Behind the menu is an illustrated National Mall
@@ -53,6 +62,14 @@ budget adviser.
   are remembered, and have switches in Settings too. On phones the scene is a banner with the
   title in its sky, and the choices follow. The road map, the record (fact cards, ballot,
   medals, certificates) and Settings are pages of their own (`#levels`, `#record`, `#settings`).
+- **The field guide** (`#guide`, from the main menu): every chapter in full, each with the level
+  it goes with (read chapters are marked), and Sources & methods and the glossary inside it.
+  Every chapter's banner links back to the field guide and to Sources & methods.
+- **Uncle Sam speaks from one spot.** Every line, the level-complete pop-up's cheer included,
+  comes from his dock at the bottom (the pop-up moves up so it sits above him). A tap anywhere
+  slides him away, stops his voice and skips his line: a level step's button then reads
+  Continue (or what the step needs) instead of "Skip this narrative". Only the step's own
+  buttons decide for themselves.
 - **Ten levels on one road map.** Chapters explain one part of the budget each: his paycheck,
   his bills, back home, the structural gap, the credit card (debt), who writes the budget
   (Congress and the laws that moved deficits), and keeping his promises (Social Security).
@@ -261,8 +278,8 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   past year's pace.
 - **The debt clock** (`#clock`, and on the debt chapter): the Treasury's Debt to the Penny,
   carried forward second by second at the pace of the past twelve months, with each person's and
-  household's share of it; a year at a time, each person's and household's share of a year's new
-  debt, how much the debt grows in a year, and the year's interest cost (gross interest expense
+  household's share of it; a year at a time, each person's and household's share of the
+  deficit, how much the debt grows in a year, and the year's interest cost (gross interest expense
   on the public debt); what has been added since the page opened, and the legal debt limit with the room left (Daily Treasury Statement, Table
   III-C). The site fetches the latest figures from the Treasury's Fiscal Data API when it opens
   and every half hour after that; the ticking part is labeled as an estimate. (Other debt clocks,
@@ -318,7 +335,12 @@ finished, stars, first-try answers, medals) and one ballot per person, and "How 
 (`#results`, offered at the end of level 10) totals them: on balancethebudget.us in the site's
 Supabase database ([`supabase/`](supabase/README.md): row-level security, count-only totals),
 and on the claude.ai artifact in the artifact's shared database. Any other copy (a local build, a
-fork) stays offline and shows only the player's own results.
+fork) stays offline and shows only the player's own results. The page leads with figures and
+charts, few words: four headline figures; columns for how far players got (each level) and for
+each quick check right on the first try; a segmented bar for every vote; support and opposition
+for each policy card from a center line (the top 10, or all); and a meter for each medal. Every
+mark has a tooltip on hover and focus, every chart a table view with the full numbers, and the
+player's own levels and answers are marked.
 
 ## Run it
 

@@ -1,0 +1,61 @@
+{
+ "fetchedAt": "2026-11-09T03:41:24.730Z",
+ "items": [
+  {
+   "id": "cbo:https://www.cbo.gov/publication/62903",
+   "source": "CBO",
+   "title": "Cost estimate: S. 3639, SAT Streamlining Act",
+   "url": "https://www.cbo.gov/publication/62903",
+   "time": "2026-11-06T19:00:00.000Z",
+   "dateOnly": false
+  },
+  {
+   "id": "cbo:https://www.cbo.gov/publication/62902",
+   "source": "CBO",
+   "title": "Cost estimate: H.R. 8183, Modernizing Access to Talents, Credentials, and Hiring Act of 2026",
+   "url": "https://www.cbo.gov/publication/62902",
+   "time": "2026-11-04T20:28:00.000Z",
+   "dateOnly": false
+  },
+  {
+   "id": "cbo:https://www.cbo.gov/publication/62590",
+   "source": "CBO",
+   "title": "Legislation considered under suspension of the Rules of the House of Representatives during the week of November 9, 2026",
+   "url": "https://www.cbo.gov/publication/62590",
+   "time": "2026-11-04T18:24:00.000Z",
+   "dateOnly": false
+  },
+  {
+   "id": "cbo:https://www.cbo.gov/publication/62897",
+   "source": "CBO",
+   "title": "Cost estimate: H.R. 3937, Wabeno Economic Development Act",
+   "url": "https://www.cbo.gov/publication/62897",
+   "time": "2026-11-03T20:18:00.000Z",
+   "dateOnly": false
+  },
+  {
+   "id": "wh-actions:https://www.whitehouse.gov/presidential-actions/2026/10/adjusting-imports-of-robotics-industrial-machinery-and-their-parts-and-components-into-the-united-states/",
+   "source": "White House",
+   "title": "Adjusting Imports of Robotics, Industrial Machinery, and Their Parts and Components into the United States",
+   "url": "https://www.whitehouse.gov/presidential-actions/2026/10/adjusting-imports-of-robotics-industrial-machinery-and-their-parts-and-components-into-the-united-states/",
+   "time": "2026-10-28T20:03:48.000Z",
+   "dateOnly": false
+  },
+  {
+   "id": "wh-actions:https://www.whitehouse.gov/presidential-actions/2026/10/further-modifying-the-scope-of-products-of-canada-subject-to-the-additional-duties-imposed-to-offset-canadian-discrimination-against-the-commerce-of-the-united-states-with-respect-to-motor-vehicles/",
+   "source": "White House",
+   "title": "Further Modifying the Scope of Products of Canada Subject to the Additional Duties Imposed to Offset Canadian Discrimination Against the Commerce of the United States with Respect to Motor Vehicles",
+   "url": "https://www.whitehouse.gov/presidential-actions/2026/10/further-modifying-the-scope-of-products-of-canada-subject-to-the-additional-duties-imposed-to-offset-canadian-discrimination-against-the-commerce-of-the-united-states-with-respect-to-motor-vehicles/",
+   "time": "2026-10-23T19:51:09.000Z",
+   "dateOnly": false
+  },
+  {
+   "id": "wh-actions:https://www.whitehouse.gov/presidential-actions/2026/10/adjusting-imports-of-wind-turbines-and-their-parts-and-components-into-the-united-states/",
+   "source": "White House",
+   "title": "Adjusting Imports of Wind Turbines and Their Parts and Components into the United States",
+   "url": "https://www.whitehouse.gov/presidential-actions/2026/10/adjusting-imports-of-wind-turbines-and-their-parts-and-components-into-the-united-states/",
+   "time": "2026-10-22T19:32:11.000Z",
+   "dateOnly": false
+  }
+ ]
+}

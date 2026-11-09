@@ -85,5 +85,26 @@
   "title": "IMF Working Paper 23/63, Fiscal Consolidation: Taking Stock of Success Factors, Impact, and Design (2023)",
   "publisher": "International Monetary Fund",
   "url": "https://www.imf.org/-/media/files/publications/wp/2023/english/wpiea2023063-print-pdf.pdf"
+ },
+ {
+  "id": "news-wh",
+  "title": "Presidential Actions (RSS feed)",
+  "publisher": "The White House",
+  "url": "https://www.whitehouse.gov/presidential-actions/",
+  "note": "Executive orders, proclamations and memoranda. The main menu's Headlines line shows the ones about taxes, tariffs, spending, the budget or the debt, in their own words, with the time posted (Eastern). Other White House releases are left out. Feed: https://www.whitehouse.gov/presidential-actions/feed/"
+ },
+ {
+  "id": "news-cbo",
+  "title": "CBO Publications (RSS feed)",
+  "publisher": "Congressional Budget Office",
+  "url": "https://www.cbo.gov/most-recent",
+  "note": "Cost estimates and reports from Congress's nonpartisan budget office, newest first, with the time posted. Feed: https://www.cbo.gov/publications/all/rss.xml"
+ },
+ {
+  "id": "news-congress",
+  "title": "Senate Floor Today, House Floor Today, Bills Presented to the President (RSS feeds)",
+  "publisher": "Congress.gov, Library of Congress",
+  "url": "https://www.congress.gov/rss",
+  "note": "Spending and tax bills considered on each chamber's floor that day, and bills sent to the President. Read live in the visitor's browser on the public site, and when the site is built."
  }
 ]

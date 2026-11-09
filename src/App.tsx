@@ -39,6 +39,7 @@ import ClockPage from './game/DebtClock';
 import Together from './game/Together';
 import { activeChallenge } from './game/challenge';
 import DuelPage, { DuelsPage } from './game/Duel';
+import FieldGuide, { CHAPTER_LEVEL as CHAPTER_LEVEL_MAP } from './game/FieldGuide';
 import { activeDuel, DUEL_LEVEL, loadDuels } from './game/duel';
 import { activeRoom } from './game/rooms';
 import { JourneyProvider, useJourney } from './game/state';
@@ -104,14 +105,12 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['levels', 'The road map'],
   ['record', 'Your record'],
   ['settings', 'Settings'],
+  ['guide', 'The field guide'],
   ...STOPS.map((l) => [l.id, `Level ${l.n}: ${l.title}`]),
 ]);
 
 // Each field-guide chapter belongs to a level, so readers can jump into the game from any page.
-const CHAPTER_LEVEL: Partial<Record<Route, string>> = {
-  revenue: 'level-1', receipt: 'level-1', overview: 'level-2', spending: 'level-2', state: 'level-3',
-  gap: 'level-4', debt: 'level-6', process: 'level-7', laws: 'level-7', 'social-security': 'level-9',
-};
+const CHAPTER_LEVEL = CHAPTER_LEVEL_MAP as Partial<Record<Route, string>>;
 
 const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   journey: () => <Journey />,
@@ -156,6 +155,7 @@ const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   levels: () => <LevelsPage />,
   record: () => <RecordPage />,
   settings: () => <SettingsPage />,
+  guide: () => <FieldGuide />,
 };
 
 function DeskPage({ id }: { id: string }) {
@@ -220,8 +220,11 @@ function ChapterBanner({ route }: { route: Route }) {
   const l = LEVELS.find((x) => x.id === id)!;
   return (
     <div className="chapter-banner">
-      <span className="small">Field guide for <strong>Level {l.n}: {l.title}</strong>{j.done.includes(id) ? ' (complete)' : ''}</span>
-      <a className="small" href={'#' + id}>{j.done.includes(id) ? 'Replay the level' : 'Play the level'}</a>
+      <span className="small"><a href="#guide">Field guide</a> for <strong>Level {l.n}: {l.title}</strong>{j.done.includes(id) ? ' (complete)' : ''}</span>
+      <span className="chapter-banner-links small">
+        <a href={'#' + id}>{j.done.includes(id) ? 'Replay the level' : 'Play the level'}</a>
+        <a href="#sources">Sources &amp; methods</a>
+      </span>
     </div>
   );
 }

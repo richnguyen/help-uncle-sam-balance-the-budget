@@ -15,7 +15,8 @@
     "voice:collect": "node scripts/voice/collect.mjs http://localhost:5173/",
     "voice:synth": "python3 scripts/voice/synth.py scripts/voice/lines.json ${KOKORO_DIR:-.kokoro} public/voice src/data/generated/voice.json",
     "test:db": "node supabase/tests/rls.test.mjs",
-    "previews": "node scripts/make-previews.mjs http://localhost:5173/"
+    "previews": "node scripts/make-previews.mjs http://localhost:5173/",
+    "news": "node scripts/fetch-news.mjs"
   },
   "dependencies": {
     "d3": "7.9.0",

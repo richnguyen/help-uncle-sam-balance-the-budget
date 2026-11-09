@@ -91,6 +91,17 @@ export function SamDockView({ route }: { route: string }) {
   useActionBarHeight();
   const { line, shown, hide, show } = dock;
   const speaking = !!line && n.speakingId === line.owner;
+  // How tall he stands while he's up (--samh), so a pop-up can sit above him instead of under him.
+  useEffect(() => {
+    const root = document.documentElement;
+    const inner = box.current?.querySelector<HTMLElement>('.samdock-inner');
+    if (!shown || !line || !inner) { root.style.setProperty('--samh', '0px'); return; }
+    const set = () => root.style.setProperty('--samh', `${Math.round(inner.getBoundingClientRect().height)}px`);
+    set();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(set) : null;
+    ro?.observe(inner);
+    return () => { ro?.disconnect(); root.style.setProperty('--samh', '0px'); };
+  }, [shown, !!line]); // eslint-disable-line react-hooks/exhaustive-deps
   // He waves hello only on the first line after sliding in; each later line gets just a reaction.
   const [enterSeq, setEnterSeq] = useState<number | null>(null);
   useEffect(() => {
@@ -98,12 +109,14 @@ export function SamDockView({ route }: { route: string }) {
     setEnterSeq((cur) => (cur == null ? line.seq : cur));
   }, [shown, line?.seq]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // A tap anywhere else slides him away, except on a level step's own bar, which decides itself.
+  // A tap anywhere slides him away and stops his voice, so it skips his line: the step's button
+  // then reads Continue. Only a level step's own buttons decide for themselves (their first tap
+  // is the skip), and the switch that turns his voice on.
   useEffect(() => {
     if (!shown) return;
     const away = (e: PointerEvent) => {
       const t = e.target as Element | null;
-      if (!t || box.current?.contains(t) || t.closest('.samdock-peek, [data-sam-keep], .ab-panel, .appbar')) return;
+      if (!t || box.current?.contains(t) || t.closest('.samdock-peek, [data-sam-keep] button, [data-sam-keep] a, .ab-panel, .stb-voice')) return;
       hide();
     };
     window.addEventListener('pointerdown', away, true);

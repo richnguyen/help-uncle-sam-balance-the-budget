@@ -1,5 +1,7 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import { PageHead, Section, Stat } from '../components/ui';
+import { ChartFrame, focusPoint, Legend, TipRow, TipTitle, useTooltip, useWidth } from '../components/ui';
+import { SegBar } from '../components/charts';
+import { PageHead, Section } from '../components/ui';
 import { geo } from '../data';
 import { backendOn, rpc } from '../lib/backend';
 import { pct } from '../lib/format';
@@ -13,8 +15,91 @@ import { MEDALS } from './medals';
 import { useJourney } from './state';
 
 // "How everyone played": totals from every player's anonymous record and every ballot, shown at
-// the end of the game, plus rankings of policy cards and states (never of people). Each row
-// states its count, so small numbers are never mistaken for a poll.
+// the end of the game, plus rankings of policy cards and states (never of people). Charts first,
+// few words: every chart has a tooltip on each mark and a table view with the full numbers, so
+// small counts are never mistaken for a poll.
+
+// The categorical order (validated: colorblind-safe, both themes), with the ink each fill takes.
+const CAT = [
+  { color: 'var(--c-ss)', ink: '#fff' }, { color: 'var(--c-medicare)', ink: '#0b0b0b' }, { color: 'var(--c-health)', ink: '#0b0b0b' },
+  { color: 'var(--c-income)', ink: '#0b0b0b' }, { color: 'var(--c-defense)', ink: '#fff' },
+];
+
+interface Col { id: string; x: string; value: number; n: number; tip: ReactNode; aria: string; mine?: boolean }
+/** Columns from one baseline (0–100%): one hue, 4px rounded caps, the highest and lowest labeled, a tooltip on each. */
+function Columns({ items, label, height = 210 }: { items: Col[]; label: string; height?: number }) {
+  const [ref, w] = useWidth<HTMLDivElement>(640);
+  const { show, hide } = useTooltip();
+  const W = Math.max(280, w), H = height, ml = 40, mr = 6, mt = 20, mb = 34;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const band = iw / Math.max(1, items.length);
+  const bw = Math.min(24, band * 0.62);
+  const y = (v: number) => mt + ih * (1 - Math.max(0, Math.min(1, v)));
+  const counted = items.map((it, i) => ({ it, i })).filter((x) => x.it.n > 0);
+  const hi = counted.reduce<number | null>((b, x) => (b == null || x.it.value > items[b].value ? x.i : b), null);
+  const lo = counted.reduce<number | null>((b, x) => (b == null || x.it.value < items[b].value ? x.i : b), null);
+  return (
+    <div ref={ref} className="rcols">
+      <svg width={W} height={H} role="img" aria-label={label}>
+        {[0, 0.5, 1].map((t) => (
+          <g key={t}>
+            <line x1={ml} x2={W - mr} y1={y(t)} y2={y(t)} className="rcols-grid" />
+            <text x={ml - 6} y={y(t) + 4} textAnchor="end" className="rcols-tick">{Math.round(t * 100)}%</text>
+          </g>
+        ))}
+        {items.map((it, i) => {
+          const cx = ml + band * (i + 0.5), top = y(it.value), base = y(0), h = base - top, r = Math.min(4, h), x0 = cx - bw / 2;
+          const tipAt = (e: { clientX: number; clientY: number }) => show(it.tip, e.clientX, e.clientY);
+          return (
+            <g key={it.id} className="rcol" tabIndex={0} aria-label={it.aria} onPointerMove={tipAt} onPointerLeave={hide}
+              onFocus={(e) => { const pt = focusPoint(e.currentTarget); show(it.tip, pt.x, pt.y); }} onBlur={hide}>
+              <rect x={cx - band / 2} y={mt - 10} width={band} height={ih + 10} className="rcol-hit" />
+              {h > 0.5 && <path className="rcol-bar" d={`M${x0} ${base} V${top + r} Q${x0} ${top} ${x0 + r} ${top} H${x0 + bw - r} Q${x0 + bw} ${top} ${x0 + bw} ${top + r} V${base} Z`} />}
+              {(i === hi || i === lo) && <text x={cx} y={top - 6} textAnchor="middle" className="rcols-val">{Math.round(it.value * 100)}%</text>}
+              <text x={cx} y={H - mb + 16} textAnchor="middle" className="rcols-x">{it.x}</text>
+              {it.mine && <circle cx={cx} cy={H - mb + 27} r={3.5} className="rcol-mine" />}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/** Support (right) and opposition (left) for each card, from a center line; a tooltip on each row. */
+function Diverging({ rows }: { rows: { id: string; name: string; side: string; yes: number; no: number; mine: string }[] }) {
+  const { show, hide } = useTooltip();
+  return (
+    <ol className="rdiv">
+      {rows.map((r) => {
+        const n = r.yes + r.no;
+        const tip = <><TipTitle>{r.name}</TipTitle><TipRow color="var(--vote-yes)" line={false} label="Support" value={n ? `${pct(r.yes / n, 0)} (${r.yes})` : '—'} /><TipRow color="var(--vote-no)" line={false} label="Oppose" value={n ? `${pct(r.no / n, 0)} (${r.no})` : '—'} />{r.mine && <TipRow label="You" value={r.mine} />}</>;
+        return (
+          <li key={r.id} className="rdiv-row" tabIndex={0} aria-label={`${r.name}: ${n ? `${pct(r.yes / n, 0)} support, ${pct(r.no / n, 0)} oppose, ${n} votes` : 'no votes yet'}`}
+            onPointerMove={(e) => show(tip, e.clientX, e.clientY)} onPointerLeave={hide}
+            onFocus={(e) => { const pt = focusPoint(e.currentTarget); show(tip, pt.x, pt.y); }} onBlur={hide}>
+            <span className="rdiv-name"><span className="rcard-kind" data-side={r.side}>{r.side === 'revenue' ? 'Tax' : 'Cut'}</span>{r.name}{r.mine && <span className="rrow-you">you</span>}</span>
+            <span className="rdiv-bars" aria-hidden="true">
+              <span className="rdiv-left"><span style={{ width: `${n ? (r.no / n) * 100 : 0}%` }} /></span>
+              <span className="rdiv-right"><span style={{ width: `${n ? (r.yes / n) * 100 : 0}%` }} /></span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** A headline number. */
+function Fig({ label, value, note, hero = false }: { label: string; value: ReactNode; note?: ReactNode; hero?: boolean }) {
+  return (
+    <div className={'rfig' + (hero ? ' rfig-hero' : '')}>
+      <span className="rfig-label">{label}</span>
+      <strong className="rfig-value">{value}</strong>
+      {note && <span className="rfig-note">{note}</span>}
+    </div>
+  );
+}
 
 function Row({ label, share, note, mine, icon }: { label: ReactNode; share: number; note: string; mine?: boolean; icon?: ReactNode }) {
   return (
@@ -23,18 +108,6 @@ function Row({ label, share, note, mine, icon }: { label: ReactNode; share: numb
       <span className="rrow-track" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(1, share)) * 100}%` }} /></span>
       <span className="rrow-val num">{note}</span>
     </li>
-  );
-}
-
-function Split({ yes, no, mine }: { yes: number; no: number; mine?: 'support' | 'oppose' | '' }) {
-  const n = yes + no;
-  return (
-    <span className="rsplit">
-      <span className="rsplit-track" aria-label={`${yes} support, ${no} oppose`}>
-        {n ? <><span className="yes" style={{ flex: `${yes} 0 0` }} /><span className="no" style={{ flex: `${no} 0 0` }} /></> : <span style={{ flex: 1 }} />}
-      </span>
-      <span className="small num">{n ? `${pct(yes / n, 0)} support · ${pct(no / n, 0)} oppose · ${n} vote${n === 1 ? '' : 's'}` : 'No votes yet'}{mine ? ` · you: ${mine}` : ''}</span>
-    </span>
   );
 }
 
@@ -100,123 +173,129 @@ export default function Results() {
     return sb - sa;
   });
 
+  const [allCards, setAllCards] = useState(false);
+  const quizCols: (Col & { question: string })[] = LEVELS.flatMap((l) => l.steps.filter((st) => st.quiz).map((st, k) => {
+    const q = st.quiz!;
+    const f = t.firstTry[q.id] ?? { right: 0, n: 0 };
+    const me = j.quiz[q.id];
+    const v = f.n ? f.right / f.n : 0;
+    return { id: q.id, question: q.question, x: `${l.n}${'abcdef'[k]}`, value: v, n: f.n, mine: !!(me?.correct && me.tries === 1), aria: `Level ${l.n}: ${q.question} ${f.n ? `${pct(v, 0)} right on the first try, of ${f.n}` : 'no answers yet'}`, tip: <><TipTitle>Level {l.n}: {q.question}</TipTitle><TipRow color="var(--c-emph)" line={false} label="Right on the first try" value={f.n ? `${pct(v, 0)} of ${f.n}` : 'no answers yet'} /></> };
+  }));
+  const levelCols: Col[] = STOPS.map((s) => {
+    const fin = t.done[s.id] ?? 0;
+    const st = t.stars[s.id];
+    const avg = st && st.n ? st.sum / st.n : 0;
+    return { id: s.id, x: String(s.n), value: share(fin), n: n, mine: j.done.includes(s.id), aria: `Level ${s.n}, ${s.title}: ${pct(share(fin), 0)} of players finished it`, tip: <><TipTitle>Level {s.n}: {s.title}</TipTitle><TipRow color="var(--c-emph)" line={false} label="Finished it" value={`${pct(share(fin), 0)} · ${fin}`} /><TipRow label="Average stars" value={fin && st?.n ? `★ ${avg.toFixed(1)}` : '—'} /></> };
+  });
+  const cardRows = cards.map(({ o, t: tl }) => ({ id: o.id, name: o.name, side: o.side, yes: tl.support, no: tl.oppose, mine: myOption(o.id) }));
+  const youDot = <span className="rlegend-you"><span className="rcol-mine-key" aria-hidden="true" /> you</span>;
+
   return (
     <div className="results">
-      <PageHead
-        eyebrow="The game · results"
-        title="How everyone played"
-        lede={shared
-          ? <>Results from everyone who has played {where}. Records are anonymous: no names, only levels, stars, first-try answers, medals, and votes.</>
-          : <>Your own results. Results from other players are collected on the public site, balancethebudget.us, and on the shared copy of this game on claude.ai; a page on its own cannot see what other visitors did.</>}
-      />
-      {shared && c.canWrite === false && <div className="callout small">You can see everyone’s results, but adding your own needs Contributor access to this page; ask the person who shared it.</div>}
+      <PageHead eyebrow="The game · results" title="How everyone played"
+        lede={shared ? <>Everyone who has played {where}, at a glance. Anonymous: no names, ever.</> : <>Your own results, in this browser. Everyone’s are on the public site, balancethebudget.us.</>} />
+      {shared && c.canWrite === false && <div className="callout small">You can see everyone’s results; adding yours needs Contributor access to this page.</div>}
       {(c.error || v.error) && <div className="callout small">{c.error ?? v.error}</div>}
       {c.loading && shared && <p className="small muted">Loading results…</p>}
-      {c.source === 'site' && <div className="callout small">Build one budget with everyone: <a href="#peoples">the People’s Budget</a> takes one move a day.</div>}
 
-      <div className="grid-4">
-        <Stat label={shared ? 'Players' : 'Players counted here'} value={`${n}`} note={shared ? 'who finished a level or answered a question' : 'just you, in this browser'} />
-        <Stat label={t.finishedAll != null ? `Finished all ${STOPS.length} levels` : `Finished level ${last.n}`} value={`${finishedAll}`} note={n ? `${pct(share(finishedAll), 0)} of players` : '—'} />
-        <Stat label="Average stars" value={n ? avgStars.toFixed(1) : '—'} note={`out of ${MAX_STARS}`} />
-        <Stat label="Ballots cast" value={`${v.available ? v.voters : Object.keys(j.choices).filter((k) => j.choices[k]).length ? 1 : 0}`} note={v.available ? 'one per person' : 'yours, in this browser'} />
+      <div className="rfigs">
+        <Fig hero label={shared ? 'Players' : 'Players here'} value={n.toLocaleString('en-US')} note={shared ? undefined : 'just you'} />
+        <Fig label={t.finishedAll != null ? `Finished all ${STOPS.length}` : `Finished level ${last.n}`} value={n ? pct(share(finishedAll), 0) : '—'} note={`${finishedAll} player${finishedAll === 1 ? '' : 's'}`} />
+        <Fig label="Average stars" value={n ? avgStars.toFixed(1) : '—'} note={`of ${MAX_STARS}`} />
+        <Fig label="Ballots" value={`${v.available ? v.voters : Object.keys(j.choices).filter((k) => j.choices[k]).length ? 1 : 0}`} note={v.available ? 'one per person' : 'yours'} />
       </div>
 
-      <Section id="levels" title="How far players got" sub="Share of players who finished each level, and their average stars on it.">
-        <ol className="rlist">
-          {STOPS.map((s) => {
-            const fin = t.done[s.id] ?? 0;
-            const st = t.stars[s.id];
-            const avg = st && st.n ? st.sum / st.n : 0;
-            return <Row key={s.id} icon={<span className="rrow-icon"><LevelIcon id={s.icon} size={14} /></span>} label={`${s.n}. ${s.title}`} share={share(fin)} note={`${pct(share(fin), 0)} · ★ ${fin && st?.n ? avg.toFixed(1) : '—'}`} mine={j.done.includes(s.id)} />;
-          })}
-        </ol>
-      </Section>
+      <ChartFrame title="How far players got" sub={<>Share of players who finished each level {youDot}</>}
+        table={{ columns: [{ key: 'l', label: 'Level' }, { key: 'f', label: 'Finished', align: 'r' }, { key: 's', label: 'Average stars', align: 'r' }], rows: STOPS.map((s) => { const fin = t.done[s.id] ?? 0; const st = t.stars[s.id]; return { l: `${s.n}. ${s.title}`, f: `${pct(share(fin), 0)} (${fin})`, s: fin && st?.n ? (st.sum / st.n).toFixed(1) : '—' }; }) }}>
+        <Columns items={levelCols} label={`Share of players who finished each of the ${STOPS.length} levels`} />
+      </ChartFrame>
 
-      {ranks && ranks.cards.length > 0 && (
-        <Section id="card-ranks" title={`The cards players reach for on level ${last.n}`} sub={`Share of players’ level ${last.n} plans that use each card (each player’s latest plan counts once).`}>
-          <ol className="rlist">
-            {ranks.cards.slice(0, 12).map((r) => {
-              const o = CARD_NAME[r.card];
-              if (!o) return null;
-              return <Row key={r.card} label={<><span className="rcard-kind" data-side={o.side}>{o.side === 'revenue' ? 'Tax' : 'Cut'}</span>{o.name}</>} share={Number(r.share)} note={`${pct(Number(r.share), 0)} · ${r.plans}`} mine={!!myPlan?.ids.includes(r.card)} />;
-            })}
-          </ol>
-        </Section>
-      )}
+      <ChartFrame title="Right on the first try" sub={<>Each quick check, by level (1a is level 1’s first) {youDot}</>}
+        table={{ columns: [{ key: 'q', label: 'Question', wrap: true }, { key: 'r', label: 'First try', align: 'r' }], rows: quizCols.map((c2) => ({ q: <><span className="muted">{c2.x}</span> {c2.question}</>, r: c2.n ? `${pct(c2.value, 0)} of ${c2.n}` : '—' })) }}>
+        <Columns items={quizCols} label="Share of players right on the first try, for each quick check" />
+      </ChartFrame>
 
-      {ranks && (
-        <Section id="state-ranks" title="States as teams" sub="Average levels finished by the players in each state who picked one. A state appears once it has 5 players.">
-          {ranks.states.length ? (
-            <ol className="rlist">
-              {ranks.states.map((r) => <Row key={r.state} label={STATE_NAME[r.state] ?? r.state} share={Number(r.avg_levels) / STOPS.length} note={`${Number(r.avg_levels).toFixed(1)} levels · ${r.players} players`} mine={r.state === myState} />)}
-            </ol>
-          ) : <p className="small muted">No state has 5 players yet. Pick your state on level 3 to put yours on the board.</p>}
-        </Section>
-      )}
-
-      <Section id="quiz" title="Quick checks: right on the first try" sub="Of the players who answered each question.">
-        <ol className="rlist">
-          {LEVELS.flatMap((l) => l.steps.filter((st) => st.quiz).map((st) => {
-            const q = st.quiz!;
-            const f = t.firstTry[q.id] ?? { right: 0, n: 0 };
-            const me = j.quiz[q.id];
-            return <Row key={q.id} label={<><span className="muted">L{l.n}</span> {q.question}</>} share={f.n ? f.right / f.n : 0} note={f.n ? `${pct(f.right / f.n, 0)} of ${f.n}` : 'no answers yet'} mine={!!(me?.correct && me.tries === 1)} />;
-          }))}
-        </ol>
-      </Section>
-
-      <Section id="medals" title="Medals" sub="Share of players who earned each one.">
-        <ol className="rlist">
-          {MEDALS.map((m) => {
-            const k = t.medals[m.id] ?? 0;
-            return <Row key={m.id} label={m.name} share={share(k)} note={`${pct(share(k), 0)} · ${k}`} mine={j.medals.includes(m.id)} />;
-          })}
-        </ol>
-      </Section>
-
-      <Section id="level-votes" title="How everyone voted on each level’s question" sub={v.available ? `${v.voters} ${v.voters === 1 ? 'ballot' : 'ballots'} so far.` : 'Your votes, in this browser.'}>
+      <Section id="level-votes" title="How everyone voted" sub={v.available ? `${v.voters} ${v.voters === 1 ? 'ballot' : 'ballots'}` : 'Your votes'}>
         <div className="rvotes">
           {levelVotes.map(({ level, vote }) => {
             if (vote.kind === 'option') {
               const o = OPTIONS_DATA.options.find((x) => x.id === vote.optionId)!;
               const tl = optionTally(o.id);
+              const tot = tl.support + tl.oppose;
+              const parts = [{ label: 'Support', value: tl.support, color: 'var(--vote-yes)', ink: '#fff' }, { label: 'Oppose', value: tl.oppose, color: 'var(--vote-no)', ink: '#0b0b0b' }];
               return (
                 <article key={o.id} className="card rvote">
-                  <div className="stat-label">Level {level.n} · policy option</div>
+                  <span className="rvote-tag">Level {level.n}</span>
                   <h3 className="rvote-q">{o.name}</h3>
-                  <Split yes={tl.support} no={tl.oppose} mine={myOption(o.id)} />
+                  {tot ? <SegBar parts={parts} label={o.name} format={(x) => `${x} vote${x === 1 ? '' : 's'}`} /> : <div className="rvote-empty">No votes yet</div>}
+                  <Legend items={parts.map((p) => ({ label: p.label, color: p.color }))} />
+                  <span className="rvote-n">{tot} vote{tot === 1 ? '' : 's'}{myOption(o.id) ? ` · you: ${myOption(o.id)}` : ''}</span>
                 </article>
               );
             }
             const tl = issueTally(vote.id);
             const tot = Object.values(tl).reduce((a, b) => a + b, 0);
             const mineV = myIssue(vote.id);
+            const parts = vote.choices.map((ch, k) => ({ label: ch.label, value: tl[ch.value] ?? 0, ...CAT[k % CAT.length] }));
             return (
               <article key={vote.id} className="card rvote">
-                <div className="stat-label">Level {level.n} · question</div>
+                <span className="rvote-tag">Level {level.n}</span>
                 <h3 className="rvote-q">{vote.question}</h3>
-                <ol className="rlist">
-                  {vote.choices.map((ch) => <Row key={ch.value} label={ch.label} share={tot ? (tl[ch.value] ?? 0) / tot : 0} note={tot ? `${pct((tl[ch.value] ?? 0) / tot, 0)} · ${tl[ch.value] ?? 0}` : '0'} mine={mineV === ch.value} />)}
-                </ol>
+                {tot ? <SegBar parts={parts.filter((p) => p.value > 0)} label={vote.question} format={(x) => `${x} vote${x === 1 ? '' : 's'}`} /> : <div className="rvote-empty">No votes yet</div>}
+                <Legend items={parts.map((p) => ({ label: p.label, color: p.color }))} />
+                <span className="rvote-n">{tot} vote{tot === 1 ? '' : 's'}{mineV ? ` · you: ${vote.choices.find((ch) => ch.value === mineV)?.label ?? mineV}` : ''}</span>
               </article>
             );
           })}
         </div>
       </Section>
 
-      <Section id="cards" title="Every policy card" sub="Support and opposition for each option CBO has priced, most supported first.">
-        <ol className="rcards">
-          {cards.map(({ o, t: tl }) => (
-            <li key={o.id} className="rcard">
-              <span className="rcard-name"><span className="rcard-kind" data-side={o.side}>{o.side === 'revenue' ? 'Tax' : 'Cut'}</span>{o.name}</span>
-              <Split yes={tl.support} no={tl.oppose} mine={myOption(o.id)} />
-            </li>
-          ))}
-        </ol>
+      <ChartFrame title="Every policy card" sub="Support and opposition, most supported first"
+        legend={<Legend items={[{ label: 'Oppose', color: 'var(--vote-no)' }, { label: 'Support', color: 'var(--vote-yes)' }]} />}
+        table={{ columns: [{ key: 'c', label: 'Card', wrap: true }, { key: 'y', label: 'Support', align: 'r' }, { key: 'n', label: 'Oppose', align: 'r' }], rows: cardRows.map((r) => ({ c: r.name, y: String(r.yes), n: String(r.no) })) }}>
+        <Diverging rows={allCards ? cardRows : cardRows.slice(0, 10)} />
+        {cardRows.length > 10 && <button type="button" className="link-btn rdiv-more" onClick={() => setAllCards(!allCards)}>{allCards ? 'Show the top 10' : `Show all ${cardRows.length} cards`}</button>}
+      </ChartFrame>
+
+      {ranks && ranks.cards.length > 0 && (
+        <Section id="card-ranks" title={`In players’ level ${last.n} plans`} sub="Share of plans using each card">
+          <ol className="rlist">
+            {ranks.cards.slice(0, 8).map((r) => {
+              const o = CARD_NAME[r.card];
+              if (!o) return null;
+              return <Row key={r.card} label={<><span className="rcard-kind" data-side={o.side}>{o.side === 'revenue' ? 'Tax' : 'Cut'}</span>{o.name}</>} share={Number(r.share)} note={pct(Number(r.share), 0)} mine={!!myPlan?.ids.includes(r.card)} />;
+            })}
+          </ol>
+        </Section>
+      )}
+
+      {ranks && ranks.states.length > 0 && (
+        <Section id="state-ranks" title="States as teams" sub="Average levels finished (states with 5 or more players)">
+          <ol className="rlist">
+            {ranks.states.slice(0, 8).map((r) => <Row key={r.state} label={STATE_NAME[r.state] ?? r.state} share={Number(r.avg_levels) / STOPS.length} note={`${Number(r.avg_levels).toFixed(1)}`} mine={r.state === myState} />)}
+          </ol>
+        </Section>
+      )}
+
+      <Section id="medals" title="Medals" sub="Share of players who earned each">
+        <ul className="rmedals">
+          {MEDALS.map((m) => {
+            const k = t.medals[m.id] ?? 0;
+            const got = j.medals.includes(m.id);
+            return (
+              <li key={m.id} className="rmedal" data-got={got || undefined} title={m.desc}>
+                <span className="rmedal-disc" aria-hidden="true">{got ? '★' : ''}</span>
+                <span className="rmedal-name">{m.name}</span>
+                <span className="rmedal-meter" aria-hidden="true"><span style={{ width: `${share(k) * 100}%` }} /></span>
+                <span className="rmedal-val">{n ? pct(share(k), 0) : '—'}</span>
+              </li>
+            );
+          })}
+        </ul>
       </Section>
 
-      {c.source === 'site' && <p className="small"><a href="#stats">Share stats: how sharing brings in new players</a></p>}
-      <p className="small muted">This is an informal tally of the people who played {where}, not a scientific survey: they chose to play, and each counts once. Percentages of a handful of players move a lot with each new one.</p>
+      {c.source === 'site' && <p className="small"><a href="#peoples">The People’s Budget</a> · <a href="#stats">Share stats</a></p>}
+      <p className="small muted">An informal tally of people who chose to play, not a survey.</p>
     </div>
   );
 }

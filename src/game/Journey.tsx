@@ -2,7 +2,7 @@ import { type JSX, useEffect, useRef, useState } from 'react';
 import { Stars } from '../components/game';
 import { PageHead, Section } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
-import { budget, SOURCES } from '../data';
+import { budget } from '../data';
 import { moneyWords } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
 import { useVotes } from '../lib/votes';
@@ -13,6 +13,8 @@ import { useDebtClock } from './DebtClock';
 import { DeficitClock } from './DeficitClock';
 import { duckMusic, setMusicWanted, startMusic, stopMusic, useMusicWanted, whenAudioAllowed } from './music';
 import { useNarrator } from './voice';
+import { mergeNews, when } from './news';
+import { useLive } from '../lib/live';
 import { backendOn } from '../lib/backend';
 import { MEDALS } from './medals';
 import { GAME_NAME, SITE_URL } from './share';
@@ -43,8 +45,6 @@ const NEWS = [
   { date: '2026-11-08', title: 'Duel a friend on level 10', body: 'Two plans built blind, three rounds, and fewer cards breaks a tie.', href: '#together' },
   { date: '2026-11-07', title: 'The debt clock is live', body: 'Ticking from the Treasury’s own count, with the room left under the debt limit.', href: '#clock' },
 ];
-const shortDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-const retrieved = SOURCES.map((x) => x.retrieved).filter(Boolean).sort().at(-1);
 
 function useProgress() {
   const j = useJourney();
@@ -99,7 +99,7 @@ export default function Journey() {
     { href: '#levels', title: 'Levels', sub: `The road map · ${done.length} of ${STOPS.length} done · ★ ${stars} of ${MAX_STARS}`, icon: 'map' },
     { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
     { href: '#daily', title: 'The Daily Dollar', sub: played && played.length >= ROUNDS ? `#${dayNumber(key)} done: ${played.filter(Boolean).length} of ${ROUNDS} · next in ${untilNext()}` : `#${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''} · five calls, about a minute`, icon: 'daily' },
-    { href: '#overview', title: 'Field guide', sub: 'Every chapter in full, no game needed', icon: 'book' },
+    { href: '#guide', title: 'Field guide', sub: 'Every chapter in full, with sources and methods', icon: 'book' },
     { href: '#settings', title: 'Settings', sub: 'Text size, theme, Uncle Sam’s voice, music', icon: 'gear' },
   ];
   return (
@@ -133,30 +133,7 @@ export default function Journey() {
         </nav>
         <div className="menu-deficit"><DeficitClock /></div>
       </div>
-      {/* Just below: what's new in the game, and the small things. */}
-      <section className="menu-live" aria-label="What’s new">
-        <section className="card menu-whatsnew" aria-labelledby="whatsnew-t">
-          <span className="stat-label" id="whatsnew-t">What’s new</span>
-          {NEWS.map((x) => (
-            <a key={x.title} className="today-row" href={x.href}>
-              <strong>{x.title}</strong>
-              <span className="small muted"><time dateTime={x.date}>{shortDate(x.date)}</time> · {x.body}</span>
-            </a>
-          ))}
-        </section>
-      </section>
-      <footer className="menu-foot">
-        <nav className="menu-corner" aria-label="More">
-          <a href="#record"><MenuIcon id="record" size={16} /> Your record</a>
-          <a href="#results"><MenuIcon id="chart" size={16} /> How everyone played</a>
-          <a href="#clock"><MenuIcon id="clock" size={16} /> The debt clock</a>
-        </nav>
-        <div className="menu-corner menu-corner-right">
-          <a href="#sources"><MenuIcon id="doc" size={16} /> Sources &amp; methods</a>
-          <span className="small muted">Official data from the Treasury, CBO, Census, and SSA{retrieved ? `, updated ${shortDate(retrieved.slice(0, 10))}` : ''}</span>
-        </div>
-      </footer>
-      {/* Uncle Sam in his usual place at the bottom, standing on the Today strip. */}
+      {/* Uncle Sam in his usual place at the bottom, standing on the Headlines line. */}
       <SamSays mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
         {byName(greeting, name)}
       </SamSays>
@@ -372,12 +349,15 @@ function TodayStrip() {
   const clock = useDebtClock();
   const limitWatch = clock.monthsLeft != null && clock.monthsLeft < 6;
   // The items, once: each a link, in one line.
-  const items: { href: string; title: string; body: string; news?: boolean }[] = [];
+  const items: { href: string; title: string; body: string; news?: boolean; time?: string }[] = [];
+  // Official announcements about spending and taxes, newest first, each with its source and time.
+  const live = useLive();
+  const official = mergeNews(live.news).slice(0, 8);
   if (due && due.kind === 'shutdown') items.push({ href: '#process', news: true, title: `Shutdown watch: funding runs out ${due.days === 0 ? 'at midnight tonight' : `after ${longDate(due.date)}`} (${inDays(due.days)})`, body: `${due.what}${theme?.id === 'shutdown' ? '' : ' The week before, the Daily Dollar is about what Congress pays for each year.'}` });
   if (limitWatch) items.push({ href: '#clock', news: true, title: `Debt limit watch: ${clock.monthsLeft! < 1 ? 'less than a month' : `about ${Math.round(clock.monthsLeft!)} month${Math.round(clock.monthsLeft!) === 1 ? '' : 's'}`} of room left`, body: `Uncle Sam can borrow about ${moneyWords(clock.room!, 0)} more before he reaches the legal limit. Then the Treasury’s workarounds buy a little time, and Congress has to act.` });
   items.push({ href: '#daily', title: `The Daily Dollar #${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''}`, body: `${played && played.length >= ROUNDS ? `You got ${right} of ${ROUNDS}. The next one is ready in ${untilNext()}.` : theme ? `${EDITION_ABOUT[theme.id]} this week. Today’s puzzle: five calls, about a minute.` : 'Today’s puzzle is ready: five higher-or-lower calls, about a minute.'}${upcoming ? ` Coming up: ${upcoming.name}, ${span(upcoming)}.` : ''}` });
   if (backendOn()) items.push({ href: '#peoples', title: 'The People’s Budget', body: 'Your one move for today: push one card in or out of everyone’s budget.' });
-  for (const x of NEWS) items.push({ href: x.href, title: `New: ${x.title}`, body: x.body });
+  for (const x of NEWS) items.push({ href: x.href, title: x.title, body: x.body, time: x.date });
   // Like a news channel's crawl: one line, right to left, looping without a seam (the line is
   // drawn twice). Its speed stays the same whatever its length. It pauses under the pointer, on
   // keyboard focus, or with the pause button; with less motion asked for, it holds still and
@@ -394,22 +374,34 @@ function TodayStrip() {
     ro?.observe(el);
     return () => ro?.disconnect();
   }, []);
+  // The deadlines first, then the official news, then today's puzzle and what's new in the game.
+  const deadlines = items.filter((x) => x.news), rest = items.filter((x) => !x.news);
+  const game = (x: (typeof items)[number], copy: boolean) => (
+    <a key={x.href + x.title} className={'ticker-item' + (x.news ? ' today-news' : '')} href={x.href} tabIndex={copy ? -1 : undefined}>
+      {x.time && <time className="ticker-when" dateTime={x.time}>{when(x.time + 'T12:00:00-05:00', true)}</time>}
+      <strong>{x.title}</strong> <span>{x.body}</span>
+    </a>
+  );
   const line = (copy: boolean) => (
     <span className="ticker-set" ref={copy ? undefined : set} aria-hidden={copy || undefined}>
-      {items.map((x) => (
-        <a key={x.href + x.title} className={'ticker-item' + (x.news ? ' today-news' : '')} href={x.href} tabIndex={copy ? -1 : undefined}>
-          <strong>{x.title}</strong> <span>{x.body}</span>
+      {deadlines.map((x) => game(x, copy))}
+      {official.map((x) => (
+        <a key={x.id} className="ticker-item ticker-official" href={x.url} target="_blank" rel="noopener noreferrer" tabIndex={copy ? -1 : undefined}>
+          <span className="ticker-src">{x.source}</span>
+          <time className="ticker-when" dateTime={x.time}>{when(x.time, x.dateOnly)}</time>
+          <strong>{x.title}</strong>
         </a>
       ))}
+      {rest.map((x) => game(x, copy))}
     </span>
   );
   return (
-    <section className="menu-strip ticker" aria-label="Today" data-paused={paused || undefined}>
-      <span className="strip-label" aria-hidden="true">Today</span>
+    <section className="menu-strip ticker" aria-label="Headlines" data-paused={paused || undefined}>
+      <span className="strip-label" aria-hidden="true">Headlines</span>
       <div className="ticker-window">
         <div className="ticker-run" ref={run}>{line(false)}{line(true)}</div>
       </div>
-      <button type="button" className="ticker-pause" aria-pressed={paused} aria-label={paused ? 'Run the news line' : 'Pause the news line'} onClick={() => setPaused(!paused)}>
+      <button type="button" className="ticker-pause" aria-pressed={paused} aria-label={paused ? 'Run the headlines' : 'Pause the headlines'} onClick={() => setPaused(!paused)}>
         <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">{paused ? <path d="M3.5 2v10l8-5z" fill="currentColor" /> : <path d="M3.5 2h2.5v10H3.5zM8 2h2.5v10H8z" fill="currentColor" />}</svg>
       </button>
     </section>

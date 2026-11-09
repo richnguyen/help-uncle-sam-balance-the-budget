@@ -581,6 +581,17 @@ html[data-text="larger"] { font-size: 125%; }
 .nav-fold > summary::-webkit-details-marker { display: none; }
 .nav-fold > summary::after { content: "+"; margin-left: auto; font-size: 0.875rem; }
 .nav-fold[open] > summary::after { content: "–"; }
+/* The field guide's front page. */
+.guide-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+.guide-card { display: flex; align-items: center; gap: 12px; height: 100%; padding: 12px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--ring); color: var(--ink); text-decoration: none; transition: box-shadow 0.15s ease, transform 0.15s ease; }
+.guide-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: var(--accent-wash); color: var(--accent); }
+.guide-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.guide-n { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.guide-card[data-read] .guide-icon { background: var(--accent); color: var(--accent-ink); }
+@media (hover: hover) { .guide-card:hover { box-shadow: 0 0 0 2px var(--accent); transform: translateY(-1px); } }
+.guide-card:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent); }
+.guide-ref { display: flex; flex-direction: column; gap: 12px; }
+.chapter-banner-links { display: inline-flex; flex-wrap: wrap; gap: 4px 16px; }
 .chapter-banner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 16px; padding: 10px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--ring); margin-bottom: -16px; }
 
 /* ---------- Uncle Sam and his speech bubble ---------- */
@@ -1130,6 +1141,51 @@ html.modal-open { overflow: hidden; }
 .rrow-track > span { display: block; height: 100%; border-radius: 999px; background: var(--c-emph); transition: width 0.4s ease; }
 .rrow[data-mine] .rrow-track > span { background: var(--accent); }
 .rrow-val { font-size: 0.8125rem; color: var(--ink-2); text-align: right; white-space: nowrap; }
+/* How everyone played: figures and charts. */
+.rfigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.rfig { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--ring); }
+.rfig-label { font-size: 0.8125rem; color: var(--ink-2); }
+.rfig-value { font-family: var(--font-body); font-weight: 650; font-size: 1.75rem; line-height: 1.1; color: var(--ink); }
+.rfig-hero .rfig-value { font-size: 3rem; }
+.rfig-note { font-size: 0.75rem; color: var(--muted); }
+.rcols { width: 100%; }
+.rcols svg { display: block; overflow: visible; }
+.rcols-grid { stroke: var(--line); stroke-width: 1; }
+.rcols-tick, .rcols-x { fill: var(--muted); font-size: 11px; font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+.rcols-val { fill: var(--ink); font-size: 12px; font-weight: 650; font-family: var(--font-body); }
+.rcol-hit { fill: transparent; }
+.rcol-bar { fill: var(--c-emph); transition: opacity 0.12s ease; }
+.rcol:hover .rcol-bar, .rcol:focus-visible .rcol-bar { opacity: 0.8; }
+.rcol:focus-visible { outline: none; }
+.rcol:focus-visible .rcol-hit { fill: color-mix(in srgb, var(--accent) 10%, transparent); }
+.rcol-mine { fill: var(--gold); stroke: var(--surface); stroke-width: 2; }
+.rlegend-you { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; color: var(--muted); }
+.rcol-mine-key { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+.rdiv { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rdiv-row { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(140px, 1fr); align-items: center; gap: 12px; padding: 4px 6px; border-radius: 6px; font-size: 0.875rem; }
+.rdiv-row:hover, .rdiv-row:focus-visible { background: var(--surface-2); outline: none; }
+.rdiv-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.rdiv-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; height: 14px; }
+.rdiv-left, .rdiv-right { position: relative; display: flex; background: var(--surface-2); }
+.rdiv-left { justify-content: flex-end; border-radius: 4px 0 0 4px; }
+.rdiv-right { border-radius: 0 4px 4px 0; }
+.rdiv-left > span { display: block; height: 100%; background: var(--vote-no); border-radius: 4px 0 0 4px; }
+.rdiv-right > span { display: block; height: 100%; background: var(--vote-yes); border-radius: 0 4px 4px 0; }
+.rdiv-more { margin-top: 8px; }
+@media (max-width: 600px) { .rdiv-row { grid-template-columns: 1fr; gap: 4px; } }
+.rvote { display: flex; flex-direction: column; gap: 8px; }
+.rvote-tag { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.rvote-q { margin: 0; font-size: 1rem; line-height: 1.3; }
+.rvote-empty { height: 28px; border-radius: 4px; background: var(--surface-2); display: grid; place-items: center; font-size: 0.8125rem; color: var(--muted); }
+.rvote-n { font-size: 0.75rem; color: var(--muted); }
+.rmedals { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 8px; }
+.rmedal { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; gap: 4px 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--ring); }
+.rmedal-disc { grid-row: 1 / span 2; grid-column: 1; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); color: var(--gold); font-size: 0.9rem; }
+.rmedal[data-got] .rmedal-disc { background: var(--gold); color: #fff; }
+.rmedal-name { grid-row: 1; grid-column: 2; font-size: 0.875rem; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmedal-val { grid-row: 1; grid-column: 3; font-size: 0.8125rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.rmedal-meter { grid-row: 2; grid-column: 2 / span 2; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--c-emph) 16%, var(--surface)); overflow: hidden; }
+.rmedal-meter > span { display: block; height: 100%; border-radius: 999px; background: var(--c-emph); }
 .rvotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 12px; }
 .rvote { display: flex; flex-direction: column; gap: 8px; }
 .rvote-q { font-size: var(--step-0); line-height: 1.35; }
@@ -1539,6 +1595,18 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 .samdock-peek .sam { width: 34px; height: auto; margin-top: 10px; }
 @keyframes peek-in { from { transform: translateX(-100%); } to { transform: none; } }
 html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
+/* A finished level's pop-up: Uncle Sam stays in his usual spot at the bottom, in front of it. */
+html.modal-open.celebrate-open .samdock { display: flex; z-index: 95; bottom: 0; }
+html.modal-open.celebrate-open .samdock-peek { display: none; }
+/* The pop-up waits a moment before it moves (when he slides in or away), so a tap that sends him
+   away still lands on the button under the finger. */
+html.celebrate-open .celebrate-scrim { padding-bottom: calc(var(--samh, 0px) + 16px); transition: padding-bottom 0.3s ease 0.45s; }
+/* It shrinks to fit the room above him and scrolls inside, so its top (and its close button) never goes off screen. */
+html.celebrate-open .celebrate { max-height: calc(100vh - 32px - var(--samh, 0px)); transition: max-height 0.3s ease 0.45s; }
+@media (max-width: 900px) {
+  html.celebrate-open .celebrate-scrim { padding-bottom: var(--samh, 0px); }
+  html.celebrate-open .celebrate { max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - var(--samh, 0px)); }
+}
 /* Without frosted glass (older browsers), a nearly solid pane does the same job. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .samdock .samdock-inner { background: color-mix(in srgb, var(--paper) 94%, transparent); }
@@ -1904,6 +1972,8 @@ html.modal-open .samdock, html.modal-open .samdock-peek { display: none; }
 .ticker-item::after { content: "•"; margin: 0 18px; color: var(--muted); }
 .ticker-item strong { font-weight: 700; }
 .ticker-item span { color: var(--ink-2); }
+.ticker-src { flex: none; align-self: center; padding: 2px 7px; border-radius: 4px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.ticker-when { flex: none; font-size: 0.8125rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
 .ticker-item.today-news { background: none; box-shadow: none; border: 0; border-radius: 0; margin: 0; padding: 8px 0; }
 .ticker-item.today-news strong { color: var(--critical); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ticker-item.today-news strong { color: #ff8a80; } }

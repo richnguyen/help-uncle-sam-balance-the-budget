@@ -41,7 +41,10 @@ export function useDebtClock() {
   const at = (now: number) => base.total + perSecond * Math.max(0, (now - t0) / 1000);
   const room = limit ? limit.limit - limit.subject : null;
   const monthsLeft = room != null && perSecond > 0 ? room / perSecond / (30.44 * 86400) : null;
-  return { base, ago, perSecond, perYear: perSecond * YEAR, interestPerSecond, interestPerYear: gross.gross, limit, room, monthsLeft, at, live: !!live.debt, interestFY: gross.fy };
+  // The deficit over the past twelve months (Monthly Treasury Statement), for each person's and household's share of it.
+  const last12 = budget.monthly.slice(-12);
+  const deficitYear = last12.reduce((s, m) => s + m.outlays - m.receipts, 0);
+  return { base, ago, perSecond, perYear: perSecond * YEAR, deficitYear, interestPerSecond, interestPerYear: gross.gross, limit, room, monthsLeft, at, live: !!live.debt, interestFY: gross.fy };
 }
 export type DebtClockModel = ReturnType<typeof useDebtClock>;
 
@@ -138,8 +141,8 @@ export function DebtClock({ compact = false }: { compact?: boolean }) {
       <p className="small clock-each">That’s about <strong><Tick value={(n) => c.at(n) / POP} /></strong> for every person in America{compact ? '' : <>, and <strong><Tick value={(n) => c.at(n) / HH} /></strong> for every household</>}.</p>
       {/* A year at a time: what the debt adds, each person's share of that, and the interest bill. */}
       <div className="clock-grid">
-        <div className="clock-stat"><span className="stat-label">Every person’s share</span><strong>{dollars(c.perYear / POP)}</strong><span className="small muted">a year: their part of a year’s new debt</span></div>
-        {!compact && <div className="clock-stat"><span className="stat-label">Every household’s share</span><strong>{dollars(c.perYear / HH)}</strong><span className="small muted">a year: its part of a year’s new debt</span></div>}
+        <div className="clock-stat"><span className="stat-label">Every person’s share</span><strong>{dollars(c.deficitYear / POP)}</strong><span className="small muted">a year: their part of the deficit</span></div>
+        {!compact && <div className="clock-stat"><span className="stat-label">Every household’s share</span><strong>{dollars(c.deficitYear / HH)}</strong><span className="small muted">a year: its part of the deficit</span></div>}
         <div className="clock-stat"><span className="stat-label">Growing by</span><strong>{moneyWords(c.perYear, 2)}</strong><span className="small muted">a year, at the past 12 months’ pace</span></div>
         {!compact && <div className="clock-stat"><span className="stat-label">Interest costs</span><strong>{moneyWords(c.interestPerYear, 2)}</strong><span className="small muted">a year (FY{c.interestFY} interest expense on the public debt, gross)</span></div>}
       </div>
@@ -184,7 +187,7 @@ export default function ClockPage() {
           <li><strong>The ticking</strong> is an estimate: the change over the past twelve months, spread evenly over every second. Real borrowing comes in lumps (auctions, tax days, benefit payments), so the next official count can land a little above or below.</li>
           <li><strong>The debt limit</strong> comes from the Daily Treasury Statement (Table III-C), which counts slightly less debt than the total: a few kinds of debt don’t count toward the limit.</li>
           <li><strong>Interest</strong> is the Treasury’s gross interest expense on the public debt for FY{debt.interestByFY.at(-1)?.fy}, from its Interest Expense dataset. It includes the interest credited to trust funds such as Social Security’s, which the budget’s smaller “net interest” figure leaves out.</li>
-          <li><strong>Every person’s share</strong> and <strong>every household’s share</strong> are a year’s new debt (the past twelve months) divided by the population and the number of households.</li>
+          <li><strong>Every person’s share</strong> and <strong>every household’s share</strong> are the deficit over the past twelve months (Monthly Treasury Statement) divided by the population and the number of households.</li>
         </ul>
         <p className="small">Other debt clocks use their own estimates and formulas. This one uses the Treasury’s published figures only; the sources are in <a href="#sources">Sources &amp; methods</a>.</p>
       </section>
