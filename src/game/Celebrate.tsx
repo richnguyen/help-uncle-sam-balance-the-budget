@@ -1,7 +1,8 @@
+import { lower } from '../lib/format';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { useHaptics } from './haptics';
 import { LevelIcon } from './icons';
-import { DIFF_COLOR, diffKey, LEVELS, STOPS, type Stop } from './levels';
+import { campaignOf, DIFF_COLOR, diffKey, LEVELS, missionLong, missionShort, nextOf, STOPS, type Stop } from './levels';
 import { GAME_NAME, shareCard, SITE_URL } from './share';
 import { ShareButton, SocialShare } from './ShareButton';
 import { SamSays } from './UncleSam';
@@ -19,7 +20,7 @@ import { NameField } from './NameField';
 // is never the answer to a quick check, so a friend still gets to guess for themselves.
 export function factFor(stop: Stop) {
   const l = LEVELS.find((x) => x.id === stop.id);
-  return l ? l.shareFact : `I met the goal “${stop.title.toLowerCase()}” using real options priced by the Congressional Budget Office.`;
+  return l ? l.shareFact : `I met the goal “${lower(stop.title)}” using real options priced by the Congressional Budget Office.`;
 }
 const took = (m?: number | null) => (m ? ` in ${m} minute${m === 1 ? '' : 's'}` : '');
 
@@ -28,7 +29,7 @@ const took = (m?: number | null) => (m ? ` in ${m} minute${m === 1 ? '' : 's'}` 
  * or try again). `newcomer`: they haven't played the earlier levels, so the next step is level 1.
  */
 export function Celebration({ stop, stars, onClose, line, share, children, challenge, newcomer = false, onShare, minutes }: { stop: Stop; stars: number; onClose: () => void; line?: string; share?: { text: string; url: string; duel?: boolean }; children?: ReactNode; challenge?: { outcome: Outcome; by: string }; newcomer?: boolean; onShare?: () => void; minutes?: number | null }) {
-  const next = STOPS[stop.n] as Stop | undefined; // n is 1-based, so this is the following level
+  const next = nextOf(stop.id);
   const box = useRef<HTMLDivElement>(null);
   const buzz = useHaptics();
   useEffect(() => {
@@ -41,24 +42,25 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
   }, [onClose]); // eslint-disable-line react-hooks/exhaustive-deps
   const say = line ?? CHEER[stars];
   const fact = factFor(stop);
-  const text = share?.text ?? `I finished level ${stop.n} of “${GAME_NAME}”${took(minutes)} with ${stars} of 3 stars. Did you know? ${fact} Your turn:`;
+  const text = share?.text ?? `I finished ${missionShort(stop)} of “${GAME_NAME}”${took(minutes)} with ${stars} of 3 stars. Did you know? ${fact} Your turn:`;
   const url = share?.url ?? SITE_URL;
-  const card = () => shareCard({ eyebrow: `Level ${stop.n} of ${STOPS.length} complete${minutes ? ` · ${minutes} min` : ''}`, title: stop.title, stars, fact: `Did you know? ${fact}`, color: DIFF_COLOR[stop.difficulty], samSvg: box.current?.querySelector('svg.sam')?.outerHTML });
+  const card = () => shareCard({ eyebrow: `${missionLong(stop)} complete${minutes ? ` · ${minutes} min` : ''}`, title: stop.title, stars, fact: `Did you know? ${fact}`, color: DIFF_COLOR[stop.difficulty], samSvg: box.current?.querySelector('svg.sam')?.outerHTML });
   // Level 1 ends with the player's own card ("my share of Uncle Sam") instead of a fact card.
   const mine = stop.id === 'level-1' && !share && !challenge;
   return (
     <div className="celebrate-scrim" onClick={onClose}>
       <div className="celebrate" role="dialog" aria-modal="true" aria-labelledby="celebrate-t" onClick={(e) => e.stopPropagation()} ref={box} data-diff={diffKey(stop.difficulty)}>
         <div className="celebrate-band">
-          <span className="celebrate-level"><LevelIcon id={stop.icon} size={18} /> Level {stop.n} of {STOPS.length} · {stop.difficulty}</span>
+          <span className="celebrate-level"><LevelIcon id={stop.icon} size={18} /> {missionLong(stop)} · {stop.difficulty}</span>
           <button type="button" className="celebrate-x" aria-label="Close" onClick={onClose}>×</button>
         </div>
         <div className="celebrate-body">
-          <h2 className="celebrate-title" id="celebrate-t">Level complete!</h2>
+          <h2 className="celebrate-title" id="celebrate-t">{stop.final ? `Campaign ${stop.campaign} complete!` : 'Mission complete!'}</h2>
           <div className="celebrate-stars" aria-label={`${stars} of 3 stars`}>
             {[1, 2, 3].map((k) => <span key={k} className="cstar" data-on={k <= stars} style={{ animationDelay: `${0.15 + k * 0.18}s` }}>★</span>)}
           </div>
           <div className="celebrate-badge"><span className="stat-label">Certificate earned</span><strong>{stop.badge}</strong></div>
+          {stop.final && <div className="celebrate-campaign"><span className="stat-label">Goal reached</span><strong>{campaignOf(stop.id).title}</strong>{next && <span className="small muted">Next, Campaign {next.campaign}: {lower(campaignOf(next.id).title)}.</span>}</div>}
           {/* Uncle Sam cheers from his usual spot at the bottom, like everywhere else. */}
           <SamSays mood="cheering" auto delay={350}>{say}</SamSays>
           <figure className="celebrate-quote">
@@ -73,7 +75,7 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
           )}
           {!challenge && !mine && (
             <div className="celebrate-share">
-              <div className="small"><span className="stat-label">{share?.duel ? 'Duel a friend' : share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share?.duel ? 'Your plan goes in the link, sealed. Each friend balances the budget on their own, then you compare three rounds: the debt, the economy, and the balance.' : share ? 'Send your plan as a link. Your friend plays the same level and sees how much you two agree.' : fact}</div></div>
+              <div className="small"><span className="stat-label">{share?.duel ? 'Duel a friend' : share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share?.duel ? 'Your plan goes in the link, sealed. Each friend balances the budget on their own, then you compare three rounds: the debt, the economy, and the balance.' : share ? 'Send your plan as a link. Your friend plays the same mission and sees how much you two agree.' : fact}</div></div>
               {share && <NameField id="cel-name" label={share.duel ? 'Sign your duel (first name, optional)' : 'Sign your challenge (first name, optional)'} />}
               <div className="celebrate-share-actions"><ShareButton text={text} card={card} url={url} label={share?.duel ? 'Send the duel' : share ? 'Send the challenge' : 'Share'} kind={share ? 'plan' : 'level'} onShare={onShare} /></div>
               <SocialShare text={text} url={url} kind={share ? 'plan' : 'level'} onShare={onShare} />
@@ -91,16 +93,16 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
                 {challenge.outcome === 'lost'
                   ? <button type="button" className="btn btn-primary btn-lg" data-primary onClick={onClose}>Try again</button>
                   : <span data-primary-wrap><ShareButton text={text} url={url} label={`Send it back to ${challenge.by}`} className="btn btn-primary btn-lg" kind="plan" onShare={onShare} /></span>}
-                {newcomer && <a className="btn" href={'#' + STOPS[0].id} onClick={onClose}>Start from level 1: how the budget works</a>}
+                {newcomer && <a className="btn" href={'#' + STOPS[0].id} onClick={onClose}>Start from mission 1.1: how the budget works</a>}
                 {challenge.outcome !== 'lost' && <button type="button" className="btn" onClick={onClose}>Keep improving</button>}
                 {!newcomer && <a className="btn" href="#levels" onClick={onClose}>Road map</a>}
               </div>
             </>
           ) : newcomer ? (
             <>
-              <p className="small">New here? The earlier levels show where Uncle Sam’s money comes from and goes, a few minutes each.</p>
+              <p className="small">New here? The first missions show where Uncle Sam’s money comes from and goes, a few minutes each.</p>
               <div className="celebrate-actions">
-                <a className="btn btn-primary btn-lg" data-primary href={'#' + STOPS[0].id} onClick={onClose}>Start from level 1</a>
+                <a className="btn btn-primary btn-lg" data-primary href={'#' + STOPS[0].id} onClick={onClose}>Start from mission 1.1</a>
                 <button type="button" className="btn" onClick={onClose}>Stay here</button>
               </div>
             </>
@@ -110,17 +112,17 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
                 <div className="celebrate-next" data-diff={diffKey(next.difficulty)}>
                   <span className="celebrate-next-icon"><LevelIcon id={next.icon} size={22} /></span>
                   <div>
-                    <div className="stat-label">Up next · level {next.n} · {next.difficulty}{next.kind === 'desk' ? ' level' : ''}</div>
+                    <div className="stat-label">Up next · {missionShort(next)} · {next.difficulty}{next.final ? ' · final mission' : ''}</div>
                     <strong>{next.title}</strong>
-                    {next.kind === 'desk' && <div className="small muted">A budget-desk level: you fix the budget yourself. Take your time.</div>}
+                    {next.kind === 'desk' && <div className="small muted">The campaign’s final mission, at the budget desk: you fix the budget yourself. Take your time.</div>}
                   </div>
                 </div>
               ) : (
-                <p className="small">That was the final level. Your Budget Story is ready: your budget personality and your biggest moves, as cards to share. You can also see how everyone played.</p>
+                <p className="small">That was the final mission. Your Budget Story is ready: your budget personality and your biggest moves, as cards to share. You can also see how everyone played.</p>
               )}
               <div className="celebrate-actions">
                 {next
-                  ? <a className="btn btn-primary btn-lg" data-primary href={'#' + next.id} onClick={onClose}>Play level {next.n}</a>
+                  ? <a className="btn btn-primary btn-lg" data-primary href={'#' + next.id} onClick={onClose}>Play {missionShort(next)}</a>
                   : <a className="btn btn-primary btn-lg" data-primary href="#story" onClick={onClose}>See your Budget Story</a>}
                 {!next && <a className="btn" href="#results" onClick={onClose}>How everyone played</a>}
                 <a className="btn" href="#levels" onClick={onClose}>Road map</a>

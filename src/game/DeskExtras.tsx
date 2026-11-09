@@ -28,6 +28,9 @@ export function CongressLink({ id, topic }: { id: string; topic: string }) {
   );
 }
 
+/** The real proposal closest to one of the game's ready-made plans, if there is one. */
+export const proposalFor = (id: string) => { const p = DATA.plans[id]; return p && !('none' in p) ? p : null; };
+
 export function PlanProposal({ id }: { id: string }) {
   const p = DATA.plans[id];
   if (!p || 'none' in p) return null;
@@ -45,8 +48,8 @@ export function Accomplishments({ stars, badges }: { stars: number; badges: stri
   return (
     <div className="accomp" aria-label="Accomplishments">
       <div className="accomp-points">
-        <Stars n={stars} size="md" label={`Best on this level: ${stars} of 3 stars`} />
-        <span className="small muted">best on this level</span>
+        <Stars n={stars} size="md" label={`Best on this mission: ${stars} of 3 stars`} />
+        <span className="small muted">best on this mission</span>
       </div>
       <div className="accomp-badges">
         <span className="accomp-count"><AwardIcon size={16} /> {got} of {BADGES.length} badges</span>

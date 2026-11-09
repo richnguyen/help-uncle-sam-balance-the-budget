@@ -7,7 +7,7 @@ import { moneyWords } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
 import { useVotes } from '../lib/votes';
 import { LevelIcon, LockIcon } from './icons';
-import { diffKey, isUnlocked, LEVELS, MAX_STARS, rankFor, STOPS, unlockText } from './levels';
+import { CAMPAIGNS, diffKey, isUnlocked, LEVELS, MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS, unlockText } from './levels';
 import { dayNumber, editionName, loadResults, longDate, nextDeadline, nextTheme, ROUNDS, span, type ThemeId, themeFor, todayKey, untilNext } from './daily';
 import { useDebtClock } from './DebtClock';
 import { DeficitClock } from './DeficitClock';
@@ -42,7 +42,8 @@ const byName = (line: string, name: string) => (!name ? line : /^Welcome back/.t
 // you are in the top-right corner; live numbers on the right; small things in the bottom
 // corners. Every choice leads to its own page, and every page leads back here.
 const NEWS = [
-  { date: '2026-11-08', title: 'Duel a friend on level 10', body: 'Two plans built blind, three rounds, and fewer cards breaks a tie.', href: '#together' },
+  { date: '2026-11-09', title: 'Three campaigns, sixteen missions', body: 'Six new missions on how a change hits the economy, who pays, and what grows it, plus plan ideas on every desk.', href: '#levels' },
+  { date: '2026-11-08', title: 'Duel a friend on the final mission', body: 'Two plans built blind, three rounds, and fewer cards breaks a tie.', href: '#together' },
   { date: '2026-11-07', title: 'The debt clock is live', body: 'Ticking from the Treasury’s own count, with the room left under the debt limit.', href: '#clock' },
 ];
 
@@ -90,15 +91,14 @@ export default function Journey() {
     : fresh
       ? JOURNEY_LINES.fresh(moneyWords(T))
       : next && hard(next.difficulty)
-        ? JOURNEY_LINES.hardNext(rank.name.toLowerCase(), next.n)
+        ? JOURNEY_LINES.hardNext(rank.name.toLowerCase())
         : JOURNEY_LINES.back(rank.name.toLowerCase());
   const primary = next
-    ? { href: '#' + next.id, title: fresh ? 'Start the game' : 'Continue', sub: `Level ${next.n}: ${next.title} · about ${next.minutes} min`, icon: 'play' as const }
+    ? { href: '#' + next.id, title: fresh ? 'Start the game' : 'Continue', sub: `${missionShort(next)}: ${next.title} · about ${next.minutes} min`, icon: 'play' as const }
     : { href: '#story', title: 'Your Budget Story', sub: 'Your plans and your budget personality, as cards to share', icon: 'story' as const };
   const items: { href: string; title: string; sub: string; icon: MenuIconId }[] = [
-    { href: '#levels', title: 'Levels', sub: `The road map · ${done.length} of ${STOPS.length} done · ★ ${stars} of ${MAX_STARS}`, icon: 'map' },
-    { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
     { href: '#daily', title: 'The Daily Dollar', sub: played && played.length >= ROUNDS ? `#${dayNumber(key)} done: ${played.filter(Boolean).length} of ${ROUNDS} · next in ${untilNext()}` : `#${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''} · five calls, about a minute`, icon: 'daily' },
+    { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
     { href: '#guide', title: 'Field guide', sub: 'Every chapter in full, with sources and methods', icon: 'book' },
     { href: '#settings', title: 'Settings', sub: 'Text size, theme, Uncle Sam’s voice, music', icon: 'gear' },
   ];
@@ -118,7 +118,7 @@ export default function Journey() {
           <button type="button" className="menu-toggle" aria-pressed={sound} onClick={() => setAmbienceWanted(!sound)} aria-label={sound ? 'Sounds of the Mall: on. Turn them off' : 'Sounds of the Mall: off. Turn them on'} title={sound ? 'Sounds of the Mall: on' : 'Sounds of the Mall: off'}>
             <MenuIcon id={sound ? 'wind' : 'mute'} size={20} />
           </button>
-          <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} levels, ${j.medals.length} medals`}>
+          <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} missions, ${j.medals.length} medals`}>
             <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
             <span className="mp-text">
               <strong>{name || 'Your record'}</strong>
@@ -128,7 +128,10 @@ export default function Journey() {
           </a>
         </div>
         <nav className="menu-main" aria-label="Main menu">
-          <MenuItem {...primary} primary />
+          <div className="menu-continue">
+            <MenuItem {...primary} primary />
+            <CampaignChips />
+          </div>
           {items.map((x) => <MenuItem key={x.href} {...x} />)}
         </nav>
         <div className="menu-deficit"><DeficitClock /></div>
@@ -167,6 +170,29 @@ export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{MENU_PATHS[id]}</svg>;
 }
 
+const ROADMAP_AT = 'ftd:roadmap-at';
+/** Inside Continue: the three campaigns, each with its progress; a tap opens the road map at that campaign. */
+function CampaignChips() {
+  const j = useJourney();
+  return (
+    <div className="mc-camps" role="group" aria-label="Campaigns">
+      {CAMPAIGNS.map((c) => {
+        const ms = STOPS.filter((s) => s.campaign === c.n);
+        const fin = ms.filter((s) => j.done.includes(s.id)).length;
+        const open = isUnlocked(ms[0].id, j.done, j.settings.freeRoam);
+        return (
+          <a key={c.n} className="mc-camp" href="#levels" data-open={open} data-done={fin === ms.length || undefined}
+            onClick={() => { try { sessionStorage.setItem(ROADMAP_AT, 'campaign-' + c.n); } catch { /* the road map opens at the top */ } }}
+            title={c.title} aria-label={`Campaign ${c.n}: ${c.title}. ${fin} of ${ms.length} missions done${open ? '' : '. Locked'}`}>
+            <span className="mc-k">{open ? null : <LockIcon />}Campaign {c.n}<span className="mc-n">{fin}/{ms.length}</span></span>
+            <span className="mc-bar" aria-hidden="true"><span style={{ width: `${(fin / ms.length) * 100}%` }} /></span>
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
 function MenuItem({ href, title, sub, icon, primary = false }: { href: string; title: string; sub: string; icon: MenuIconId; primary?: boolean }) {
   return (
     <a className={'menu-item' + (primary ? ' menu-item-primary' : '')} href={href}>
@@ -177,51 +203,61 @@ function MenuItem({ href, title, sub, icon, primary = false }: { href: string; t
   );
 }
 
-/** The road map, as its own page: every level, with progress at the top. */
+/** The road map, as its own page: the three campaigns and their missions, with progress at the top. */
 export function LevelsPage() {
   const { j, done, next, minutesLeft, total, stars, rank, finished } = useProgress();
+  useEffect(() => {
+    let at: string | null = null;
+    try { at = sessionStorage.getItem(ROADMAP_AT); sessionStorage.removeItem(ROADMAP_AT); } catch { /* no storage: stay at the top */ }
+    if (at && at !== 'campaign-1') requestAnimationFrame(() => document.getElementById(at!)?.scrollIntoView({ block: 'start' }));
+  }, []);
   return (
     <div className="journey">
-      <PageHead eyebrow="Levels" title="The road map" lede="Ten levels. Easy chapters build up to three hard budget-desk levels, so a tough level is always followed by a breather." />
+      <PageHead eyebrow="Campaigns" title="The road map" lede="Three campaigns, each with one goal. Missions go from easy to hard, and each one teaches an idea you’ll use at the campaign’s final mission, the budget desk." />
       <div className="card journey-progress" aria-label="Your progress">
         <div className="jp-rank">
           <span className="stat-label">Your title</span>
           <strong>{rank.name}</strong>
         </div>
-        <div className="jp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={STOPS.length} aria-valuenow={done.length} aria-label={`${done.length} of ${STOPS.length} levels done`}>
-          {STOPS.map((s) => <span key={s.id} data-done={j.done.includes(s.id)} data-desk={s.kind === 'desk'} />)}
+        <div className="jp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={STOPS.length} aria-valuenow={done.length} aria-label={`${done.length} of ${STOPS.length} missions done`}>
+          {STOPS.map((s) => <span key={s.id} data-done={j.done.includes(s.id)} data-desk={s.kind === 'desk'} data-camp-start={(s.mission === 1 && s.campaign > 1) || undefined} />)}
         </div>
-        <div className="small"><strong>{done.length} of {STOPS.length}</strong> levels · <strong>★ {stars}</strong> of {MAX_STARS} stars · {finished ? 'all done' : `about ${minutesLeft} of ${total} minutes left`}</div>
-        <p className="small muted">Easy levels explain one part of the budget in a few short steps, a couple of questions, and one vote. Every few levels comes a hard one at the budget desk, where you fix the budget yourself. The full chapters and original documents are always one click away.</p>
+        <div className="small"><strong>{done.length} of {STOPS.length}</strong> missions · <strong>★ {stars}</strong> of {MAX_STARS} stars · {finished ? 'all done' : `about ${minutesLeft} of ${total} minutes left`}</div>
       </div>
-      <Section id="map" title="Every level">
-        <ol className="roadmap">
-          {STOPS.map((s) => {
-            const isDone = j.done.includes(s.id);
-            const open = isUnlocked(s.id, j.done, j.settings.freeRoam);
-            const st = j.stars[s.id] ?? 0;
-            return (
-              <li key={s.id} className="stop" data-done={isDone} data-open={open} data-kind={s.kind} data-hard={hard(s.difficulty)} data-diff={diffKey(s.difficulty)} data-next={s.id === next?.id}>
-                <span className="stop-node" aria-hidden="true">{open || isDone ? <LevelIcon id={s.icon} size={20} /> : <LockIcon />}</span>
-                <div className="stop-body">
-                  <div className="stop-meta">
-                    <span>Level {s.n}</span>
-                    <span className={'pill ' + pillFor(s.difficulty)}>{s.difficulty}{s.kind === 'desk' ? ' level' : ''}</span>
-                    <span className="muted">about {s.minutes} min</span>
-                    {isDone && <Stars n={st} size="sm" label={`${st} of 3 stars`} />}
-                  </div>
-                  <h3 className="stop-title">{open ? <a href={'#' + s.id}>{s.title}</a> : s.title}</h3>
-                  <div className="small muted">{open ? s.topic : unlockText(s.id)}</div>
-                </div>
-                {open && <a className={'btn' + (s.id === next?.id ? ' btn-primary' : '')} href={'#' + s.id} aria-label={`${isDone ? 'Replay' : 'Play'} level ${s.n}: ${s.title}`}>{isDone ? 'Replay' : s.id === next?.id ? 'Play' : 'Open'}</a>}
-              </li>
-            );
-          })}
-        </ol>
-      </Section>
+      {CAMPAIGNS.map((c) => {
+        const ms = STOPS.filter((s) => s.campaign === c.n);
+        const fin = ms.filter((s) => j.done.includes(s.id)).length;
+        return (
+          <Section key={c.n} id={'campaign-' + c.n} eyebrow={`Campaign ${c.n} · ${fin} of ${ms.length} missions`} title={c.title} sub={c.blurb}>
+            <ol className="roadmap">
+              {ms.map((s) => {
+                const isDone = j.done.includes(s.id);
+                const open = isUnlocked(s.id, j.done, j.settings.freeRoam);
+                const st = j.stars[s.id] ?? 0;
+                return (
+                  <li key={s.id} className="stop" data-done={isDone} data-open={open} data-kind={s.kind} data-hard={hard(s.difficulty)} data-diff={diffKey(s.difficulty)} data-next={s.id === next?.id}>
+                    <span className="stop-node" aria-hidden="true">{open || isDone ? <LevelIcon id={s.icon} size={20} /> : <LockIcon />}</span>
+                    <div className="stop-body">
+                      <div className="stop-meta">
+                        <span>{s.final ? `Final mission` : `Mission ${s.campaign}.${s.mission}`}</span>
+                        <span className={'pill ' + pillFor(s.difficulty)}>{s.difficulty}{s.kind === 'desk' ? ' · budget desk' : ''}</span>
+                        <span className="muted">about {s.minutes} min</span>
+                        {isDone && <Stars n={st} size="sm" label={`${st} of 3 stars`} />}
+                      </div>
+                      <h3 className="stop-title">{open ? <a href={'#' + s.id}>{s.title}</a> : s.title}</h3>
+                      <div className="small muted">{open ? s.topic : unlockText(s.id)}</div>
+                    </div>
+                    {open && <a className={'btn' + (s.id === next?.id ? ' btn-primary' : '')} href={'#' + s.id} aria-label={`${isDone ? 'Replay' : 'Play'} ${missionShort(s)}: ${s.title}`}>{isDone ? 'Replay' : s.id === next?.id ? 'Play' : 'Open'}</a>}
+                  </li>
+                );
+              })}
+            </ol>
+          </Section>
+        );
+      })}
       {j.plans && Object.keys(j.plans).length > 0 && <p className="small"><a href="#story">Your Budget Story</a>: your plans and your budget personality, as cards to share.</p>}
       <ActionBar label="Play">
-        {next ? <a className="btn btn-primary" href={'#' + next.id}>{done.length ? `Continue: level ${next.n}, ${next.title}` : 'Start level 1'}</a> : <a className="btn btn-primary" href="#story">See your Budget Story</a>}
+        {next ? <a className="btn btn-primary" href={'#' + next.id}>{done.length ? `Continue: ${missionShort(next)}, ${next.title}` : 'Start mission 1.1'}</a> : <a className="btn btn-primary" href="#story">See your Budget Story</a>}
       </ActionBar>
     </div>
   );
@@ -240,7 +276,7 @@ export function RecordPage() {
             const got = j.done.includes(l.id);
             return (
               <article key={l.id} className="factcard" data-got={got} data-diff={diffKey(l.difficulty)}>
-                <div className="factcard-top"><span className="factcard-icon"><LevelIcon id={l.icon} size={18} /></span><span className="stat-label">Level {l.n} · {l.badge}</span></div>
+                <div className="factcard-top"><span className="factcard-icon"><LevelIcon id={l.icon} size={18} /></span><span className="stat-label">{missionShort(STOP_BY_ID[l.id])} · {l.badge}</span></div>
                 {got ? (
                   <>
                     <ul className="factcard-list">{l.takeaways.map((t) => <li key={t}>{t}</li>)}</ul>
@@ -250,7 +286,7 @@ export function RecordPage() {
                     </div>
                   </>
                 ) : (
-                  <p className="small muted">Finish level {l.n}, {l.title}, to collect this card.</p>
+                  <p className="small muted">Finish {missionShort(STOP_BY_ID[l.id])}, {l.title}, to collect this card.</p>
                 )}
               </article>
             );
@@ -263,7 +299,7 @@ export function RecordPage() {
         <p className="small">See how far players got, how many got each question right, and how everyone voted on every question and policy card. <a href="#results">How everyone played</a></p>
       </div>
 
-      <Section id="ballot" title="Your budget ballot" sub={votes.available ? 'Your votes from each level, counted with everyone else who opened this page.' : 'Your votes from each level, saved in this browser.'}>
+      <Section id="ballot" title="Your budget ballot" sub={votes.available ? 'Your votes from each mission, counted with everyone else who opened this page.' : 'Your votes from each mission, saved in this browser.'}>
         <Ballot />
       </Section>
 
@@ -281,14 +317,14 @@ export function RecordPage() {
         </div>
       </Section>
 
-      <Section id="awards" title="Certificates" sub="Earn one for each level you finish. Saved in this browser only.">
+      <Section id="awards" title="Certificates" sub="Earn one for each mission you finish. Saved in this browser only.">
         <div className="badges">
           {STOPS.map((l) => {
             const got = j.done.includes(l.id);
             return (
               <div key={l.id} className="badge" data-got={got}>
-                <span className="badge-medal" aria-hidden="true">{got ? <LevelIcon id={l.icon} size={18} /> : l.n}</span>
-                <div><strong>{l.badge}</strong><div className="small muted">{got ? `Level ${l.n} complete · ${'★'.repeat(j.stars[l.id] ?? 0)}` : `Finish level ${l.n}, ${l.title}`}</div></div>
+                <span className="badge-medal" aria-hidden="true">{got ? <LevelIcon id={l.icon} size={18} /> : `${l.campaign}.${l.mission}`}</span>
+                <div><strong>{l.badge}</strong><div className="small muted">{got ? `${missionShort(l)} complete · ${'★'.repeat(j.stars[l.id] ?? 0)}` : `Finish ${missionShort(l)}, ${l.title}`}</div></div>
               </div>
             );
           })}
@@ -300,7 +336,7 @@ export function RecordPage() {
               <div className="eyebrow">Certificate</div>
               <div className="complete-title">Informed Budget Voter</div>
               <p className="small muted">For learning where federal money comes from and goes, why the government borrows, how Congress budgets, what the future holds for Social Security, and for casting a vote on each.</p>
-              <div className="sb-actions" style={{ marginTop: 8 }}><ShareButton kind="level" text={`I finished all ${STOPS.length} levels of “${GAME_NAME}” and earned ${stars} of ${MAX_STARS} stars. I’m an Informed Budget Voter.`} /></div>
+              <div className="sb-actions" style={{ marginTop: 8 }}><ShareButton kind="level" text={`I finished all ${STOPS.length} missions of “${GAME_NAME}” and earned ${stars} of ${MAX_STARS} stars. I’m an Informed Budget Voter.`} /></div>
             </div>
           </div>
         )}
@@ -431,7 +467,7 @@ function Ballot() {
       <ul className="ballot-list">
         {rows.map((r) => (
           <li key={r.q} data-cast={!!r.a}>
-            <span className="small muted">Level {r.level.n}</span>
+            <span className="small muted">{missionShort(STOP_BY_ID[r.level.id])}</span>
             <span className="ballot-q">{r.q}</span>
             <span className="ballot-a">{r.a ? <strong>{r.a}</strong> : <a href={'#' + r.level.id}>{j.done.includes(r.level.id) ? 'Not voted' : 'Play to vote'}</a>}</span>
           </li>

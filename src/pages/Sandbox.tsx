@@ -5,16 +5,17 @@ import { DragBars, EconMeter, GapBar, type GapSegment, LeverIcon, SIDE_COLOR, Sp
 import { Carousel } from '../components/Carousel';
 import { ActionBar } from '../components/ActionBar';
 import { Accomplishments, CongressLink } from '../game/DeskExtras';
+import { PlanIdeas } from '../game/ideas';
 import { ChartFrame, Legend, PageHead, Section, Seg, Term } from '../components/ui';
 import { budget, cbo } from '../data';
-import { dateLabel, dollars, money, pct } from '../lib/format';
+import { dateLabel, dollars, lower, money, pct } from '../lib/format';
 import { BADGES, earnedBadges, evaluate, loadProgress, MISSIONS, planText, type Progress, saveProgress } from '../lib/game';
 import { economics, extraFor, type Goal, goalMet, MULT, mid, optimize, optionPath, type PlanContext, planCost, type Protect, score, shortfall } from '../lib/plan';
 import { OPTIONS_DATA, withEcon } from '../lib/planData';
 import { LEVERS, type LeverId, type Levers, simulate, ZERO } from '../lib/sandbox';
 import { type Choice, useVotes } from '../lib/votes';
 import { Celebration } from '../game/Celebrate';
-import { DESK, type DeskLevel, isUnlocked, STOP_BY_ID, STOPS } from '../game/levels';
+import { DESK, type DeskLevel, isUnlocked, missionLong, missionShort, nextOf, STOP_BY_ID, STOPS } from '../game/levels';
 import { useJourney } from '../game/state';
 import { SamSays } from '../game/UncleSam';
 import type { Mood } from '../game/voice';
@@ -206,7 +207,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     if (met && desk && !wasMet.current && !challenge && !duel) setParty(ev.stars);
     wasMet.current = met;
   }, [met, ev.stars, deskStop.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const nextStop = desk ? STOPS[desk.n] : undefined;
+  const nextStop = desk ? nextOf(desk.id) : undefined;
+  const here = desk ? STOP_BY_ID[desk.id] : undefined;
 
   // The latest plan that meets the goal is kept, for challenges and the Budget Story.
   useEffect(() => {
@@ -277,6 +279,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     setIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   };
   const reset = () => { setIds([]); setLv({ ...ZERO }); setReact(null); setCopied('idle'); setHint(null); };
+  // A plan idea goes onto the desk as the player's own plan, to change as they like.
+  const loadIdea = (p: { ids: string[]; lv: Levers; gradual: boolean }) => { setIds(p.ids); setLv({ ...p.lv }); setGradual(p.gradual); setReact(null); setCopied('idle'); setHint(null); document.getElementById('game')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   useEffect(() => { setHint(null); }, [ids.join(), Object.values(lv).join(), gradual]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The hint (level 5 only): before the goal, the gentlest card that would finish the job on its
@@ -338,7 +342,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const coachBlock = desk ? <SamSays mood={said.mood} auto={party == null && !(met && !wasMet.current)} delay={special ? 300 : 900}>{said.line}</SamSays> : null;
   const progressBlock = (
     <div aria-live="polite" className="sb-progress">
-      <div className="sb-big">{met ? (desk ? 'Level complete!' : 'Mission complete!') : `${Math.min(99, Math.floor(shownProg * 100))}% of the way there`}</div>
+      <div className="sb-big">{met ? 'Mission complete!' : `${Math.min(99, Math.floor(shownProg * 100))}% of the way there`}</div>
       <GapBar segments={segments} progress={Math.max(0, prog)} />
       <div className="small muted">{met ? `You beat the goal: deficit ${last.deficit <= 0 ? 'balanced' : pct(last.deficit / last.gdp, 1) + ' of GDP'} and debt ${pct(last.debt / last.gdp, 0)} of GDP in FY${lastFY}.` : `Still needed: ${neededText}.`}</div>
     </div>
@@ -372,9 +376,9 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const copyBox = copied === 'manual' ? <textarea className="input" readOnly rows={6} value={text} onFocus={(e) => e.currentTarget.select()} aria-label="Your plan, ready to copy" /> : null;
   const nextBlock = desk && met ? (
     <div className="sb-block sb-next">
-      <strong>Level {desk.n} complete.</strong>
+      <strong>{missionShort(STOP_BY_ID[desk.id])} complete.</strong>
       <div className="sb-actions">
-        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
+        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
         <a className="btn" href="#levels">Road map</a>
       </div>
     </div>
@@ -448,7 +452,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const leversBlock = (inline: boolean) => (
     <details className="card more" open={inline || slidersUsed || undefined} id="levers">
       <summary className="chart-title">Across-the-board changes{inline ? '' : ' (advanced)'}</summary>
-      {inline && <p className="small"><strong>The cards alone can’t {mission.short.toLowerCase()}.</strong> Finish with these across-the-board changes.</p>}
+      {inline && <p className="small"><strong>The cards alone can’t {lower(mission.short)}.</strong> Finish with these across-the-board changes.</p>}
       <p className="small muted">Blunt tools: percentage changes to whole categories, from the {cbo.projShort}. They count toward the goal but not toward the efficiency score.</p>
         {LEVERS.map((l) => (
           <div className="range-row" key={l.id}>
@@ -485,7 +489,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       : desk
         ? <>
             <a className="btn" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>
-            {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary" href="#story">Your Budget Story</a>}
+            {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary" href="#story">Your Budget Story</a>}
           </>
         : null;
   const bestStars = desk ? Math.max(journey.stars[desk.id] ?? 0, ev.stars) : Math.max(progress.stars[goal] ?? 0, ev.stars);
@@ -493,7 +497,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   return (
     <>
       <PageHead
-        eyebrow={`Level ${desk?.n} of ${STOPS.length} · ${desk?.difficulty} level · budget desk`}
+        eyebrow={`${here ? missionLong(here) : 'Budget desk'} · ${desk?.difficulty} · budget desk`}
         title={desk ? mission.title : 'Can you fix the budget?'}
         lede={challenge || duel ? undefined : desk ? <>Play policy cards, real options the Congressional Budget Office (CBO) has priced, until the bar reaches the goal. Earn stars for going easy on the economy and for balancing tax increases with spending cuts.</> : <>Pick a mission, then play policy cards, real options the Congressional Budget Office (CBO) has priced, until the bar reaches the goal. Earn stars for going easy on the economy and for balancing tax increases with spending cuts.</>}
       />
@@ -542,7 +546,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
             {coachBlock}
             <div className="tb-main">
               <div className="tb-head">
-                <div className="eyebrow">Level {desk!.n} · {desk!.difficulty} level</div>
+                <div className="eyebrow">Campaign {here!.campaign} · final mission · {desk!.difficulty}</div>
                 <StarsPopover stars={ev.stars} checks={ev.checks} extra={efficiencyBlock} />
               </div>
               {progressBlock}
@@ -553,7 +557,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                 {met && duel && <button type="button" className="btn btn-primary bar-dup" onClick={reveal}>Reveal the duel</button>}
                 {met && !duel && <a className="btn bar-dup" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>}
                 {met && <button type="button" className="btn" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my plan'}</button>}
-                {met && !duel && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play level {nextStop.n}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
+                {met && !duel && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
               </div>
               {copyBox}
             </div>
@@ -585,6 +589,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
             <VoteNote votes={votes} />
           </section>
           {!cardsCanWin && leversBlock(true)}
+          {!challenge && !duel && <PlanIdeas goal={goal} current={{ ids, lv, gradual }} canLoad={!!desk && (journey.done.includes(desk.id) || journey.settings.freeRoam)} onLoad={loadIdea} />}
       </>
       <PlanForYou ids={ids} lv={lv} gradual={gradual} />
       {met && desk && (isDuelLevel && !challenge
@@ -651,7 +656,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         </div>
       </details>
 
-      {desk && <p className="fineprint-link small">This level’s full chapters and the original documents are in <a href={'#sources-' + desk.id}>Sources &amp; methods</a>.</p>}
+      {desk && <p className="fineprint-link small">This mission’s full chapters and the original documents are in <a href={'#sources-' + desk.id}>Sources &amp; methods</a>.</p>}
       {party != null && desk && (
         <Celebration stop={STOP_BY_ID[desk.id]} stars={party} onClose={() => setParty(null)}
           line={h2h?.outcome ? CHALLENGE_LINES[h2h.outcome] : DESK_PARTY[party]} share={invite ? { url: invite.url, text: invite.text, duel: true } : myLink && shareText ? { url: myLink, text: shareText } : undefined}

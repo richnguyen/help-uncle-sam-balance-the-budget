@@ -31,7 +31,7 @@ const levers = (lv: Levers) => LEVERS.filter((l) => lv[l.id]).map((l) => `${l.la
 const onDuels = (f: () => void) => { window.addEventListener('ftd-duels', f); return () => window.removeEventListener('ftd-duels', f); };
 
 export function inviteText(name: string) {
-  const body = 'Duel me on level 10 of “Help Uncle Sam Balance the Budget”: we each balance the budget on our own, then compare three rounds: the debt, the economy, and the balance. My plan stays sealed until you finish yours.';
+  const body = 'Duel me on the final mission of “Help Uncle Sam Balance the Budget”: we each balance the budget on our own, then compare three rounds: the debt, the economy, and the balance. My plan stays sealed until you finish yours.';
   return name ? `${name} here. ${body}` : body;
 }
 
@@ -131,7 +131,7 @@ export default function DuelPage({ param }: { param: string | null }) {
   if (!d) {
     return (
       <>
-        <PageHead eyebrow="Level 10 duel" title="This duel link looks incomplete" />
+        <PageHead eyebrow="Budget duel" title="This duel link looks incomplete" />
         <SamSays mood="worried" auto>{DUEL_LINES.broken}</SamSays>
         <ActionBar label="Next step"><a className="btn btn-primary" href="#duels">Your duels</a><a className="btn" href="#journey">Main menu</a></ActionBar>
       </>
@@ -146,11 +146,11 @@ export default function DuelPage({ param }: { param: string | null }) {
     const r = duelRounds(mine, theirs);
     const back: Duel = { id: d.id, role: 'guest', host: d.host, hostName: d.hostName, guest: d.guest, guestName: name || d.guestName, at: '' };
     const how = r.tiebreak && r.tiebreak !== 'tie' ? 'on fewer cards' : null;
-    const backText = `${name ? `${name} here. ` : ''}I played your level 10 duel: ${r.outcome === 'won' ? `my plan wins ${how ?? r.score}` : r.outcome === 'tied' ? `we tied ${r.score}` : `your plan wins ${how ?? flip(r.score)}`}. See the three rounds:`;
+    const backText = `${name ? `${name} here. ` : ''}I played your budget duel: ${r.outcome === 'won' ? `my plan wins ${how ?? r.score}` : r.outcome === 'tied' ? `we tied ${r.score}` : `your plan wins ${how ?? flip(r.score)}`}. See the three rounds:`;
     const sendBack = <ShareButton text={backText} url={replyLink(back)} label={`Send it to ${them(d.hostName)}`} className="btn btn-primary" kind="plan" />;
     return (
       <>
-        <PageHead eyebrow="Level 10 duel · the reveal" title={`You vs. ${Them(theirName)}`} />
+        <PageHead eyebrow="Budget duel · the reveal" title={`You vs. ${Them(theirName)}`} />
         <SamSays mood={r.outcome === 'won' ? 'cheering' : r.outcome === 'tied' ? 'happy' : 'thinking'} auto>{DUEL_LINES[r.outcome]}</SamSays>
         <Rounds mine={mine} theirs={theirs} theirName={theirName} />
         {iAmGuest && (
@@ -176,7 +176,7 @@ export default function DuelPage({ param }: { param: string | null }) {
     const replies = duels.filter((x) => x.id === d.id && x.role === 'host' && x.guest);
     return (
       <>
-        <PageHead eyebrow="Level 10 duel · your invite" title="Your duel invite" />
+        <PageHead eyebrow="Budget duel · your invite" title="Your duel invite" />
         <SamSays mood="proud" auto>{DUEL_LINES.host}</SamSays>
         <DuelStart plan={d.host} title="Send it to more friends" />
         {replies.length > 0 ? <DuelList duels={replies} title="Replies so far" /> : <p className="small muted">No replies yet. When a friend sends their plan back, the three rounds show up here and on your Duels page.</p>}
@@ -201,7 +201,7 @@ function Invite({ d }: { d: NonNullable<ReturnType<typeof readDuelParam>> }) {
   const label = playing ? 'Back to the duel' : 'Start the duel';
   return (
     <>
-      <PageHead eyebrow="Level 10 duel" title={`${Them(d.hostName)} challenged you to a duel`} lede="Balance Uncle Sam’s budget on level 10, your way. Their plan stays sealed until you reveal yours; then the two plans go head to head in three rounds." />
+      <PageHead eyebrow="Budget duel" title={`${Them(d.hostName)} challenged you to a duel`} lede="Balance Uncle Sam’s budget on the game’s final mission, your way. Their plan stays sealed until you reveal yours; then the two plans go head to head in three rounds." />
       <SamSays mood="surprised" auto>{DUEL_LINES.invite}</SamSays>
       <section className="card duel-invite">
         <ol className="duel-rules">
@@ -212,7 +212,7 @@ function Invite({ d }: { d: NonNullable<ReturnType<typeof readDuelParam>> }) {
         <p className="small">Even after three rounds? The plan with fewer policy cards wins.</p>
         <p className="small">{Them(d.hostName)}’s plan: <span className="duel-sealed">sealed</span>, {sealed.met ? 'and it balances the budget' : 'still short of balancing the budget'}. You see it only after you reveal yours.</p>
         <button type="button" className="btn btn-primary btn-lg bar-dup" onClick={accept}>{label}</button>
-        <span className="small muted">Opens level 10 right away · about 10 minutes · no sign-up</span>
+        <span className="small muted">Opens the final mission right away · about 10 minutes · no sign-up</span>
       </section>
       <ActionBar label="Start"><button type="button" className="btn btn-primary" onClick={accept}>{label}</button></ActionBar>
     </>
@@ -234,12 +234,12 @@ export function useDuelInvite(plan: DuelPlan | null) {
 const useRematch = () => JSON.parse(useSyncExternalStore(onDuels, () => JSON.stringify(rematchFor()))) as { name?: string } | null;
 
 /** Start a duel with a plan: the name, the invite link, and the ways to send it. One link, many friends. */
-export function DuelStart({ plan, compact = false, title = 'Duel a friend on level 10' }: { plan: DuelPlan; compact?: boolean; title?: string }) {
+export function DuelStart({ plan, compact = false, title = 'Duel a friend on the final mission' }: { plan: DuelPlan; compact?: boolean; title?: string }) {
   const inv = useDuelInvite(plan)!;
   const rematch = useRematch();
   return (
     <section className={'card duel-start' + (compact ? ' compact' : '')} id="duel-start" aria-labelledby="duel-start-t">
-      <div className="eyebrow">Level 10 duel</div>
+      <div className="eyebrow">Budget duel</div>
       <h2 className="section-title" id="duel-start-t">{rematch ? `Rematch: send ${them(rematch.name)} a new duel` : title}</h2>
       <p className="small">Your plan goes in the link, sealed. Each friend balances the budget on their own, then sees three rounds: the debt, the economy, and the balance. Send the same link to as many friends as you like; each reply is its own head-to-head, and they all land on your Duels page.</p>
       <NameField id={'duel-name-' + (compact ? 'c' : 'm')} label="Sign it, so they know it’s from you (first name, optional)" />
@@ -301,13 +301,13 @@ export function DuelsPage() {
   const open = duels.filter((x) => x.role === 'host' && !x.guest);
   return (
     <>
-      <PageHead eyebrow="Level 10 duels" title="Your duels" lede="Every level 10 duel you’ve sent or played on this device: your plan next to each friend’s, three rounds each. Plans are compared, never people." />
+      <PageHead eyebrow="Budget duels" title="Your duels" lede="Every budget duel you’ve sent or played on this device: your plan next to each friend’s, three rounds each. Plans are compared, never people." />
       <SamSays mood="happy" auto>{DUEL_LINES.list}</SamSays>
-      {playing != null && <div className="callout small">You’re in a duel with {them(playing)}. <a href={'#' + DUEL_LEVEL}>Back to level 10</a> to finish it and reveal both plans.</div>}
+      {playing != null && <div className="callout small">You’re in a duel with {them(playing)}. <a href={'#' + DUEL_LEVEL}>Back to the final mission</a> to finish it and reveal both plans.</div>}
       {results.length > 0 && <DuelList duels={results} title="Results" />}
       {open.length > 0 && <DuelList duels={open} title="Open invites" />}
-      {!results.length && !open.length && <p className="small">No duels yet. Balance the budget on level 10, then send a duel to a friend.</p>}
-      <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + DUEL_LEVEL}>{results.length || open.length ? 'Play level 10 again' : 'Play level 10'}</a></ActionBar>
+      {!results.length && !open.length && <p className="small">No duels yet. Balance the budget on the final mission, then send a duel to a friend.</p>}
+      <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + DUEL_LEVEL}>{results.length || open.length ? 'Play the final mission again' : 'Play the final mission'}</a></ActionBar>
     </>
   );
 }

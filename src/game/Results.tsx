@@ -10,7 +10,7 @@ import { OPTIONS_DATA } from '../lib/planData';
 import { load } from '../lib/storage';
 import { useVotes } from '../lib/votes';
 import { LevelIcon } from './icons';
-import { LEVELS, MAX_STARS, STOPS } from './levels';
+import { LEVELS, MAX_STARS, missionShort, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { useJourney } from './state';
 
@@ -142,7 +142,7 @@ export default function Results() {
   const n = t.players;
   const share = (k: number) => (n ? k / n : 0);
   const last = STOPS[STOPS.length - 1];
-  const finishedAll = t.finishedAll ?? t.done[last.id] ?? 0;
+  const finishedAll = t.done[last.id] ?? 0;
   const avgStars = n ? t.starsTotal / n : 0;
   const shared = c.available;
   const where = c.source === 'site' ? 'at balancethebudget.us' : 'on this shared copy of the game';
@@ -179,13 +179,13 @@ export default function Results() {
     const f = t.firstTry[q.id] ?? { right: 0, n: 0 };
     const me = j.quiz[q.id];
     const v = f.n ? f.right / f.n : 0;
-    return { id: q.id, question: q.question, x: `${l.n}${'abcdef'[k]}`, value: v, n: f.n, mine: !!(me?.correct && me.tries === 1), aria: `Level ${l.n}: ${q.question} ${f.n ? `${pct(v, 0)} right on the first try, of ${f.n}` : 'no answers yet'}`, tip: <><TipTitle>Level {l.n}: {q.question}</TipTitle><TipRow color="var(--c-emph)" line={false} label="Right on the first try" value={f.n ? `${pct(v, 0)} of ${f.n}` : 'no answers yet'} /></> };
+    return { id: q.id, question: q.question, x: `${STOP_BY_ID[l.id].campaign}.${STOP_BY_ID[l.id].mission}${'abcdef'[k]}`, value: v, n: f.n, mine: !!(me?.correct && me.tries === 1), aria: `${missionShort(STOP_BY_ID[l.id])}: ${q.question} ${f.n ? `${pct(v, 0)} right on the first try, of ${f.n}` : 'no answers yet'}`, tip: <><TipTitle>{missionShort(STOP_BY_ID[l.id])}: {q.question}</TipTitle><TipRow color="var(--c-emph)" line={false} label="Right on the first try" value={f.n ? `${pct(v, 0)} of ${f.n}` : 'no answers yet'} /></> };
   }));
   const levelCols: Col[] = STOPS.map((s) => {
     const fin = t.done[s.id] ?? 0;
     const st = t.stars[s.id];
     const avg = st && st.n ? st.sum / st.n : 0;
-    return { id: s.id, x: String(s.n), value: share(fin), n: n, mine: j.done.includes(s.id), aria: `Level ${s.n}, ${s.title}: ${pct(share(fin), 0)} of players finished it`, tip: <><TipTitle>Level {s.n}: {s.title}</TipTitle><TipRow color="var(--c-emph)" line={false} label="Finished it" value={`${pct(share(fin), 0)} · ${fin}`} /><TipRow label="Average stars" value={fin && st?.n ? `★ ${avg.toFixed(1)}` : '—'} /></> };
+    return { id: s.id, x: `${s.campaign}.${s.mission}`, value: share(fin), n: n, mine: j.done.includes(s.id), aria: `${missionShort(s)}, ${s.title}: ${pct(share(fin), 0)} of players finished it`, tip: <><TipTitle>{missionShort(s)}: {s.title}</TipTitle><TipRow color="var(--c-emph)" line={false} label="Finished it" value={`${pct(share(fin), 0)} · ${fin}`} /><TipRow label="Average stars" value={fin && st?.n ? `★ ${avg.toFixed(1)}` : '—'} /></> };
   });
   const cardRows = cards.map(({ o, t: tl }) => ({ id: o.id, name: o.name, side: o.side, yes: tl.support, no: tl.oppose, mine: myOption(o.id) }));
   const youDot = <span className="rlegend-you"><span className="rcol-mine-key" aria-hidden="true" /> you</span>;
@@ -200,17 +200,17 @@ export default function Results() {
 
       <div className="rfigs">
         <Fig hero label={shared ? 'Players' : 'Players here'} value={n.toLocaleString('en-US')} note={shared ? undefined : 'just you'} />
-        <Fig label={t.finishedAll != null ? `Finished all ${STOPS.length}` : `Finished level ${last.n}`} value={n ? pct(share(finishedAll), 0) : '—'} note={`${finishedAll} player${finishedAll === 1 ? '' : 's'}`} />
+        <Fig label="Balanced the budget" value={n ? pct(share(finishedAll), 0) : '—'} note={`${finishedAll} player${finishedAll === 1 ? '' : 's'}`} />
         <Fig label="Average stars" value={n ? avgStars.toFixed(1) : '—'} note={`of ${MAX_STARS}`} />
         <Fig label="Ballots" value={`${v.available ? v.voters : Object.keys(j.choices).filter((k) => j.choices[k]).length ? 1 : 0}`} note={v.available ? 'one per person' : 'yours'} />
       </div>
 
-      <ChartFrame title="How far players got" sub={<>Share of players who finished each level {youDot}</>}
-        table={{ columns: [{ key: 'l', label: 'Level' }, { key: 'f', label: 'Finished', align: 'r' }, { key: 's', label: 'Average stars', align: 'r' }], rows: STOPS.map((s) => { const fin = t.done[s.id] ?? 0; const st = t.stars[s.id]; return { l: `${s.n}. ${s.title}`, f: `${pct(share(fin), 0)} (${fin})`, s: fin && st?.n ? (st.sum / st.n).toFixed(1) : '—' }; }) }}>
-        <Columns items={levelCols} label={`Share of players who finished each of the ${STOPS.length} levels`} />
+      <ChartFrame title="How far players got" sub={<>Share of players who finished each mission (1.5 is campaign 1, mission 5) {youDot}</>}
+        table={{ columns: [{ key: 'l', label: 'Mission' }, { key: 'f', label: 'Finished', align: 'r' }, { key: 's', label: 'Average stars', align: 'r' }], rows: STOPS.map((s) => { const fin = t.done[s.id] ?? 0; const st = t.stars[s.id]; return { l: `${s.campaign}.${s.mission} ${s.title}`, f: `${pct(share(fin), 0)} (${fin})`, s: fin && st?.n ? (st.sum / st.n).toFixed(1) : '—' }; }) }}>
+        <Columns items={levelCols} label={`Share of players who finished each of the ${STOPS.length} missions`} />
       </ChartFrame>
 
-      <ChartFrame title="Right on the first try" sub={<>Each quick check, by level (1a is level 1’s first) {youDot}</>}
+      <ChartFrame title="Right on the first try" sub={<>Each quick check, by mission (1.1a is mission 1.1’s first) {youDot}</>}
         table={{ columns: [{ key: 'q', label: 'Question', wrap: true }, { key: 'r', label: 'First try', align: 'r' }], rows: quizCols.map((c2) => ({ q: <><span className="muted">{c2.x}</span> {c2.question}</>, r: c2.n ? `${pct(c2.value, 0)} of ${c2.n}` : '—' })) }}>
         <Columns items={quizCols} label="Share of players right on the first try, for each quick check" />
       </ChartFrame>
@@ -225,7 +225,7 @@ export default function Results() {
               const parts = [{ label: 'Support', value: tl.support, color: 'var(--vote-yes)', ink: '#fff' }, { label: 'Oppose', value: tl.oppose, color: 'var(--vote-no)', ink: '#0b0b0b' }];
               return (
                 <article key={o.id} className="card rvote">
-                  <span className="rvote-tag">Level {level.n}</span>
+                  <span className="rvote-tag">{missionShort(STOP_BY_ID[level.id])}</span>
                   <h3 className="rvote-q">{o.name}</h3>
                   {tot ? <SegBar parts={parts} label={o.name} format={(x) => `${x} vote${x === 1 ? '' : 's'}`} /> : <div className="rvote-empty">No votes yet</div>}
                   <Legend items={parts.map((p) => ({ label: p.label, color: p.color }))} />
@@ -239,7 +239,7 @@ export default function Results() {
             const parts = vote.choices.map((ch, k) => ({ label: ch.label, value: tl[ch.value] ?? 0, ...CAT[k % CAT.length] }));
             return (
               <article key={vote.id} className="card rvote">
-                <span className="rvote-tag">Level {level.n}</span>
+                <span className="rvote-tag">{missionShort(STOP_BY_ID[level.id])}</span>
                 <h3 className="rvote-q">{vote.question}</h3>
                 {tot ? <SegBar parts={parts.filter((p) => p.value > 0)} label={vote.question} format={(x) => `${x} vote${x === 1 ? '' : 's'}`} /> : <div className="rvote-empty">No votes yet</div>}
                 <Legend items={parts.map((p) => ({ label: p.label, color: p.color }))} />
@@ -258,7 +258,7 @@ export default function Results() {
       </ChartFrame>
 
       {ranks && ranks.cards.length > 0 && (
-        <Section id="card-ranks" title={`In players’ level ${last.n} plans`} sub="Share of plans using each card">
+        <Section id="card-ranks" title="In players’ balance-the-budget plans" sub="Share of plans using each card">
           <ol className="rlist">
             {ranks.cards.slice(0, 8).map((r) => {
               const o = CARD_NAME[r.card];
@@ -270,7 +270,7 @@ export default function Results() {
       )}
 
       {ranks && ranks.states.length > 0 && (
-        <Section id="state-ranks" title="States as teams" sub="Average levels finished (states with 5 or more players)">
+        <Section id="state-ranks" title="States as teams" sub="Average missions finished (states with 5 or more players)">
           <ol className="rlist">
             {ranks.states.slice(0, 8).map((r) => <Row key={r.state} label={STATE_NAME[r.state] ?? r.state} share={Number(r.avg_levels) / STOPS.length} note={`${Number(r.avg_levels).toFixed(1)}`} mine={r.state === myState} />)}
           </ol>

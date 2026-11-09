@@ -15,6 +15,12 @@ const PATHS: Record<IconId, JSX.Element> = {
   target: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></>,
   shield: <><path d="M12 3.2 19 6v5.5c0 4.4-3 7.8-7 9.3-4-1.5-7-4.9-7-9.3V6z" /><path d="m8.8 12 2.3 2.3 4.2-4.5" /></>,
   scale: <><path d="M12 4v16M7.5 20.5h9M5 7h14" /><path d="M5 7 2.5 13a2.8 2.8 0 0 0 5 0zM19 7l-2.5 6a2.8 2.8 0 0 0 5 0z" /></>,
+  wave: <><path d="M12 3.5v6M9.4 7 12 9.6 14.6 7" /><path d="M2.5 15c1.6-3 3.2-3 4.8 0s3.2 3 4.8 0 3.2-3 4.8 0 3.2 3 4.6 0" /><path d="M5 19.5h14" /></>,
+  meter: <><circle cx="12" cy="13.5" r="7" /><path d="m12 13.5 3.2-3.2M10 3h4M12 3v3.5" /></>,
+  hands: <><circle cx="8" cy="7" r="2.6" /><circle cx="16.5" cy="8.5" r="2.1" /><path d="M3 19.5c.5-3.6 2.4-5.6 5-5.6s4.5 2 5 5.6M13.4 19.5c.4-2.8 1.6-4.4 3.1-4.4s2.7 1.6 3.1 4.4" /></>,
+  sprout: <><path d="M12 21v-9M7 21h10" /><path d="M12 12c0-4 3-6.5 7.5-6.5 0 4.5-3 6.5-7.5 6.5zM12 14.5c0-3-2.5-5-6-5 0 3.5 2.5 5 6 5z" /></>,
+  bridge: <><path d="M2.5 9h19M2.5 18h19M5 9v9M19 9v9" /><path d="M5 9c2.5 0 4 2 4 5M19 9c-2.5 0-4 2-4 5M9 14h6" /></>,
+  hourglass: <><path d="M6.5 3h11M6.5 21h11" /><path d="M7.5 3v2.5c0 2.5 4.5 4.5 4.5 6.5s-4.5 4-4.5 6.5V21M16.5 3v2.5c0 2.5-4.5 4.5-4.5 6.5s4.5 4 4.5 6.5V21" /></>,
 };
 
 export function LevelIcon({ id, size = 20 }: { id: IconId; size?: number }) {

@@ -9,7 +9,7 @@ import { dollars, moneyWords, pct } from '../lib/format';
 import { partOfTheFix, personalEffect, savedWages } from '../lib/personal';
 import { GOAL_DONE, whoPays } from './ChallengeParts';
 import { ClipMaker } from './Clip';
-import { DESK, MAX_STARS, rankFor, STOPS } from './levels';
+import { DESK, MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { archetype, ballotFrom, closestPreset, concentration, myName, type SavedPlan } from './plans';
 import { useShareLink } from './shortlinks';
 import { STORY_LINES } from './script';
@@ -57,9 +57,9 @@ function buildCards(level: string, plan: SavedPlan, o: { name: string; stars: nu
       eyebrow: `My Budget Story · ${new Date().getFullYear()}`,
       title: o.name ? `${o.name}’s Budget Story` : 'My Budget Story',
       big: `★ ${o.stars} of ${MAX_STARS}`,
-      body: `I helped Uncle Sam with his budget: ${o.done} of ${STOPS.length} levels, every number from official U.S. government data.`,
+      body: `I helped Uncle Sam with his budget: ${o.done} of ${STOPS.length} missions, every number from official U.S. government data.`,
       chips: [o.rank],
-      alt: `My Budget Story. ${o.stars} of ${MAX_STARS} stars, ${o.done} of ${STOPS.length} levels, rank ${o.rank}.`,
+      alt: `My Budget Story. ${o.stars} of ${MAX_STARS} stars, ${o.done} of ${STOPS.length} missions, rank ${o.rank}.`,
     },
     {
       id: 'personality', color: COLORS.blue,
@@ -77,7 +77,7 @@ function buildCards(level: string, plan: SavedPlan, o: { name: string; stars: nu
       eyebrow: 'My biggest move',
       title: top.name,
       big: shareOf(top.share),
-      body: `On its own, this card closes ${top.share >= 1 ? 'the whole gap' : `about ${Math.max(1, Math.round(top.share * 100))}% of the gap`} on level ${d.n}. CBO puts it at about ${moneyWords(top.savings10 * 1e9, 1)} over ten years.`,
+      body: `On its own, this card closes ${top.share >= 1 ? 'the whole gap' : `about ${Math.max(1, Math.round(top.share * 100))}% of the gap`} on ${missionShort(STOP_BY_ID[d.id])}. CBO puts it at about ${moneyWords(top.savings10 * 1e9, 1)} over ten years.`,
       note: bill && !('none' in bill) ? `Closest bill in Congress: ${bill.bill}, ${bill.title}, ${bill.year}.` : undefined,
       alt: `My biggest move: ${top.name}, ${shareOf(top.share).toLowerCase()}.`,
     });
@@ -116,7 +116,7 @@ function buildCards(level: string, plan: SavedPlan, o: { name: string; stars: nu
     eyebrow: 'Can you beat my plan?',
     title: 'Your turn',
     body: proposal && !('none' in proposal) ? `My plan is closest to the real proposal ${proposal.name}. Play free and see if you can do better.` : 'Play free and see if you can do better.',
-    chips: ['10 levels', 'Real CBO numbers', 'No sign-up'],
+    chips: [`${STOPS.length} missions`, 'Real CBO numbers', 'No sign-up'],
     alt: 'Your turn: can you beat my plan? Play free.',
   });
   return cards;
@@ -145,7 +145,7 @@ export default function Story() {
       <>
         <PageHead eyebrow="Your Budget Story" title="Your Budget Story" lede="Cards about how you’d run Uncle Sam’s books: your budget personality, your biggest move, and the result." />
         <SamSays mood="thinking" auto>{STORY_LINES.locked}</SamSays>
-        <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + first.id}>Go to level {first.n}</a></ActionBar>
+        <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + first.id}>Go to {missionShort(STOP_BY_ID[first.id])}</a></ActionBar>
       </>
     );
   }
@@ -177,7 +177,7 @@ export default function Story() {
 
   return (
     <>
-      <PageHead eyebrow={`Your Budget Story · from level ${d.n}`} title="Your Budget Story" lede="Your budget personality, your biggest move, and the result, as cards sized for a phone story. Built from your latest plan on the budget desk." />
+      <PageHead eyebrow={`Your Budget Story · from ${missionShort(STOP_BY_ID[d.id])}`} title="Your Budget Story" lede="Your budget personality, your biggest move, and the result, as cards sized for a phone story. Built from your latest plan on the budget desk." />
       <div className="sr-only" ref={samBox} aria-hidden="true"><UncleSam mood="cheering" size={120} /></div>
       <SamSays mood="cheering" auto>{STORY_LINES.ready}</SamSays>
       <Section id="cards" title="Your cards" sub="Swipe through. Save any card as an image, or share them all at once.">

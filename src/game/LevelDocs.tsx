@@ -1,7 +1,7 @@
 import { SOURCE_BY_ID } from '../data';
 import { OPTIONS_DATA } from '../lib/planData';
 import { LevelIcon } from './icons';
-import { diffKey, LEVELS, STOPS, type Stop } from './levels';
+import { diffKey, LEVELS, missionShort, type Stop, STOPS } from './levels';
 import { useJourney } from './state';
 
 // The fine print for each level: its full field-guide chapter and the original government
@@ -36,7 +36,7 @@ export function LevelDocs() {
           <article key={s.id} id={'doc-' + s.id} className="card leveldoc" data-diff={diffKey(s.difficulty)}>
             <div className="leveldoc-head">
               <span className="factcard-icon"><LevelIcon id={s.icon} size={18} /></span>
-              <div><div className="stat-label">Level {s.n} · {s.difficulty}</div><a className="leveldoc-title" href={'#' + s.id}>{s.title}</a></div>
+              <div><div className="stat-label">{missionShort(s)} · {s.difficulty}</div><a className="leveldoc-title" href={'#' + s.id}>{s.title}</a></div>
             </div>
             <div className="leveldoc-cols">
               <div>

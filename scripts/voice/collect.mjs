@@ -84,7 +84,7 @@ const banks = await page.evaluate(async () => {
   add('common', S.JOURNEY_LINES.finished);
   for (const r of L.RANKS) {
     add('common', S.JOURNEY_LINES.back(r.name.toLowerCase()));
-    for (const d of L.DESK) add('common', S.JOURNEY_LINES.hardNext(r.name.toLowerCase(), d.n));
+    add('common', S.JOURNEY_LINES.hardNext(r.name.toLowerCase()));
   }
   return out;
 });

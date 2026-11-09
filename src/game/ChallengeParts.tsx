@@ -48,7 +48,7 @@ export function ChallengeShare({ level, plan, onShare }: { level: string; plan: 
     <section className="card challenge-share" id="challenge" aria-labelledby="challenge-t">
       <div className="eyebrow">Challenge a friend</div>
       <h2 className="section-title" id="challenge-t">Send your plan and see who does it better</h2>
-      <p className="small">Your friend sees your plan, plays the same level, and finds out how much you two agree. Nothing is sent until you share the link; the plan travels inside the link itself.</p>
+      <p className="small">Your friend sees your plan, plays the same mission, and finds out how much you two agree. Nothing is sent until you share the link; the plan travels inside the link itself.</p>
       <div className="challenge-fields">
         <div className="field">
           <label htmlFor="ch-name">Sign it with your first name, so your friend knows it’s from you</label>

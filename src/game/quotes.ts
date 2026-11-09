@@ -14,5 +14,11 @@ export const QUOTES: Record<string, Quote> = {
   'level-7': { text: 'This power over the purse may, in fact, be regarded as the most complete and effectual weapon with which any constitution can arm the immediate representatives of the people.', who: 'James Madison', where: 'The Federalist No. 58, 1788' },
   'level-8': { text: 'Fellow-citizens, we cannot escape history.', who: 'Abraham Lincoln', where: 'Annual message to Congress, December 1, 1862' },
   'level-9': { text: 'We have tried to frame a law which will give some measure of protection to the average citizen and to his family against the loss of a job and against poverty-ridden old age.', who: 'Franklin D. Roosevelt', where: 'Statement on signing the Social Security Act, August 14, 1935' },
+  'level-economy': { text: 'The boom, not the slump, is the right time for austerity at the Treasury.', who: 'John Maynard Keynes', where: '“How to Avoid a Slump,” The Times (London), January 1937' },
+  'level-drag': { text: 'Make haste slowly.', who: 'Augustus, Roman emperor', where: 'His favorite saying, as recorded by Suetonius, The Lives of the Caesars, c. 121' },
+  'level-fairness': { text: 'The test of our progress is not whether we add more to the abundance of those who have much; it is whether we provide enough for those who have too little.', who: 'Franklin D. Roosevelt', where: 'Second inaugural address, January 20, 1937' },
+  'level-growth': { text: 'Productivity isn’t everything, but in the long run it is almost everything.', who: 'Paul Krugman', where: 'The Age of Diminished Expectations, 1990' },
+  'level-investment': { text: 'Together, the uniting forces of our communication and transportation systems are dynamic elements in the very name we bear—United States.', who: 'Dwight D. Eisenhower', where: 'Special message to Congress on a national highway program, February 22, 1955' },
+  'level-future': { text: 'The principle of spending money to be paid by posterity, under the name of funding, is but swindling futurity on a large scale.', who: 'Thomas Jefferson', where: 'Letter to John Taylor, May 28, 1816' },
   'level-10': { text: 'We cannot always build the future for our youth, but we can build our youth for the future.', who: 'Franklin D. Roosevelt', where: 'Address at the University of Pennsylvania, September 20, 1940' },
 };

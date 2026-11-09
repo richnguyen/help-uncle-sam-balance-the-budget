@@ -87,3 +87,6 @@ export function people(v: number): string {
   if (v >= 1e3) return `${Math.round(v / 1e3)} thousand`;
   return int(v);
 }
+
+/** A title used mid-sentence: lowercases its first letter only, so “GDP” and “Social Security” keep their capitals. */
+export const lower = (s: string) => s.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase());

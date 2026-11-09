@@ -1,3 +1,4 @@
+import { lower } from './format';
 import type { EconSummary, Goal } from './plan';
 import { load, save } from './storage';
 
@@ -60,13 +61,13 @@ export interface Badge { id: string; name: string; desc: string }
 
 export const BADGES: Badge[] = [
   { id: 'first', name: 'First move', desc: 'Add your first policy card.' },
-  { id: 'stabilize', name: 'Debt stabilizer', desc: 'Finish level 5: stop the debt from outgrowing the economy.' },
-  { id: 'deficit3', name: 'Deficit tamer', desc: 'Finish level 8: cut the deficit to 3% of GDP.' },
-  { id: 'balance', name: 'Budget balancer', desc: 'Finish level 10: balance the budget.' },
-  { id: 'gentle', name: 'Light touch', desc: 'Complete a mission while going easy on the economy.' },
-  { id: 'even', name: 'Even-handed', desc: 'Complete a mission with 40 to 60% of savings from each side.' },
-  { id: 'promise', name: 'Promise keeper', desc: 'Complete a mission without cutting benefits for current retirees, programs for low-income families, or public investment.' },
-  { id: 'economist', name: 'Economist-level', desc: 'Complete a mission at no more than 10% above the lowest possible economic cost.' },
+  { id: 'stabilize', name: 'Debt stabilizer', desc: 'Finish campaign 1: stop the debt from outgrowing the economy.' },
+  { id: 'deficit3', name: 'Deficit tamer', desc: 'Finish campaign 2: cut the deficit to 3% of GDP.' },
+  { id: 'balance', name: 'Budget balancer', desc: 'Finish campaign 3: balance the budget.' },
+  { id: 'gentle', name: 'Light touch', desc: 'Meet a budget desk’s goal while going easy on the economy.' },
+  { id: 'even', name: 'Even-handed', desc: 'Meet a budget desk’s goal with 40 to 60% of savings from each side.' },
+  { id: 'promise', name: 'Promise keeper', desc: 'Meet a budget desk’s goal without cutting benefits for current retirees, programs for low-income families, or public investment.' },
+  { id: 'economist', name: 'Economist-level', desc: 'Meet a budget desk’s goal at no more than 10% above the lowest possible economic cost.' },
   { id: 'voter', name: 'Voice heard', desc: 'Vote on a policy card or pick a plan.' },
 ];
 
@@ -100,7 +101,7 @@ export function earnedBadges(o: { goal: Goal; ev: Evaluation; count: number; rev
 
 export function planText(o: { mission: Mission; names: string[]; deficit: string; debt: string; stars: number; fy: number }) {
   return [
-    `My plan to ${o.mission.title.toLowerCase()} by FY${o.fy} (${'★'.repeat(o.stars)}${'☆'.repeat(3 - o.stars)}):`,
+    `My plan to ${lower(o.mission.title)} by FY${o.fy} (${'★'.repeat(o.stars)}${'☆'.repeat(3 - o.stars)}):`,
     ...o.names.map((n) => `• ${n}`),
     `Result in FY${o.fy}: deficit ${o.deficit} of GDP, debt ${o.debt} of GDP.`,
     'Built with Help Uncle Sam Balance the Budget, using CBO estimates.',

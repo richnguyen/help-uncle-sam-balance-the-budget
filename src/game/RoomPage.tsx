@@ -4,11 +4,11 @@ import { EconMeter, GapBar, type GapSegment, SplitBar } from '../components/game
 import { PageHead, Section } from '../components/ui';
 import { assess, CTX, LAST_FY } from '../lib/assess';
 import { backendOn, closeRoom, getRoom, joinRoom, leaveRoom, type Membership, myMembership, type Room, ROOM_CODE, rpc } from '../lib/backend';
-import { money, pct } from '../lib/format';
+import { lower, money, pct } from '../lib/format';
 import { goalGap } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import { ZERO } from '../lib/sandbox';
-import { DESK, STOPS } from './levels';
+import { DESK, missionLong, missionShort, STOP_BY_ID, stopForCode, STOPS } from './levels';
 import { BALLOT, siteRoot } from './plans';
 import { activeRoom, forgetRoom, rememberRoom, setActiveRoom } from './rooms';
 import { ROOM_LINES } from './script';
@@ -95,7 +95,7 @@ export default function RoomPage({ param }: { param: string | null }) {
   const joined = !!me;
   const ref = { code: room.code, name: room.name, level: room.level };
   const link = `${siteRoot()}p/room/?room=${room.code}`;
-  const shareText = `Join our room “${room.name}” in Help Uncle Sam Balance the Budget: play level ${d.n} and add your plan to ours. Room code ${room.code}.`;
+  const shareText = `Join our room “${room.name}” in Help Uncle Sam Balance the Budget: play ${missionShort(STOP_BY_ID[d.id])} (${lower(d.title)}) and add your plan to ours. Room code ${room.code}.`;
   const members = t?.members ?? room.members;
   const finished = t?.done[d.id] ?? 0;
 
@@ -119,7 +119,7 @@ export default function RoomPage({ param }: { param: string | null }) {
 
   return (
     <>
-      <PageHead eyebrow={`Room · level ${d.n} of ${STOPS.length} · ${d.difficulty}`} title={room.name} lede={<>Everyone in this room plays level {d.n}. A card is in the room’s plan when more than half the members’ plans use it.</>} />
+      <PageHead eyebrow={`Room · ${missionLong(STOP_BY_ID[d.id])} · ${d.difficulty}`} title={room.name} lede={<>Everyone in this room plays {missionShort(STOP_BY_ID[d.id])}, {lower(d.title)}. A card is in the room’s plan when more than half the members’ plans use it.</>} />
       <SamSays mood="happy" auto>{joined ? ROOM_LINES.welcome : ROOM_LINES.invited}</SamSays>
       {error && <div className="callout small" role="status">{error}</div>}
 
@@ -130,7 +130,7 @@ export default function RoomPage({ param }: { param: string | null }) {
           {joined ? (
             <>
               <ActionBar label="The room">
-                <a className="btn btn-primary" href={'#' + d.id} onClick={() => setActiveRoom(ref)}>{me?.cards ? `Play level ${d.n} again` : `Play level ${d.n} for the room`}</a>
+                <a className="btn btn-primary" href={'#' + d.id} onClick={() => setActiveRoom(ref)}>{me?.cards ? `Play ${missionShort(STOP_BY_ID[d.id])} again` : `Play ${missionShort(STOP_BY_ID[d.id])} for the room`}</a>
                 <ShareButton text={shareText} url={link} label="Invite" className="btn" />
               </ActionBar>
               <div className="sb-actions">
@@ -141,13 +141,13 @@ export default function RoomPage({ param }: { param: string | null }) {
           ) : (
             <ActionBar label="The room"><button type="button" className="btn btn-primary" onClick={join} disabled={busy != null}>{busy === 'join' ? 'Joining…' : 'Join this room'}</button></ActionBar>
           )}
-          {joined && <div className="small muted">{me?.cards ? `Your plan is in: ${me.cards.length} cards, ${me.stars ?? 0} of 3 stars.` : `When you meet the goal on level ${d.n}, your plan joins the room’s.`}</div>}
+          {joined && <div className="small muted">{me?.cards ? `Your plan is in: ${me.cards.length} cards, ${me.stars ?? 0} of 3 stars.` : `When you meet the goal on ${missionShort(STOP_BY_ID[d.id])}, your plan joins the room’s.`}</div>}
           {!joined && <div className="small muted">Joining takes a quick, private check that you’re a person. The room sees totals, never who did what.</div>}
         </div>
       </section>
 
       <section className="card peoples-board" aria-live="polite">
-        <div className="sb-big">{!t?.plans ? 'No plans yet: be the first' : a.met ? `The room’s plan meets the goal: ${d.title.toLowerCase()}` : `The room’s plan is ${Math.floor(a.progress * 100)}% of the way`}</div>
+        <div className="sb-big">{!t?.plans ? 'No plans yet: be the first' : a.met ? `The room’s plan meets the goal: ${lower(d.title)}` : `The room’s plan is ${Math.floor(a.progress * 100)}% of the way`}</div>
         <GapBar segments={segments} progress={a.progress} />
         <div className="small muted">{t?.plans ? (a.met ? `With ${roomIds.length} cards, in FY${LAST_FY}: deficit ${a.last.deficit <= 0 ? 'balanced' : pct(a.last.deficit / a.last.gdp, 1) + ' of GDP'}, debt ${pct(a.last.debt / a.last.gdp, 0)} of GDP.` : `${roomIds.length} card${roomIds.length === 1 ? '' : 's'} have a majority. Still needed: ${money(still)} by FY${LAST_FY}.`) : `Goal: ${d.title.toLowerCase()} by FY${LAST_FY}.`}</div>
         {t?.plans ? (
@@ -174,7 +174,7 @@ export default function RoomPage({ param }: { param: string | null }) {
           <ol className="rlist">
             {STOPS.map((s) => <Bar key={s.id} label={`${s.n}. ${s.title}`} share={members ? (t.done[s.id] ?? 0) / members : 0} note={`${t.done[s.id] ?? 0} of ${members}`} />)}
           </ol>
-          <p className="small muted">{finished} of {members} finished level {d.n}.</p>
+          <p className="small muted">{finished} of {members} finished {missionShort(STOP_BY_ID[d.id])}.</p>
         </Section>
       )}
 
@@ -186,13 +186,13 @@ export default function RoomPage({ param }: { param: string | null }) {
                 if (q.key.startsWith('option:')) {
                   const v = t.votes!.options[q.key.slice(7)] ?? { support: 0, oppose: 0 };
                   const n = v.support + v.oppose;
-                  return <article key={q.key} className="card rvote"><div className="stat-label">Level {q.level} · policy option</div><h3 className="rvote-q">{q.question}</h3><p className="small num">{n ? `${pct(v.support / n, 0)} support · ${pct(v.oppose / n, 0)} oppose · ${n} vote${n === 1 ? '' : 's'}` : 'No votes yet'}</p></article>;
+                  return <article key={q.key} className="card rvote"><div className="stat-label">{missionShort(stopForCode(q.level)!)} · policy option</div><h3 className="rvote-q">{q.question}</h3><p className="small num">{n ? `${pct(v.support / n, 0)} support · ${pct(v.oppose / n, 0)} oppose · ${n} vote${n === 1 ? '' : 's'}` : 'No votes yet'}</p></article>;
                 }
                 const tally = t.votes!.issues[q.key] ?? {};
                 const tot = Object.values(tally).reduce((x, y) => x + y, 0);
                 return (
                   <article key={q.key} className="card rvote">
-                    <div className="stat-label">Level {q.level} · question</div>
+                    <div className="stat-label">{missionShort(stopForCode(q.level)!)} · question</div>
                     <h3 className="rvote-q">{q.question}</h3>
                     <ol className="rlist">{q.values.map((val, i) => <Bar key={val} label={q.labels[i]} share={tot ? (tally[val] ?? 0) / tot : 0} note={tot ? `${pct((tally[val] ?? 0) / tot, 0)} · ${tally[val] ?? 0}` : '0'} />)}</ol>
                   </article>
@@ -208,7 +208,7 @@ export default function RoomPage({ param }: { param: string | null }) {
         <SocialShare text={shareText} url={link} />
         {room.mine && <div className="sb-actions" style={{ marginTop: 12 }}><button type="button" className="btn" onClick={close} disabled={busy != null}>Close the room</button><span className="small muted">You started this room. Closing it removes it for everyone.</span></div>}
       </Section>
-      <p className="small muted">Rooms keep each member’s latest plan for level {d.n} (cards only) and count members’ progress and votes. Nobody, including whoever started the room, can see who did what. Not a scientific survey.</p>
+      <p className="small muted">Rooms keep each member’s latest plan for {missionShort(STOP_BY_ID[d.id])} (cards only) and count members’ progress and votes. Nobody, including whoever started the room, can see who did what. Not a scientific survey.</p>
     </>
   );
 }

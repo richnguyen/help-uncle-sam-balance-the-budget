@@ -11,6 +11,7 @@ import { ReceiptTeaser, useWages, WageControls } from '../components/TaxReceipt'
 import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
 import { QUOTES, type Quote } from './quotes';
+import { CONCEPT_LEVELS } from './concepts';
 
 // ---------------------------------------------------------------------------------------------
 // The seven chapter levels. Every number Uncle Sam says, and every quiz answer, is computed from
@@ -35,7 +36,7 @@ export interface Step {
 }
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Super hard';
-export type IconId = 'paycheck' | 'bills' | 'home' | 'gap' | 'gauge' | 'card' | 'capitol' | 'target' | 'shield' | 'scale';
+export type IconId = 'paycheck' | 'bills' | 'home' | 'gap' | 'gauge' | 'card' | 'capitol' | 'target' | 'shield' | 'scale' | 'wave' | 'meter' | 'hands' | 'sprout' | 'bridge' | 'hourglass';
 
 export interface Level {
   id: string;
@@ -181,7 +182,7 @@ const topProgram = topProgramCounts[0]?.[0] ?? 'Social Security Retirement Insur
 const interestBeatsDefense = cat('interest') > cat('defense');
 const mixChoices = [{ value: 'taxes', label: 'Mostly tax increases' }, { value: 'even', label: 'An even mix of taxes and cuts' }, { value: 'cuts', label: 'Mostly spending cuts' }];
 
-export const LEVELS: Level[] = [
+const CHAPTERS: Level[] = [
   {
     id: 'level-1', n: 1, title: 'Uncle Sam’s paycheck', topic: 'Where the money comes from', difficulty: 'Easy', minutes: 4, icon: 'paycheck', badge: 'Revenue basics',
     steps: [
@@ -395,6 +396,8 @@ export const LEVELS: Level[] = [
     links: [{ title: 'The 2026 Social Security Trustees Report (full report, PDF)', url: 'https://www.ssa.gov/oact/TR/2026/tr2026.pdf' }],
   },
 ];
+/** Every chapter mission: the original seven, then the concept missions before each budget desk. */
+export const LEVELS: Level[] = [...CHAPTERS, ...CONCEPT_LEVELS];
 
 /** The budget desk levels: the hard "wall" levels where the player fixes the budget with real options. */
 /** `hint`: the first desk level offers a hint (Uncle Sam points to one card, or to the next star). */
@@ -405,25 +408,49 @@ export const DESK: DeskLevel[] = [
   { id: 'level-10', n: 10, goal: 'balance', title: 'Balance the budget', topic: 'Budget desk: the final challenge, no borrowing at all', difficulty: 'Super hard', minutes: 10, icon: 'scale', badge: 'Budget balanced' },
 ];
 
-/** Every level in play order, chapters and budget desk alike. */
-export interface Stop { id: string; n: number; kind: 'chapter' | 'desk'; title: string; topic: string; difficulty: Difficulty; minutes: number; icon: IconId; badge: string; quote: Quote }
-export const STOPS: Stop[] = [
-  ...LEVELS.map((l) => ({ id: l.id, n: l.n, kind: 'chapter' as const, title: l.title, topic: l.topic, difficulty: l.difficulty, minutes: l.minutes, icon: l.icon, badge: `${l.badge}: explained`, quote: QUOTES[l.id] })),
-  ...DESK.map((d) => ({ id: d.id, n: d.n, kind: 'desk' as const, title: d.title, topic: d.topic, difficulty: d.difficulty, minutes: d.minutes, icon: d.icon, badge: d.badge, quote: QUOTES[d.id] })),
-].sort((a, b) => a.n - b.n);
+/**
+ * Three campaigns, each with one goal, built from missions that go from easy to hard and end at
+ * the budget desk. A mission's `n` is its stable code (old links, rooms, previews and saved
+ * progress use it); players see "Campaign 1 · Mission 5" instead.
+ */
+export interface Campaign { n: 1 | 2 | 3; goal: 'stabilize' | 'deficit3' | 'balance'; title: string; blurb: string; missions: string[] }
+export const CAMPAIGNS: Campaign[] = [
+  { n: 1, goal: 'stabilize', title: 'Stop the debt from outgrowing the economy', blurb: 'Learn where the money comes from and goes, how a change hits the economy, and who it reaches. Then steady the debt.', missions: ['level-1', 'level-2', 'level-3', 'level-4', 'level-economy', 'level-drag', 'level-fairness', 'level-5'] },
+  { n: 2, goal: 'deficit3', title: 'Cut the deficit to 3% of GDP', blurb: 'Learn about the debt, how Congress budgets, what grows the economy, and why public investment is different. Then cut the deficit to a level the country can keep up.', missions: ['level-6', 'level-7', 'level-growth', 'level-investment', 'level-8'] },
+  { n: 3, goal: 'balance', title: 'Balance the budget', blurb: 'Learn what Social Security’s future and the interest bill ask of the next generation. Then try to balance the books.', missions: ['level-9', 'level-future', 'level-10'] },
+];
+
+/** Every mission in play order, chapters and budget desk alike. */
+export interface Stop { id: string; n: number; kind: 'chapter' | 'desk'; title: string; topic: string; difficulty: Difficulty; minutes: number; icon: IconId; badge: string; quote: Quote; pos: number; campaign: 1 | 2 | 3; mission: number; of: number; final: boolean }
+const RAW: Record<string, Omit<Stop, 'pos' | 'campaign' | 'mission' | 'of' | 'final'>> = Object.fromEntries([
+  ...LEVELS.map((l) => [l.id, { id: l.id, n: l.n, kind: 'chapter' as const, title: l.title, topic: l.topic, difficulty: l.difficulty, minutes: l.minutes, icon: l.icon, badge: `${l.badge}: explained`, quote: QUOTES[l.id] }]),
+  ...DESK.map((d) => [d.id, { id: d.id, n: d.n, kind: 'desk' as const, title: d.title, topic: d.topic, difficulty: d.difficulty, minutes: d.minutes, icon: d.icon, badge: d.badge, quote: QUOTES[d.id] }]),
+]);
+export const STOPS: Stop[] = CAMPAIGNS.flatMap((c) => c.missions.map((id, k) => ({ ...RAW[id], campaign: c.n, mission: k + 1, of: c.missions.length, final: k === c.missions.length - 1, pos: 0 }))).map((s, i) => ({ ...s, pos: i + 1 }));
 export const STOP_BY_ID: Record<string, Stop> = Object.fromEntries(STOPS.map((s) => [s.id, s]));
 export const ALL_STOPS = STOPS;
+export const campaignOf = (id: string) => CAMPAIGNS[(STOP_BY_ID[id]?.campaign ?? 1) - 1];
+/** The mission after this one, in play order (none after the last). */
+export const nextOf = (id: string): Stop | undefined => STOPS[(STOP_BY_ID[id]?.pos ?? STOPS.length)];
+export const prevOf = (id: string): Stop | undefined => { const p = STOP_BY_ID[id]?.pos ?? 1; return p > 1 ? STOPS[p - 2] : undefined; };
+/** "Mission 1.5": the campaign, then the mission within it. */
+export const missionShort = (s: Pick<Stop, 'campaign' | 'mission'>) => `Mission ${s.campaign}.${s.mission}`;
+/** "Campaign 1 · Mission 5 of 8", or "Campaign 1 · Final mission". */
+export const missionLong = (s: Pick<Stop, 'campaign' | 'mission' | 'of' | 'final'>) => `Campaign ${s.campaign} · ${s.final ? 'Final mission' : `Mission ${s.mission} of ${s.of}`}`;
+/** A desk's stop, from its stable code (5, 8 or 10). */
+export const stopForCode = (n: number) => STOPS.find((s) => s.n === n);
 
 export function isUnlocked(id: string, done: string[], freeRoam: boolean) {
   if (freeRoam) return true;
   const s = STOP_BY_ID[id];
   if (!s) return true;
-  return s.n === 1 || done.includes(`level-${s.n - 1}`);
+  // A mission played before the campaigns existed stays open.
+  return s.pos === 1 || done.includes(id) || done.includes(STOPS[s.pos - 2].id);
 }
 
 export function unlockText(id: string) {
-  const s = STOP_BY_ID[id];
-  return !s || s.n === 1 ? 'Open' : `Finish level ${s.n - 1} to unlock`;
+  const prev = prevOf(id);
+  return prev ? `Finish ${missionShort(prev)} to unlock` : 'Open';
 }
 
 /** Stars for a chapter level: three for every question right on the first try. */
@@ -448,8 +475,8 @@ export const sourcesFor = (ids: string[]) => ids.map(src).filter(Boolean);
 export const RANKS = [
   { at: 0, name: 'New volunteer' },
   { at: 2, name: 'Budget aide' },
-  { at: 4, name: 'Budget analyst' },
-  { at: 7, name: 'Senior budget adviser' },
+  { at: 5, name: 'Budget analyst' },
+  { at: 11, name: 'Senior budget adviser' },
   { at: STOPS.length, name: 'Informed Budget Voter' },
 ];
 export const rankFor = (n: number) => [...RANKS].reverse().find((r) => n >= r.at)!;

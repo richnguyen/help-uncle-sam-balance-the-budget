@@ -191,7 +191,7 @@ export default function ClockPage() {
         </ul>
         <p className="small">Other debt clocks use their own estimates and formulas. This one uses the Treasury’s published figures only; the sources are in <a href="#sources">Sources &amp; methods</a>.</p>
       </section>
-      <ActionBar label="Next step"><a className="btn btn-primary" href="#level-6">Play level 6: the credit card</a><a className="btn" href="#debt">Read the debt chapter</a></ActionBar>
+      <ActionBar label="Next step"><a className="btn btn-primary" href="#level-6">Play mission 2.1: the credit card</a><a className="btn" href="#debt">Read the debt chapter</a></ActionBar>
     </>
   );
 }

@@ -25,7 +25,7 @@ export function TogetherCards({ compact = false }: { compact?: boolean }) {
         <span className="tcard-tag">Class, club, or office</span>
         <strong className="tcard-title">Build one plan as a group</strong>
         <span className="tcard-meta">5 to 40 people · one class period · a 6-character code</span>
-        {!compact && <p className="small">Everyone plays the same budget-desk level on their own phone. Each plan joins the room’s, and the room shows the plan the group agrees on, card by card. No accounts, and nobody sees who chose what.</p>}
+        {!compact && <p className="small">Everyone plays the same budget-desk mission on their own phone. Each plan joins the room’s, and the room shows the plan the group agrees on, card by card. No accounts, and nobody sees who chose what.</p>}
         <span className="tcard-actions">
           <a className="btn btn-primary" href="#rooms">Start a room</a>
           <a className="btn" href="#teach">For teachers: a lesson plan</a>
@@ -53,7 +53,7 @@ export function TogetherCards({ compact = false }: { compact?: boolean }) {
       </li>
       <li className="tcard" data-kind="duel">
         <span className="tcard-tag">One friend, or many</span>
-        <strong className="tcard-title">Duel on level 10</strong>
+        <strong className="tcard-title">Duel on the final mission</strong>
         <span className="tcard-meta">2 plans per duel · about 10 minutes each · one link for many friends</span>
         {!compact && <p className="small">You each balance the budget on your own, with your plans sealed. Then the two plans face off in three rounds: the debt, the economy, and the balance. Plans are compared, never people.</p>}
         <span className="tcard-actions">

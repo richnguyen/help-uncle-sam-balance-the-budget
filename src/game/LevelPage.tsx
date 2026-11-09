@@ -8,7 +8,7 @@ import { Stars } from '../components/game';
 import { ActionBar } from '../components/ActionBar';
 import { useHaptics } from './haptics';
 import { LevelIcon } from './icons';
-import { chapterStars, checksOf, diffKey, isUnlocked, LEVELS, type Level, type Quiz, type Step, STOP_BY_ID, STOPS, unlockText, type VoteSpec } from './levels';
+import { campaignOf, chapterStars, checksOf, diffKey, isUnlocked, LEVELS, type Level, missionLong, missionShort, nextOf, type Quiz, type Step, STOP_BY_ID, STOPS, unlockText, type VoteSpec } from './levels';
 import { useJourney } from './state';
 import { useSamDock } from './samdock';
 import { finishLevelTime, levelMinutes, resetLevelTime, useLevelTimer } from './levelTime';
@@ -31,9 +31,9 @@ function Locked({ level }: { level: Level }) {
     <div className="level">
       <LevelHead level={level} />
       <SamSays mood="thinking" auto>{lockedLine(unlockText(level.id))}</SamSays>
-      {next && <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + next.id}>Go to level {next.n}: {next.title}</a></ActionBar>}
+      {next && <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + next.id}>Go to {missionShort(next)}: {next.title}</a></ActionBar>}
       <div className="sb-actions" style={{ marginTop: 16 }}>
-        <button type="button" className="btn" onClick={() => j.setSettings({ freeRoam: true })}>Unlock every level (free roam)</button>
+        <button type="button" className="btn" onClick={() => j.setSettings({ freeRoam: true })}>Unlock every mission (free roam)</button>
         {level.deepDive.map((d) => <a key={d.route} className="btn" href={'#' + d.route}>Read the full chapter: {d.label}</a>)}
       </div>
     </div>
@@ -45,9 +45,9 @@ function LevelHead({ level }: { level: Level }) {
   const best = j.stars[level.id] ?? 0;
   return (
     <header className="level-head" data-diff={diffKey(level.difficulty)}>
-      <div className="eyebrow level-eyebrow"><LevelIcon id={level.icon} size={16} /> Level {level.n} of {STOPS.length} · {level.difficulty} · about {level.minutes} min</div>
+      <div className="eyebrow level-eyebrow"><LevelIcon id={level.icon} size={16} /> {missionLong(STOP_BY_ID[level.id])} · {level.difficulty} · about {level.minutes} min</div>
       <h1 className="page-title">{level.title}</h1>
-      {j.done.includes(level.id) && <div className="accomp-points"><Stars n={best} size="md" label={`Best on this level: ${best} of 3 stars`} /><span className="small muted">best on this level{best < 3 ? ' · replay for more stars' : ''}</span></div>}
+      {j.done.includes(level.id) && <div className="accomp-points"><Stars n={best} size="md" label={`Best on this mission: ${best} of 3 stars`} /><span className="small muted">best on this mission{best < 3 ? ' · replay for more stars' : ''}</span></div>}
       <p className="lede">{level.topic}</p>
     </header>
   );
@@ -133,7 +133,7 @@ function LevelRun({ level }: { level: Level }) {
           <ActionBar className="level-nav" label="Step" keepSam>
             <button type="button" className="btn" onClick={back} disabled={i === 0 && (samUp || !dock?.line)}>Back</button>
             <button type="button" className="btn btn-primary" onClick={primary} disabled={!reveal && !quizOk}>
-              {samUp ? 'Skip this narrative' : !quizOk ? (step.quiz?.guess ? 'Make a guess to continue' : 'Answer to continue') : step.kind === 'vote' ? (hasVoted(step.vote!, j.choices) ? 'Finish the level' : 'Skip the vote and finish') : i === level.steps.length - 1 ? 'Finish the level' : 'Continue'}
+              {samUp ? 'Skip this narrative' : !quizOk ? (step.quiz?.guess ? 'Make a guess to continue' : 'Answer to continue') : step.kind === 'vote' ? (hasVoted(step.vote!, j.choices) ? 'Finish the mission' : 'Skip the vote and finish') : i === level.steps.length - 1 ? 'Finish the mission' : 'Continue'}
             </button>
             <span className="keyhint small muted" aria-hidden="true">{step.kind === 'quiz' ? <><kbd>1</kbd>–<kbd>{step.quiz!.choices.length}</kbd> answer · </> : null}<kbd>Enter</kbd> continue · <kbd>←</kbd> back</span>
           </ActionBar>
@@ -141,7 +141,7 @@ function LevelRun({ level }: { level: Level }) {
       ) : (
         <Complete level={level} onReview={() => { j.retry(level.steps.filter((x) => x.quiz).map((x) => x.quiz!.id)); resetLevelTime(level.id); go(0); }} />
       )}
-      <p className="fineprint-link small">This level’s full chapter and the original government documents are in <a href={'#sources-' + level.id}>Sources &amp; methods</a>.</p>
+      <p className="fineprint-link small">This mission’s full chapter and the original government documents are in <a href={'#sources-' + level.id}>Sources &amp; methods</a>.</p>
       {party != null && <Celebration stop={STOP_BY_ID[level.id]} stars={party} minutes={mins} onClose={() => setParty(null)} />}
     </div>
   );
@@ -155,7 +155,7 @@ function StepTrack({ level, at, done, finished, onGo }: { level: Level; at: numb
   const n = level.steps.length;
   const count = finished ? n : done.length;
   return (
-    <nav className="steptrack" aria-label="Steps in this level">
+    <nav className="steptrack" aria-label="Steps in this mission">
       <div className="steptrack-bar" role="progressbar" aria-valuemin={0} aria-valuemax={n} aria-valuenow={count} aria-label={`${count} of ${n} steps done`}>
         {level.steps.map((s, k) => {
           const isDone = finished || done.includes(k);
@@ -352,7 +352,7 @@ function VoteFoot({ votes }: { votes: ReturnType<typeof useVotes> }) {
 
 function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
   const j = useJourney();
-  const next = STOPS[level.n];
+  const next = nextOf(level.id);
   const quizzes = checksOf(level).map((q) => j.quiz[q.id]);
   const firstTry = quizzes.filter((q) => q?.correct && q.tries === 1).length;
   const levelsDone = STOPS.filter((l) => j.done.includes(l.id)).length;
@@ -362,9 +362,9 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
       <div className="complete-top">
         <UncleSam mood="proud" size={120} />
         <div>
-          <div className="eyebrow">Level {level.n} complete · <span className="complete-stars" aria-label={`${stars} of 3 stars`}>{'★'.repeat(stars)}<span className="muted">{'★'.repeat(3 - stars)}</span></span></div>
+          <div className="eyebrow">{missionShort(STOP_BY_ID[level.id])} complete · <span className="complete-stars" aria-label={`${stars} of 3 stars`}>{'★'.repeat(stars)}<span className="muted">{'★'.repeat(3 - stars)}</span></span></div>
           <h2 className="complete-title" id="complete-t">{level.badge}: explained</h2>
-          <p className="small muted">{firstTry === quizzes.length ? `${quizzes.length === 1 ? 'The quick check' : 'Every quick check'} right on the first try. ` : `${firstTry} of ${quizzes.length} quick check${quizzes.length === 1 ? '' : 's'} right on the first try; replay for three stars. `}{levelsDone} of {STOPS.length} levels done.</p>
+          <p className="small muted">{firstTry === quizzes.length ? `${quizzes.length === 1 ? 'The quick check' : 'Every quick check'} right on the first try. ` : `${firstTry} of ${quizzes.length} quick check${quizzes.length === 1 ? '' : 's'} right on the first try; replay for three stars. `}{levelsDone} of {STOPS.length} missions done.</p>
         </div>
       </div>
       <div className="stat-label">What we figured out together</div>
@@ -377,12 +377,13 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
           <MyShareCard compact />
         </div>
       )}
-      {next?.kind === 'desk' && <div className="callout"><div className="callout-title">Up next: a hard level at the budget desk</div><p className="small">Level {next.n} asks you to fix the budget yourself: {next.title.toLowerCase()}. Take your time.</p></div>}
+      {next?.kind === 'desk' && <div className="callout"><div className="callout-title">Up next: the campaign’s final mission, at the budget desk</div><p className="small">{missionShort(next)} asks you to fix the budget yourself, using what this campaign taught you: {next.title.toLowerCase()}. Take your time.</p></div>}
+      {next && next.campaign !== STOP_BY_ID[level.id].campaign && <div className="callout"><div className="callout-title">Campaign {next.campaign} starts next</div><p className="small">{campaignOf(next.id).title}. {campaignOf(next.id).blurb}</p></div>}
       <p className="small complete-together">Play it with others: <a href="#rooms">a room for your class or club</a>, <a href="#daily">the Daily Dollar with your group chat</a>, or <a href="#chain">pass the budget</a>.</p>
       <p className="small"><a href="#levels">See your progress on the road map</a></p>
       <ActionBar label="Next">
-        {next ? <a className="btn btn-primary" href={'#' + next.id}>Next: level {next.n}, {next.title}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
-        <button type="button" className="btn" onClick={onReview}>Replay this level</button>
+        {next ? <a className="btn btn-primary" href={'#' + next.id}>Next: {missionShort(next)}, {next.title}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
+        <button type="button" className="btn" onClick={onReview}>Replay this mission</button>
       </ActionBar>
     </section>
   );

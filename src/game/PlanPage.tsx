@@ -8,7 +8,7 @@ import { acceptChallenge } from './challenge';
 import { AgreementCard, assessShared, cardName, GOAL_PLAN, HeadToHead, whoPays } from './ChallengeParts';
 import { PlanProposal } from './DeskExtras';
 import { LevelIcon } from './icons';
-import { STOP_BY_ID, STOPS } from './levels';
+import { missionLong, missionShort, STOP_BY_ID, stopForCode, STOPS } from './levels';
 import { BALLOT, ballotFrom, closestPreset, compare, decodePlan, encodePlan, myName } from './plans';
 import { useShareLink } from './shortlinks';
 import { PLAN_LINES } from './script';
@@ -65,7 +65,7 @@ export default function PlanPage({ param }: { param: string | null }) {
   return (
     <div className="level planpage">
       <header className="level-head">
-        <div className="eyebrow level-eyebrow"><LevelIcon id={stop.icon} size={16} /> A plan from a friend · level {stop.n} of {STOPS.length} · {stop.difficulty}</div>
+        <div className="eyebrow level-eyebrow"><LevelIcon id={stop.icon} size={16} /> A plan from a friend · {missionLong(stop)} · {stop.difficulty}</div>
         <h1 className="page-title">{by === 'Your friend' ? 'Your friend’s' : `${by}’s`} {GOAL_PLAN[plan.goal]}</h1>
       </header>
       {/* The first screen: what the plan scored, and the button to take it on. */}
@@ -75,7 +75,7 @@ export default function PlanPage({ param }: { param: string | null }) {
           <span className="small">{a.shares.length} card{a.shares.length === 1 ? '' : 's'} · {whoPays(a)} · {RATING[a.econ.rating]}</span>
         </div>
         <button type="button" className="btn btn-primary btn-lg bar-dup" onClick={take}>{mine ? 'Play it again and try to beat it' : 'Take the challenge'}</button>
-        <span className="small muted">Opens level {stop.n} right away · about {stop.minutes} minutes · no sign-up</span>
+        <span className="small muted">Opens {missionShort(stop)} right away · about {stop.minutes} minutes · no sign-up</span>
       </section>
       <SamSays mood="surprised" compact auto say={mine ? PLAN_LINES.played : PLAN_LINES.intro}>{mine ? PLAN_LINES.played : plan.by ? `${plan.by} sent you their plan for my budget. Have a look, then see if you can do better.` : PLAN_LINES.intro}</SamSays>
 
@@ -95,12 +95,12 @@ export default function PlanPage({ param }: { param: string | null }) {
 
       <ActionBar className="plan-cta" label="The challenge">
         <button type="button" className="btn btn-primary" onClick={take}>{mine ? 'Play it again and try to beat it' : 'Take the challenge'}</button>
-        <a className="btn" href="#journey">Start from level 1</a>
+        <a className="btn" href="#journey">Start from mission 1.1</a>
       </ActionBar>
       <p className="small muted">Beat {by === 'Your friend' ? 'their' : `${by}’s`} plan on stars, a gentler steepest year for the economy, or fewer cards.</p>
 
       {mine && (
-        <Section id="vs" title="Your plan against theirs" sub={`Your latest plan on level ${stop.n}, scored the same way.`}>
+        <Section id="vs" title="Your plan against theirs" sub={`Your latest plan on ${missionShort(stop)}, scored the same way.`}>
           <HeadToHead mine={mine} theirs={a} by={by === 'Your friend' ? 'Them' : by} sam={false} />
         </Section>
       )}
@@ -132,9 +132,9 @@ export default function PlanPage({ param }: { param: string | null }) {
               const yours = j.choices[q.key];
               return (
                 <li key={q.key}>
-                  <span className="small muted">Level {q.level}</span>
+                  <span className="small muted">{missionShort(stopForCode(q.level)!)}</span>
                   <strong>{q.question}</strong>
-                  <span>{q.labels[q.values.indexOf(v)]}{yours ? <span className="small muted"> · you said {q.labels[q.values.indexOf(yours)] ?? yours}</span> : <span className="small muted"> · play level {q.level} to answer</span>}</span>
+                  <span>{q.labels[q.values.indexOf(v)]}{yours ? <span className="small muted"> · you said {q.labels[q.values.indexOf(yours)] ?? yours}</span> : <span className="small muted"> · play {missionShort(stopForCode(q.level)!)} to answer</span>}</span>
                 </li>
               );
             })}

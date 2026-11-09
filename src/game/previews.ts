@@ -1,4 +1,4 @@
-import { DESK } from './levels';
+import { DESK, missionLong, STOP_BY_ID } from './levels';
 import { ARCHETYPES, LEGACY_ARCHETYPE } from './plans';
 
 // Link previews for shared plans. Link-preview crawlers read a page's preview tags and ignore the
@@ -59,26 +59,26 @@ export const SPECIAL_PREVIEWS: SpecialPreview[] = [
   {
     id: 'room', color: '#5b45cc', mood: 'happy',
     eyebrow: 'Play as a group · join the room', heading: ['Join our', 'room'], sub: 'Build one plan for Uncle Sam together',
-    boxLabel: 'How it works', box: 'Everyone in the room plays the same budget-desk level. A card is in the room’s plan when more than half the members’ plans use it.',
+    boxLabel: 'How it works', box: 'Everyone in the room plays the same budget-desk mission. A card is in the room’s plan when more than half the members’ plans use it.',
     title: 'Join our room: build one plan for Uncle Sam’s budget together',
-    description: 'You’ve been invited to a room in Help Uncle Sam Balance the Budget. Play the room’s level, and your plan joins the group’s. Real CBO numbers.',
+    description: 'You’ve been invited to a room in Help Uncle Sam Balance the Budget. Play the room’s mission, and your plan joins the group’s. Real CBO numbers.',
     alt: 'Join our room: build one plan for Uncle Sam’s budget together.',
   },
   {
     id: 'duel', color: '#b4232f', mood: 'surprised',
-    eyebrow: 'Level 10 duel · plan vs. plan', heading: ['Duel me on', 'level 10'], sub: 'Balance the budget, then compare plans',
+    eyebrow: 'Budget duel · plan vs. plan', heading: ['Duel me on', 'the budget'], sub: 'Balance the budget, then compare plans',
     boxLabel: 'Three rounds', box: 'We each balance Uncle Sam’s budget on our own. My plan stays sealed until you finish yours; then the plans face off: the debt, the economy, and the balance.',
-    title: 'Duel me: balance Uncle Sam’s budget on level 10',
-    description: 'A friend sent you a level 10 duel. Balance the federal budget your way, then compare plans in three rounds: the debt, the economy, and the balance. Real CBO numbers.',
-    alt: 'Duel me on level 10: we each balance the budget, then compare plans in three rounds.',
+    title: 'Duel me: balance Uncle Sam’s budget',
+    description: 'A friend sent you a budget duel. Balance the federal budget your way, then compare plans in three rounds: the debt, the economy, and the balance. Real CBO numbers.',
+    alt: 'Duel me on the budget: we each balance the budget, then compare plans in three rounds.',
   },
   {
     id: 'duel-back', color: '#1d5a43', mood: 'cheering',
-    eyebrow: 'Level 10 duel · the reveal', heading: ['Our duel', 'is in'], sub: 'Two plans, three rounds',
+    eyebrow: 'Budget duel · the reveal', heading: ['Our duel', 'is in'], sub: 'Two plans, three rounds',
     boxLabel: 'Three rounds', box: 'The debt: whose plan leaves it lower. The economy: whose plan goes easier on it. The balance: whose split of taxes and cuts is closer to even.',
-    title: 'Our level 10 duel is in: see the three rounds',
-    description: 'Your friend played your level 10 duel. See both plans side by side, round by round: the debt, the economy, and the balance. Plans are compared, never people.',
-    alt: 'Our level 10 duel is in: two plans, three rounds.',
+    title: 'Our budget duel is in: see the three rounds',
+    description: 'Your friend played your budget duel. See both plans side by side, round by round: the debt, the economy, and the balance. Plans are compared, never people.',
+    alt: 'Our budget duel is in: two plans, three rounds.',
   },
 ];
 /** The People's Budget's preview, kept for links made before the others existed. */
@@ -96,7 +96,8 @@ export function previewText(k: PreviewKind) {
     personality: a.name,
     line: LINE[k.archetype],
     level: d.n,
+    mission: missionLong(STOP_BY_ID[d.id]),
     difficulty: d.difficulty,
-    alt: `${title} Level ${d.n}: ${GOAL[k.level].short}. ${k.stars} of 3 stars. Budget personality: ${a.name}.`,
+    alt: `${title} ${missionLong(STOP_BY_ID[d.id])}: ${GOAL[k.level].short}. ${k.stars} of 3 stars. Budget personality: ${a.name}.`,
   };
 }

@@ -8,7 +8,7 @@ import { goalGap } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import { ZERO } from '../lib/sandbox';
 import { useHaptics } from './haptics';
-import { DESK } from './levels';
+import { DESK, missionShort, STOP_BY_ID } from './levels';
 import { CARD_CODE, cleanName, myName, setMyName, siteRoot } from './plans';
 import { CHAIN_LINES } from './script';
 import { ShareButton, SocialShare } from './ShareButton';
@@ -104,7 +104,7 @@ export default function Chain({ param }: { param: string | null }) {
           <div className="field">
             <label htmlFor="chain-goal">The chain’s goal</label>
             <select id="chain-goal" className="select" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
-              {REACHABLE.map((x) => <option key={x.id} value={x.n}>{x.title} (level {x.n})</option>)}
+              {REACHABLE.map((x) => <option key={x.id} value={x.n}>{x.title} ({missionShort(STOP_BY_ID[x.id])})</option>)}
             </select>
           </div>
           <p className="small muted">Balancing the budget isn’t offered: the policy cards alone can’t get there. Pick your first card below.</p>

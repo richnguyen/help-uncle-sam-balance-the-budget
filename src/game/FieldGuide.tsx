@@ -1,7 +1,7 @@
 import { PageHead } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
 import { BookIcon, DocIcon, LevelIcon } from './icons';
-import { STOP_BY_ID } from './levels';
+import { missionShort, STOP_BY_ID } from './levels';
 import { FIELD_GUIDE } from './nav';
 import { useJourney } from './state';
 
@@ -18,7 +18,7 @@ export default function FieldGuide() {
   const j = useJourney();
   return (
     <>
-      <PageHead eyebrow="Field guide" title="The field guide" lede="Every chapter in full, no game needed. Each one goes with a level, and every number says where it comes from." />
+      <PageHead eyebrow="Field guide" title="The field guide" lede="Every chapter in full, no game needed. Each one goes with a mission, and every number says where it comes from." />
       <ol className="guide-grid">
         {FIELD_GUIDE.map((g, i) => {
           const lv = STOP_BY_ID[CHAPTER_LEVEL[g.route]];
@@ -30,7 +30,7 @@ export default function FieldGuide() {
                 <span className="guide-text">
                   <span className="guide-n">Chapter {i + 1}{read ? ' · read' : ''}</span>
                   <strong>{g.label}</strong>
-                  {lv && <span className="small muted">Goes with level {lv.n}: {lv.title}</span>}
+                  {lv && <span className="small muted">Goes with {missionShort(lv)}: {lv.title}</span>}
                 </span>
               </a>
             </li>

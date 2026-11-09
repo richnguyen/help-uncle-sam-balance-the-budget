@@ -52,7 +52,7 @@ export default function Sources({ param }: { param?: string | null }) {
         <div className="callout-title">About the figures</div>
         Figures are nominal dollars for federal fiscal years (October 1 – September 30) unless noted. Every chart links to the official dataset it was drawn from. Official data from the U.S. Treasury, OMB, the Census Bureau, the IRS, and USAspending.gov; Treasury data through {budget.mtsLatestDate}.
       </div>
-      <Section id="by-level" title="By level" sub="For each level of the game: its full chapter and the original documents behind its numbers.">
+      <Section id="by-level" title="By mission" sub="For each mission of the game: its full chapter and the original documents behind its numbers.">
         <LevelDocs />
       </Section>
       <Section id="list" title="Datasets and documents">

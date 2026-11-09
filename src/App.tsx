@@ -45,7 +45,7 @@ import { activeRoom } from './game/rooms';
 import { JourneyProvider, useJourney } from './game/state';
 import Journey, { LevelsPage, MenuIcon, RecordPage, SettingsPage } from './game/Journey';
 import LevelPage from './game/LevelPage';
-import { DESK, isUnlocked, LEVELS, STOP_BY_ID, STOPS } from './game/levels';
+import { DESK, isUnlocked, LEVELS, missionLong, missionShort, prevOf, STOP_BY_ID, STOPS } from './game/levels';
 import { FIELD_GUIDE, REFERENCE } from './game/nav';
 import { ReadingSettings } from './game/Settings';
 import { StatusBar } from './game/StatusBar';
@@ -100,13 +100,13 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['clock', 'The debt clock'],
   ['together', 'Play together'],
   ['teach', 'For teachers'],
-  ['duel', 'A level 10 duel'],
+  ['duel', 'A budget duel'],
   ['duels', 'Your duels'],
   ['levels', 'The road map'],
   ['record', 'Your record'],
   ['settings', 'Settings'],
   ['guide', 'The field guide'],
-  ...STOPS.map((l) => [l.id, `Level ${l.n}: ${l.title}`]),
+  ...STOPS.map((l) => [l.id, `${missionShort(l)}: ${l.title}`]),
 ]);
 
 // Each field-guide chapter belongs to a level, so readers can jump into the game from any page.
@@ -124,6 +124,12 @@ const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   'level-8': () => <DeskPage id="level-8" />,
   'level-9': () => <LevelPage id="level-9" />,
   'level-10': () => <DeskPage id="level-10" />,
+  'level-economy': () => <LevelPage id="level-economy" />,
+  'level-drag': () => <LevelPage id="level-drag" />,
+  'level-fairness': () => <LevelPage id="level-fairness" />,
+  'level-growth': () => <LevelPage id="level-growth" />,
+  'level-investment': () => <LevelPage id="level-investment" />,
+  'level-future': () => <LevelPage id="level-future" />,
   overview: () => <Overview />,
   spending: () => <Spending />,
   revenue: () => <Revenue />,
@@ -172,20 +178,20 @@ function DeskPage({ id }: { id: string }) {
 function DeskLocked({ id }: { id: string }) {
   const j = useJourney();
   const d = STOP_BY_ID[id];
-  const prev = STOPS[d.n - 2];
+  const prev = prevOf(id)!;
   return (
     <div className="level">
       <header className="level-head">
-        <div className="eyebrow level-eyebrow"><LevelIcon id={d.icon} size={16} /> Level {d.n} of {STOPS.length} · {d.difficulty} level</div>
+        <div className="eyebrow level-eyebrow"><LevelIcon id={d.icon} size={16} /> {missionLong(d)} · {d.difficulty}</div>
         <h1 className="page-title">{d.title}</h1>
       </header>
       <div className="callout">
         <div className="callout-title">Locked for now</div>
-        <p className="small">Finish level {prev.n}, {prev.title}, to open this level. You can also unlock everything with free roam in settings.</p>
+        <p className="small">Finish {missionShort(prev)}, {prev.title}, to open this mission. You can also unlock everything with free roam in settings.</p>
         <div className="sb-actions">
-          <button type="button" className="btn" onClick={() => j.setSettings({ freeRoam: true })}>Unlock every level (free roam)</button>
+          <button type="button" className="btn" onClick={() => j.setSettings({ freeRoam: true })}>Unlock every mission (free roam)</button>
         </div>
-        <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + prev.id}>Go to level {prev.n}: {prev.title}</a></ActionBar>
+        <ActionBar label="Next step"><a className="btn btn-primary" href={'#' + prev.id}>Go to {missionShort(prev)}: {prev.title}</a></ActionBar>
       </div>
     </div>
   );
@@ -204,9 +210,9 @@ function DefaultActions({ route }: { route: Route }) {
   let action: JSX.Element;
   if (chapter) {
     const l = STOP_BY_ID[chapter];
-    action = <a className="btn btn-primary" href={'#' + chapter}>{j.done.includes(chapter) ? 'Replay' : 'Play'} level {l.n}: {l.title}</a>;
+    action = <a className="btn btn-primary" href={'#' + chapter}>{j.done.includes(chapter) ? 'Replay' : 'Play'} {missionShort(l)}: {l.title}</a>;
   } else if (next) {
-    action = <a className="btn btn-primary" href={'#' + next.id}>{j.done.length || j.started ? `Continue: level ${next.n}, ${next.title}` : 'Start level 1'}</a>;
+    action = <a className="btn btn-primary" href={'#' + next.id}>{j.done.length || j.started ? `Continue: ${missionShort(next)}, ${next.title}` : 'Start mission 1.1'}</a>;
   } else {
     action = <a className="btn btn-primary" href="#story">See your Budget Story</a>;
   }
@@ -220,9 +226,9 @@ function ChapterBanner({ route }: { route: Route }) {
   const l = LEVELS.find((x) => x.id === id)!;
   return (
     <div className="chapter-banner">
-      <span className="small"><a href="#guide">Field guide</a> for <strong>Level {l.n}: {l.title}</strong>{j.done.includes(id) ? ' (complete)' : ''}</span>
+      <span className="small"><a href="#guide">Field guide</a> for <strong>{missionShort(STOP_BY_ID[id])}: {l.title}</strong>{j.done.includes(id) ? ' (complete)' : ''}</span>
       <span className="chapter-banner-links small">
-        <a href={'#' + id}>{j.done.includes(id) ? 'Replay the level' : 'Play the level'}</a>
+        <a href={'#' + id}>{j.done.includes(id) ? 'Replay the mission' : 'Play the mission'}</a>
         <a href="#sources">Sources &amp; methods</a>
       </span>
     </div>

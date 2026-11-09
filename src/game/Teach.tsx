@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PageHead, Section } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
-import { STOPS } from './levels';
+import { missionShort, STOPS } from './levels';
 import { siteRoot } from './plans';
 import { ShareButton } from './ShareButton';
 import { TOGETHER_LINES } from './script';
@@ -11,12 +11,12 @@ import { SamSays } from './UncleSam';
 // first two levels, a room on the budget desk), discussion questions that don't take sides, and
 // what students need. Linked from Rooms and Play together, and easy to send to a colleague.
 
-const L = (n: number) => STOPS[n - 1];
+const L = (n: number) => STOPS.find((s) => s.n === n)!;
 
 const PLAN = [
   { min: 5, title: 'Warm-up: today’s Daily Dollar', body: 'Put it on the projector. For each pair of numbers, the class votes higher or lower before you reveal it. Same puzzle for everyone today.' },
-  { min: 15, title: `Levels 1 and 2: ${L(1).title.toLowerCase()} and ${L(2).title.toLowerCase()}`, body: 'Students play on their own phones or laptops. Each level ends with a card; level 1’s shows what a salary pays in federal taxes, and how much interest ten years of it would save if it paid down the debt.' },
-  { min: 20, title: `The budget desk, as a room: level ${L(5).n}`, body: 'Start a room for level 5 and put the 6-character code on the board. Students join and build plans with real options the Congressional Budget Office has priced. The room shows the plan the class agrees on, card by card.' },
+  { min: 15, title: `Missions 1.1 and 1.2: ${L(1).title} and ${L(2).title}`, body: 'Students play on their own phones or laptops. Each mission ends with a card; the first one shows what a salary pays in federal taxes, and how much interest ten years of it would save if it paid down the debt.' },
+  { min: 20, title: `The budget desk, as a room: ${missionShort(L(5))}`, body: 'Start a room for the first campaign’s final mission and put the 6-character code on the board. Students join and build plans with real options the Congressional Budget Office has priced. The room shows the plan the class agrees on, card by card.' },
   { min: 10, title: 'Discussion', body: 'Use the room’s results and the questions below. The room shows totals only, never who chose what.' },
 ];
 
@@ -60,7 +60,7 @@ export default function Teach() {
           <li>A phone, tablet, or laptop with a web browser. Nothing to install, and no accounts or email.</li>
           <li>A first name is optional, and stays on the student’s own device.</li>
           <li>Rooms show totals for the group, never who chose what. Vote breakdowns appear once 3 people have joined.</li>
-          <li>Each level takes 4 to 10 minutes, and progress is saved on the device, so students can finish at home.</li>
+          <li>Each mission takes 4 to 10 minutes, and progress is saved on the device, so students can finish at home.</li>
           <li>Every figure links to its source: the Treasury, the Congressional Budget Office, the Census Bureau, the IRS, and the Social Security trustees.</li>
         </ul>
       </Section>

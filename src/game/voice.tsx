@@ -52,7 +52,7 @@ export const toSentences = (t: string) => sentences(speakable(t));
 
 /** Which recording bank a page's lines live in (scripts/voice/collect.mjs uses the same rule). */
 export const DESK_LEVELS = ['level-5', 'level-8', 'level-10'];
-export const bankFor = (route: string) => (DESK_LEVELS.includes(route) ? 'desk' : /^level-\d+$/.test(route) ? route : 'common');
+export const bankFor = (route: string) => (DESK_LEVELS.includes(route) ? 'desk' : /^level-[a-z0-9]+$/.test(route) ? route : 'common');
 
 const banks = new Map<string, Promise<ArrayBuffer>>();
 // Each bank's URL carries a short fingerprint of its clips, so a phone never pairs a cached older

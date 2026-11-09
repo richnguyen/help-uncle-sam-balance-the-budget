@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BrandMark } from '../components/Guilloche';
 import { BADGES, loadProgress } from '../lib/game';
 import { AwardIcon, BookIcon, CaretIcon, DocIcon, GearIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
-import { isUnlocked, MAX_STARS, rankFor, STOP_BY_ID, STOPS } from './levels';
+import { campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { FIELD_GUIDE } from './nav';
 import { ReadingSettings } from './Settings';
@@ -10,8 +10,8 @@ import { InstallButton } from './install';
 import { useJourney } from './state';
 import { useNarrator } from './voice';
 
-// The one bar at the top of every page. Left: the current level and the ten-level track; hovering
-// it (or tapping) lists every level to jump to, plus the field-guide chapters. Then stars and
+// The one bar at the top of every page. Left: the current mission and the track of every mission
+// (grouped by campaign); hovering it (or tapping) lists every mission to jump to, plus the field-guide chapters. Then stars and
 // accomplishments. Right: continue, Uncle Sam's voice, the glossary, sources & methods,
 // settings, and the road map ("Your journey").
 
@@ -37,7 +37,7 @@ function Pop({ id, open, setOpen, hover = false, button, children, className = '
   return (
     <div className={'ab-pop ' + className} data-pop={id} onMouseEnter={enter} onMouseLeave={leave}>
       {button({ 'aria-expanded': isOpen, 'aria-controls': 'pop-' + id, onClick: () => setOpen(isOpen ? null : id) })}
-      {isOpen && <div className="ab-panel" id={'pop-' + id} role="dialog" aria-label={id === 'levels' ? 'All levels' : id === 'acc' ? 'Accomplishments' : 'Settings'}>{children}</div>}
+      {isOpen && <div className="ab-panel" id={'pop-' + id} role="dialog" aria-label={id === 'levels' ? 'All missions' : id === 'acc' ? 'Accomplishments' : 'Settings'}>{children}</div>}
     </div>
   );
 }
@@ -77,22 +77,22 @@ export function StatusBar({ route }: { route: string }) {
 
         <Pop id="levels" open={open} setOpen={setOpen} hover className="ab-levels" button={(p) => (
           <div className="ab-levelbar">
-            <button type="button" className="ab-level" {...p} aria-label={`Level ${focus.n} of ${STOPS.length}: ${focus.title}. Show all levels`}>
+            <button type="button" className="ab-level" {...p} aria-label={`${missionLong(focus)}: ${focus.title}. Show all missions`}>
               <span className="stb-icon" data-done={focusDone}><LevelIcon id={focus.icon} size={17} /></span>
-              <span className="ab-levelnum"><span className="stb-k">Level</span> <strong className="num">{focus.n}</strong><span className="muted num">/{STOPS.length}</span></span>
+              <span className="ab-levelnum"><span className="stb-k">Mission</span> <strong className="num">{focus.campaign}.{focus.mission}</strong></span>
               <CaretIcon />
             </button>
-            <span className="stb-track" aria-label={`${done} of ${STOPS.length} levels finished`}>
+            <span className="stb-track" aria-label={`${done} of ${STOPS.length} missions finished`}>
               {STOPS.map((s) => {
                 const ok = isUnlocked(s.id, j.done, j.settings.freeRoam);
                 return ok
-                  ? <a key={s.id} href={'#' + s.id} data-done={j.done.includes(s.id)} data-here={s.id === focus.id} title={`Level ${s.n}: ${s.title}`} aria-label={`Level ${s.n}: ${s.title}${j.done.includes(s.id) ? ', finished' : ''}`} />
-                  : <i key={s.id} data-here={s.id === focus.id} title={`Level ${s.n}: ${s.title} (locked)`} />;
+                  ? <a key={s.id} href={'#' + s.id} data-done={j.done.includes(s.id)} data-here={s.id === focus.id} data-camp-start={(s.mission === 1 && s.campaign > 1) || undefined} title={`${missionShort(s)}: ${s.title}`} aria-label={`${missionShort(s)}: ${s.title}${j.done.includes(s.id) ? ', finished' : ''}`} />
+                  : <i key={s.id} data-here={s.id === focus.id} data-camp-start={(s.mission === 1 && s.campaign > 1) || undefined} title={`${missionShort(s)}: ${s.title} (locked)`} />;
               })}
             </span>
           </div>
         )}>
-          <div className="ab-panel-head"><strong>All levels</strong><span className="small muted">{done} of {STOPS.length} finished</span></div>
+          <div className="ab-panel-head"><strong>All missions</strong><span className="small muted">{done} of {STOPS.length} finished</span></div>
           <ol className="ab-levellist">
             {STOPS.map((s) => {
               const ok = isUnlocked(s.id, j.done, j.settings.freeRoam);
@@ -100,10 +100,11 @@ export function StatusBar({ route }: { route: string }) {
               const body = (
                 <>
                   <span className="stb-icon" data-done={fin}>{ok || fin ? <LevelIcon id={s.icon} size={15} /> : <LockIcon />}</span>
-                  <span className="ab-ll-text"><span className="ab-ll-title">{s.n}. {s.title}</span><span className="small muted">{s.difficulty}{s.kind === 'desk' ? ' · budget desk' : ''}{fin ? ((j.stars[s.id] ?? 0) > 0 ? ` · ${'★'.repeat(j.stars[s.id] ?? 0)}` : ' · finished') : ''}</span></span>
+                  <span className="ab-ll-text"><span className="ab-ll-title">{s.campaign}.{s.mission} {s.title}</span><span className="small muted">{s.difficulty}{s.kind === 'desk' ? ' · budget desk' : ''}{fin ? ((j.stars[s.id] ?? 0) > 0 ? ` · ${'★'.repeat(j.stars[s.id] ?? 0)}` : ' · finished') : ''}</span></span>
                 </>
               );
-              return <li key={s.id} data-here={s.id === route}>{ok ? <a href={'#' + s.id} aria-current={s.id === route ? 'page' : undefined}>{body}</a> : <span className="ab-ll-locked" title="Finish the level before it to unlock">{body}</span>}</li>;
+              const head = s.mission === 1 ? <li key={'c' + s.campaign} className="ab-ll-camp"><span className="stat-label">Campaign {s.campaign}</span> {campaignOf(s.id).title}</li> : null;
+              return [head, <li key={s.id} data-here={s.id === route}>{ok ? <a href={'#' + s.id} aria-current={s.id === route ? 'page' : undefined}>{body}</a> : <span className="ab-ll-locked" title="Finish the mission before it to unlock">{body}</span>}</li>];
             })}
           </ol>
           <div className="ab-extras">

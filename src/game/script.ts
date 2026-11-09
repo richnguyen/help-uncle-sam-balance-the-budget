@@ -18,11 +18,11 @@ export const QUIZ_LINES = {
   guessRevealSay: (answer: string) => `Good try. It’s ${answer}.`,
 };
 
-export const lockedLine = (unlock: string) => `We’ll get there. This level builds on the one before it. ${unlock}.`;
+export const lockedLine = (unlock: string) => `We’ll get there. This mission builds on the one before it. ${unlock}.`;
 
 export const CHEER: Record<number, string> = {
   3: 'Well done, partner! Three stars. You have a real head for this.',
-  2: 'Nicely done! That’s another level in the books.',
+  2: 'Nicely done! That’s another mission in the books.',
   1: 'We made it through that one together. On to the next!',
   0: 'We made it through that one together. On to the next!',
 };
@@ -63,7 +63,7 @@ export const VOICE_TEST = 'Howdy, partner. This is Uncle Sam. Let’s get my boo
 export const JOURNEY_LINES = {
   fresh: (tookIn: string) => `Howdy. I’m Uncle Sam. I took in ${tookIn} last year, and I still spent more than I made. I need a level-headed adviser to help me understand my books and decide what to do. Got a few minutes?`,
   finished: 'We did it, partner. You’ve seen where every dollar comes from and goes, and you’ve weighed in on the big choices. That makes you an informed budget voter.',
-  hardNext: (rank: string, n: number) => `Welcome back, ${rank}. Next up is a hard one: level ${n}, where we try to fix my budget ourselves. Take your time.`,
+  hardNext: (rank: string) => `Welcome back, ${rank}. Next up is a hard one: this campaign’s final mission, where we try to fix my budget ourselves. Take your time.`,
   back: (rank: string) => `Welcome back. You’re my ${rank} now. Let’s pick up where we left off.`,
 };
 
@@ -99,7 +99,7 @@ export const DUEL_LINES = {
 
 export const PLAN_LINES = {
   intro: 'A friend sent you their plan for my budget. Have a look, then see if you can do better.',
-  played: 'You’ve played this level too. Here’s how your plan stacks up against theirs.',
+  played: 'You’ve played this mission too. Here’s how your plan stacks up against theirs.',
   broken: 'Hmm, this link looks incomplete, partner. Ask your friend to send it again.',
 };
 
@@ -112,7 +112,7 @@ export const CHALLENGE_LINES = {
 
 export const STORY_LINES = {
   ready: 'Here’s your Budget Story, partner: a few cards about how you’d run my books. Share the ones you like.',
-  locked: 'Your story unlocks when you finish your first budget-desk level. That’s level 5.',
+  locked: 'Your story unlocks when you finish your first campaign. Its final mission is at the budget desk.',
 };
 
 export const DAILY_LINES = {
@@ -175,7 +175,7 @@ export const PEOPLES_LINES = {
 export const ROOM_LINES = {
   start: 'Bring your class, your office, or your family. Everybody plays, and the group builds one plan together.',
   invited: 'You’ve been invited to a room. Join, and your plan counts toward the group’s.',
-  welcome: 'Welcome to the room, partner. Play the level, and your plan joins the group’s.',
+  welcome: 'Welcome to the room, partner. Play the mission, and your plan joins the group’s.',
   missing: 'I can’t find a room with that code. Check it with whoever shared it.',
   offline: 'Rooms live on the public site, balancethebudget.us. Start one there.',
 };

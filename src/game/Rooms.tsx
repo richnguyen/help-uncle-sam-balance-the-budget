@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActionBar } from '../components/ActionBar';
 import { PageHead, Section } from '../components/ui';
 import { backendOn, createRoom, getRoom, joinRoom, ROOM_CODE } from '../lib/backend';
-import { DESK } from './levels';
+import { DESK, missionShort, STOP_BY_ID, stopForCode, STOPS } from './levels';
 import { myRooms, rememberRoom } from './rooms';
 import { ROOM_LINES } from './script';
 import { PUBLIC_SITE } from './share';
@@ -58,7 +58,7 @@ export default function Rooms() {
 
   return (
     <>
-      <PageHead eyebrow="Play as a group" title="Rooms" lede="A class, an office, or a family plays one budget-desk level together. Everyone’s plan joins the room’s: a card is in the room’s plan when more than half the plans use it." />
+      <PageHead eyebrow="Play as a group" title="Rooms" lede="A class, an office, or a family plays one budget-desk mission together. Everyone’s plan joins the room’s: a card is in the room’s plan when more than half the plans use it." />
       <SamSays mood="happy" auto>{ROOM_LINES.start}</SamSays>
       {error && <div className="callout small" role="status">{error}</div>}
       <div className="grid-2 rooms-forms">
@@ -71,7 +71,7 @@ export default function Rooms() {
           <div className="field">
             <label htmlFor="room-level">The group’s goal</label>
             <select id="room-level" className="select" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
-              {DESK.map((d) => <option key={d.id} value={d.n}>Level {d.n}: {GOAL_NAME[d.n]} ({d.difficulty.toLowerCase()})</option>)}
+              {DESK.map((d) => <option key={d.id} value={d.n}>{missionShort(STOP_BY_ID[d.id])}: {GOAL_NAME[d.n]} ({d.difficulty.toLowerCase()})</option>)}
             </select>
           </div>
           <button type="button" className="btn btn-primary" onClick={start} disabled={busy != null}>{busy === 'start' ? 'Starting…' : 'Start the room'}</button>
@@ -90,7 +90,7 @@ export default function Rooms() {
       {rooms.length > 0 && (
         <Section id="mine" title="Your rooms">
           <ul className="rooms-list">
-            {rooms.map((r) => <li key={r.code}><a href={'#room?c=' + r.code}><strong>{r.name}</strong></a> <span className="small muted">· level {r.level} · code <span className="num">{r.code}</span></span></li>)}
+            {rooms.map((r) => <li key={r.code}><a href={'#room?c=' + r.code}><strong>{r.name}</strong></a> <span className="small muted">· {missionShort(stopForCode(r.level) ?? STOPS[0])} · code <span className="num">{r.code}</span></span></li>)}
           </ul>
         </Section>
       )}

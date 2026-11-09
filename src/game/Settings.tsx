@@ -51,7 +51,7 @@ export function ReadingSettings({ compact = false }: { compact?: boolean }) {
       {soundsSupported && <label className="switch"><input type="checkbox" checked={s.sounds} onChange={(e) => { j.setSettings({ sounds: e.target.checked }); if (e.target.checked) playSound('right'); }} /> Quiet sound effects on taps, answers, and wins</label>}
       {hapticsSupported && <label className="switch"><input type="checkbox" checked={s.haptics} onChange={(e) => j.setSettings({ haptics: e.target.checked })} /> Gentle vibration on answers and wins (this device supports it)</label>}
       <ReminderControl />
-      <label className="switch"><input type="checkbox" checked={s.freeRoam} onChange={(e) => j.setSettings({ freeRoam: e.target.checked })} /> Free roam: unlock every level</label>
+      <label className="switch"><input type="checkbox" checked={s.freeRoam} onChange={(e) => j.setSettings({ freeRoam: e.target.checked })} /> Free roam: unlock every mission</label>
       {!compact && (
         <div>
           <button type="button" className="btn" onClick={() => { if (confirm) { j.reset(); setConfirm(false); } else setConfirm(true); }} onBlur={() => setConfirm(false)}>

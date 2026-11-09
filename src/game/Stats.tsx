@@ -17,7 +17,7 @@ const CHANNEL_NAME: Record<string, string> = {
 };
 const KIND_NAME: Record<LinkKind, string> = {
   plan: 'Plan challenges', story: 'Budget Story', clip: '10-second clip', daily: 'The Daily Dollar', peoples: 'The People’s Budget',
-  room: 'Rooms', chain: 'Pass the budget', level: 'Level and fact cards', site: 'The game in general',
+  room: 'Rooms', chain: 'Pass the budget', level: 'Mission and fact cards', site: 'The game in general',
 };
 const WINDOWS = [{ value: '7', label: '7 days' }, { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: '3650', label: 'All time' }];
 

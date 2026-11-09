@@ -22,9 +22,10 @@ budget adviser.
   bar and no action bar. Each choice leads to its own page, and every page leads back with one
   tap ("Main menu", top left; in a level, the top bar's Main menu button). The layout follows how
   people scan a screen: the big choices on the left, biggest first (Continue or Start the game,
-  then Levels, Play together, the Daily Dollar, the field guide, Settings), each with an icon, a
-  title and one line; in the top-right corner, the music and sound switches and the player's
-  record (rank, stars, levels, medals), with this year's deficit running under them. Nothing
+  then the Daily Dollar, Play together, the field guide, Settings), each with an icon, a title and
+  one line. The three campaigns sit inside Continue, each with its progress ("Campaign 1 · 5/8");
+  a tap opens the road map (`#levels`) at that campaign; in the top-right corner, the music and sound switches and the player's
+  record (rank, stars, missions, medals), with this year's deficit running under them. Nothing
   else: no corner links and no data line. Choices light up, slide and show an arrow under the
   pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player from his usual
   dock at the bottom, standing on the **Headlines line**: a single-line news crawl (shutdown
@@ -70,21 +71,38 @@ budget adviser.
   slides him away, stops his voice and skips his line: a level step's button then reads
   Continue (or what the step needs) instead of "Skip this narrative". Only the step's own
   buttons decide for themselves.
-- **Ten levels on one road map.** Chapters explain one part of the budget each: his paycheck,
-  his bills, back home, the structural gap, the credit card (debt), who writes the budget
-  (Congress and the laws that moved deficits), and keeping his promises (Social Security).
-  Three **budget-desk levels** (5, 8 and 10) are the hard "wall" levels, where the player fixes
-  the budget with CBO-priced options. Each keeps a thin scoreboard pinned at the top while the
-  player scrolls through policy cards, each linked to the closest real proposal in Congress.
-  There are no plans to copy: the player works the plan out. Only the first desk level (5) has a
-  hint, to ease the jump from the easy levels: Uncle Sam marks one card that would help (the
-  gentlest one that would finish the job on its own), or, once the goal is met, says what earns
-  the next star; the player still plays it. Elsewhere the star tips say what earns each star,
-  never which card to play; when the cards alone can't reach the goal, the across-the-board
-  changes sit right under them. There are no ready-made plans to load or pick
-  from; a finished plan is matched to the closest real budget proposal on a shared plan's page and
-  in the Budget Story. Difficulty runs in a rhythm: easy, easy, easy, medium, hard, then a
-  breather, and so on up to a final super-hard level.
+- **Three campaigns, sixteen missions.** Each campaign has one goal and ends at a budget desk:
+  (1) stop the debt from outgrowing the economy (8 missions), (2) cut the deficit to 3% of GDP
+  (5 missions), (3) balance the budget (3 missions). Missions are numbered Campaign · Mission
+  ("Mission 1.5"), go from easy to hard, and unlock in order (`CAMPAIGNS` and `STOPS` in
+  `src/game/levels.tsx`). Learning missions explain one idea each: his paycheck, his bills, back
+  home, the structural gap, the credit card (debt), who writes the budget, and keeping his
+  promises (Social Security), plus six concept missions (`src/game/concepts.tsx`) that teach how
+  the desk scores a plan: how a policy hits the economy (CBO's output ranges by kind of change,
+  and the same $100 billion saved four ways), gentle, moderate and steep (each year's new
+  squeeze, all at once or phased in), who pays (the cards that reach current retirees,
+  low-income families and public investment), growing the pie (long-run growth), cutting
+  public investment (non-defense discretionary spending since 1962), and who pays later
+  (interest against defense, per person). Every number in them comes from the same data and CBO
+  ranges the desk uses. The internal codes stay stable (`level-1` … `level-10`, the desks at 5, 8
+  and 10, the new missions at 11–16), so old share links, rooms and duels keep working.
+- **The budget desks** (the final missions 1.8, 2.5 and 3.3) are the hard "wall" missions, where
+  the player fixes the budget with CBO-priced options. Each keeps a thin scoreboard pinned at the
+  top while the player scrolls through policy cards, each linked to the closest real proposal in
+  Congress. Only the first desk has a hint, to ease the jump: Uncle Sam marks one card that would
+  help (the gentlest one that would finish the job on its own), or, once the goal is met, says
+  what earns the next star; the player still plays it. Elsewhere the star tips say what earns each
+  star, never which card to play; when the cards alone can't reach the goal, the across-the-board
+  changes sit right under them.
+- **Plan ideas** (`src/game/ideas.tsx`), on every desk, in two tabs kept apart: "Plans that work
+  well", built for that desk's goal around one idea each (stop overpaying, make prices tell the
+  truth, two big moves, ask the top and pay fairly for care; for the balanced budget, everyone
+  chips in, protect Social Security and health care, mostly taxes), and "Proposals in Congress",
+  real plans from members of Congress, each with the game's closest version in cards. Every idea
+  is scored live by the same engine as the player's plan (stars, the economy, who pays) and flags
+  what it cuts; none is presented as advice. Ideas can be read any time and loaded with one tap
+  once the player has met that desk's goal on their own (or in free roam); a loaded plan is the
+  player's to change. They are hidden during a friend's challenge or a duel.
 - **Guesses, steps, checks and votes.** Each chapter is 4–6 short steps (at most about 80 words
   each) with a segmented progress bar. Most chapters open with a guess, asked before the step
   that shows the answer: one pick, then the answer and why, and it never counts toward stars.
@@ -105,14 +123,14 @@ budget adviser.
     history on citizenship, responsibility, the future or the economy, and a preview of the next
     level.
   - Adviser titles and a copyable "budget ballot".
-- **One top bar, no side panel.** Right end: "Main menu". Middle: the current level
-  and the ten-level track; hovering it lists every level to jump to, plus the field-guide
-  chapters. Then stars and accomplishments (medals and budget-desk badges). Right: Continue,
+- **One top bar, no side panel.** Right end: "Main menu". Middle: the current mission
+  ("Mission 1.5") and the sixteen-mission track, with a gap where each campaign starts; hovering
+  it lists every mission by campaign, plus the field-guide chapters. Then stars and accomplishments (medals and budget-desk badges). Right: Continue,
   Uncle Sam's voice switch, Glossary, Methods (sources & methods) and Settings.
 - **Settings** (top bar): text size, light/dark theme, voice choice, vibration, and free roam to
   unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
-  are gathered on Sources & methods ("By level"), one link from every level. The field guide
+  are gathered on Sources & methods ("By mission"), one link from every mission. The field guide
   (all earlier pages) is listed in the top bar's level menu and in every page's footer.
 
 ### Design notes: five UX lessons from Royal Match, without the pressure tactics
@@ -148,7 +166,7 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
 - **One action bar.** Every screen's forward actions sit in one bar
   (`src/components/ActionBar.tsx`), fixed to the bottom of the screen at every width so players
   always know where to look: Back and Continue on a level step,
-  the next level after one, Higher and Lower on the Daily Dollar, Take the challenge on a friend's
+  the next mission after one, Higher and Lower on the Daily Dollar, Take the challenge on a friend's
   plan, the hint or the next steps (with the stars and progress) on the budget desk, Share on the
   People's Budget and the Budget Story, and, on pages with no action of their own, the chapter's
   level or the next level to play. One bar per screen; a button the bar holds isn't repeated in the
@@ -234,7 +252,7 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   ends on "Try again". Newcomers are pointed to level 1 at the end, and Uncle Sam's voice starts
   downloading only after the first tap. The share stats count each step: took the challenge, met
   the goal, sent a plan back.
-- **Level 10 duel** (`/p/duel/?duel=…`, `#duel`, `#duels`): level 10 shares a duel instead of a
+- **The budget duel** (`/p/duel/?duel=…`, `#duel`, `#duels`): the final mission (3.3) shares a duel instead of a
   challenge. The host's plan travels sealed in the invite (`hp`, `hlv`, `hph`, `hby`); the friend
   sees only that it exists and whether it balances the budget, plays level 10 on their own from
   a fresh plan (level 10 opens straight away, with no celebration pop-up), and taps "Reveal the

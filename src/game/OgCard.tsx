@@ -1,4 +1,4 @@
-import { DIFF_COLOR, DESK, STOPS } from './levels';
+import { DIFF_COLOR, DESK } from './levels';
 import { PREVIEW_KINDS, previewText, SPECIAL_PREVIEWS } from './previews';
 import { UncleSam } from './UncleSam';
 
@@ -34,7 +34,7 @@ export default function OgCard({ param }: { param: string | null }) {
     <div className="ogcard" style={{ ['--og' as string]: color }} data-kind={k.id}>
       <div className="ogcard-band" />
       <div className="ogcard-main">
-        <div className="ogcard-eyebrow">Level {t.level} of {STOPS.length} · {t.difficulty}</div>
+        <div className="ogcard-eyebrow">{t.mission} · {t.difficulty}</div>
         <div className="ogcard-title">Can you beat<br />this plan?</div>
         <div className="ogcard-goal">Goal: {t.goal[0].toLowerCase() + t.goal.slice(1)}</div>
         <div className="ogcard-stars" aria-label={`${k.stars} of 3 stars`}>

@@ -160,7 +160,7 @@ export default function MyShare() {
       <SamSays mood="proud" auto say={ME_LINES.page}>{f.total >= 1 ? <>Put toward my debt for {YEARS} straight years, your taxes would save me about <strong>{dollars(f.saved)}</strong> in interest. Put your name on your card and see what your friends chip in.</> : ME_LINES.page}</SamSays>
       <section className="card me-controls" aria-label="Your salary">
         <WageControls id="me-w" {...w} />
-        <p className="small muted">An estimate: {tax.year} IRS rates, the standard deduction, and wages as your only income. The same salary as on level 1 and your tax receipt.</p>
+        <p className="small muted">An estimate: {tax.year} IRS rates, the standard deduction, and wages as your only income. The same salary as on mission 1.1 and your tax receipt.</p>
       </section>
       <MyShareCard wages={w.wages} status={w.status} />
       <ActionBar label="Next step"><a className="btn btn-primary" href="#together">Play it with friends</a><a className="btn" href="#levels">Road map</a></ActionBar>
