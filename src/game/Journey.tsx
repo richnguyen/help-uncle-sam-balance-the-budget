@@ -171,7 +171,7 @@ export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {
 }
 
 const ROADMAP_AT = 'ftd:roadmap-at';
-/** Inside Continue: the three campaigns, each with its progress; a tap opens the road map at that campaign. */
+/** Inside Continue: the three campaigns; a tap opens the road map at that campaign. */
 function CampaignChips() {
   const j = useJourney();
   return (
@@ -184,8 +184,7 @@ function CampaignChips() {
           <a key={c.n} className="mc-camp" href="#levels" data-open={open} data-done={fin === ms.length || undefined}
             onClick={() => { try { sessionStorage.setItem(ROADMAP_AT, 'campaign-' + c.n); } catch { /* the road map opens at the top */ } }}
             title={c.title} aria-label={`Campaign ${c.n}: ${c.title}. ${fin} of ${ms.length} missions done${open ? '' : '. Locked'}`}>
-            <span className="mc-k">{open ? null : <LockIcon />}Campaign {c.n}<span className="mc-n">{fin}/{ms.length}</span></span>
-            <span className="mc-bar" aria-hidden="true"><span style={{ width: `${(fin / ms.length) * 100}%` }} /></span>
+            <span className="mc-k">{open ? null : <LockIcon />}Campaign {c.n}</span>
           </a>
         );
       })}

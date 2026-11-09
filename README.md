@@ -23,8 +23,8 @@ budget adviser.
   tap ("Main menu", top left; in a level, the top bar's Main menu button). The layout follows how
   people scan a screen: the big choices on the left, biggest first (Continue or Start the game,
   then the Daily Dollar, Play together, the field guide, Settings), each with an icon, a title and
-  one line. The three campaigns sit inside Continue, each with its progress ("Campaign 1 · 5/8");
-  a tap opens the road map (`#levels`) at that campaign; in the top-right corner, the music and sound switches and the player's
+  one line. The three campaigns sit inside Continue ("Campaign 1", "Campaign 2",
+  "Campaign 3"); a tap opens the road map (`#levels`) at that campaign; in the top-right corner, the music and sound switches and the player's
   record (rank, stars, missions, medals), with this year's deficit running under them. Nothing
   else: no corner links and no data line. Choices light up, slide and show an arrow under the
   pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player from his usual
