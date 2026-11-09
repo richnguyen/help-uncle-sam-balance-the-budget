@@ -1,0 +1,28 @@
+{
+ "source": "U.S. Treasury Fiscal Data API: Daily Treasury Statement (Tables I and II) and Debt to the Penny",
+ "fetched": "2026-11-09",
+ "latest": {
+  "date": "2026-11-05",
+  "fy": 2027,
+  "deposits": 541229000000,
+  "cash": 922752000000,
+  "debtHeldPublic": 32766722473715.61
+ },
+ "start": {
+  "date": "2026-09-30",
+  "fy": 2026,
+  "deposits": 6559233000000,
+  "cash": 984046000000,
+  "debtHeldPublic": 32425012546390.57
+ },
+ "monthEnds": [
+  {
+   "month": "2026-10-31",
+   "date": "2026-10-30",
+   "fy": 2027,
+   "deposits": 448248000000,
+   "cash": 951593000000,
+   "debtHeldPublic": 32738422032176.85
+  }
+ ]
+}

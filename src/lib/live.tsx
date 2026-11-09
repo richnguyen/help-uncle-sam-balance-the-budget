@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { budget, debt } from '../data';
+import { budget, debt, dts as bakedDts } from '../data';
+import { type TreasuryDay, treasuryDay } from './dts';
 import { type NewsItem, parseCongressFeed } from '../game/news';
 
 // Standalone build only: refresh the headline numbers straight from the Treasury Fiscal Data API
@@ -16,6 +17,9 @@ export interface LiveState {
   debtYearAgo?: { date: string; total: number };
   limit?: { date: string; limit: number; subject: number };
   mts?: { date: string; fy: number; receiptsFYTD: number; outlaysFYTD: number; deficitFYTD: number; interestFYTD?: number };
+  /** The Treasury's daily figures for the latest day (see lib/dts.ts), and for the last day of the month `mts` covers. */
+  day?: TreasuryDay;
+  dayMonthEnd?: TreasuryDay;
   /** Spending and tax bills on the Senate and House floors today, and sent to the President (Congress.gov). */
   news?: NewsItem[];
   fetchedAt?: number;
@@ -31,10 +35,11 @@ async function getJSON(path: string) {
 const isoDaysAgo = (date: string, days: number) => new Date(Date.parse(date + 'T12:00:00Z') - days * 86400000).toISOString().slice(0, 10);
 
 async function fetchLive(): Promise<LiveState> {
-  const [penny, mts, dts] = await Promise.all([
+  const [penny, mts, dts, today] = await Promise.all([
     getJSON('/v2/accounting/od/debt_to_penny?sort=-record_date&page%5Bsize%5D=1'),
     getJSON('/v1/accounting/mts/mts_table_9?sort=-record_date,src_line_nbr&page%5Bsize%5D=80'),
     getJSON(`/v1/accounting/dts/debt_subject_to_limit?sort=-record_date,src_line_nbr&page%5Bsize%5D=20`).catch(() => null),
+    treasuryDay(new Date().toISOString().slice(0, 10)).catch(() => null),
   ]);
   const p = penny.data[0];
   const out: LiveState = { status: 'live', fetchedAt: Date.now() };
@@ -59,6 +64,13 @@ async function fetchLive(): Promise<LiveState> {
       const o = scale(out_.current_fytd_rcpt_outly_amt);
       out.mts = { date, fy, receiptsFYTD: r, outlaysFYTD: o, deficitFYTD: o - r, interestFYTD: intr ? scale(intr.current_fytd_rcpt_outly_amt) : undefined };
     }
+  }
+  // The Treasury's daily figures for this fiscal year; and, once a month of this year has its
+  // official statement, the same figures on that month's last day (baked in, or fetched).
+  if (today && today.date >= bakedDts.latest.date) out.day = today;
+  if (out.mts && out.mts.fy === (out.day ?? bakedDts.latest).fy && !bakedDts.monthEnds.some((m) => m.month === out.mts!.date)) {
+    const end = await treasuryDay(out.mts.date).catch(() => null);
+    if (end && end.date.slice(0, 7) === out.mts.date.slice(0, 7)) out.dayMonthEnd = end;
   }
   // Debt subject to limit: amounts in millions (see scripts/lib/debtlimit.mjs, which bakes the same figure in).
   const d: Record<string, string>[] = dts?.data ?? [];

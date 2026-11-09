@@ -45,9 +45,18 @@ budget adviser.
   feeds live. Items older than three weeks drop off. `npm run news` refreshes the file locally.
 - **This year's deficit, running** (`DeficitClock.tsx`, on the main menu): the federal deficit
   for the fiscal year so far in red, with spending (blue) and revenue (green) beside it. It
-  starts from the Treasury's Monthly Treasury Statement for this fiscal year when there is one
-  (otherwise zero on Oct. 1) and adds the past twelve months' pace, second by second, labeled as
-  an estimate. Under it, a year at a time: every person's share of the deficit (the past twelve
+  starts from what the Treasury has counted this year: the Monthly Treasury Statement for each
+  month it has published, then the Treasury's daily figures (`scripts/fetch-dts.mjs`, refreshed
+  with every scheduled deploy and again in the visitor's browser). A deficit is paid for by
+  borrowing, so the daily deficit is the new borrowing from the public since the starting day
+  (Debt to the Penny) less the cash it added to the Treasury's account (Daily Treasury
+  Statement); tried on fiscal 2026, it came within $15 to $27 billion of the official count at
+  each month's end. Revenue is the cash deposited without borrowing, on the official footing
+  via last year's totals. From the end of the count it adds the past twelve months' pace,
+  second by second, labeled as an estimate. (Spreading last year's total evenly over the
+  calendar would badly miss a lopsided month: about $346 billion of fiscal 2027's deficit came in
+  October alone.) Under it, a year at a time: the past twelve months' deficit (all of the last
+  fiscal year, once its September is counted), every person's share of it (the past twelve
   months' deficit divided by the population), how much the debt grows in a year, and the year's interest cost (the Treasury's gross interest expense
   on the public debt, not the budget's net interest). The debt clock (`#clock`) uses the same
   annual figures.

@@ -1866,7 +1866,7 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 .deficit-side[data-kind="rev"] { --x: var(--rev); }
 .deficit-k { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
 .deficit-yearhead { margin-top: 2px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.deficit-year { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; margin: 0; }
+.deficit-year { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; margin: 0; }
 .deficit-year div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .deficit-year dt { font-size: 0.6875rem; color: var(--muted); line-height: 1.2; }
 .deficit-year dd { margin: 0; font-size: 0.8125rem; font-weight: 700; font-variant-numeric: tabular-nums; }

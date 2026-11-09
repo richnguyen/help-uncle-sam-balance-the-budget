@@ -1,110 +1,117 @@
 [
- {
-  "id": "ssa-tr2026",
-  "title": "The 2026 Annual Report of the Board of Trustees of the Federal OASI and DI Trust Funds (highlights)",
-  "publisher": "Social Security Administration",
-  "url": "https://www.ssa.gov/oact/tr/2026/II_A_highlights.html",
-  "note": "Depletion dates, percent payable, 75-year actuarial deficit, and the payroll-tax and benefit changes needed (full report: https://www.ssa.gov/oact/TR/2026/tr2026.pdf). Figures read from ssa.gov via search; ssa.gov blocks automated downloads."
- },
- {
-  "id": "ssa-press",
-  "title": "Social Security Board of Trustees: Projection for Combined Trust Funds Remains Consistent with Prior Year (June 9, 2026)",
-  "publisher": "Social Security Administration",
-  "url": "https://www.ssa.gov/news/en/press/releases/2026-06-09.html"
- },
- {
-  "id": "ssa-facts",
-  "title": "Fact Sheet on the Old-Age, Survivors, and Disability Insurance Program, June 30, 2026",
-  "publisher": "Social Security Administration, Office of the Chief Actuary",
-  "url": "https://www.ssa.gov/OACT/FACTS/"
- },
- {
-  "id": "cms-tr2026",
-  "title": "2026 Annual Report of the Boards of Trustees of the Federal Hospital Insurance and Federal Supplementary Medical Insurance Trust Funds",
-  "publisher": "Centers for Medicare & Medicaid Services",
-  "url": "https://www.cms.gov/files/document/2026-medicare-trustees-report.pdf",
-  "note": "HI trust fund depletion in the second quarter of 2033; 89% of costs payable then."
- },
- {
-  "id": "irs-rp2532",
-  "title": "Rev. Proc. 2025-32: tax year 2026 inflation adjustments (brackets, standard deduction)",
-  "publisher": "Internal Revenue Service",
-  "url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
- },
- {
-  "id": "irs-p15",
-  "title": "Publication 15 (2026), Employer’s Tax Guide: Social Security wage base and Medicare tax rates",
-  "publisher": "Internal Revenue Service",
-  "url": "https://www.irs.gov/pub/irs-pdf/p15.pdf"
- },
- {
-  "id": "irs-tc560",
-  "title": "Topic 560, Additional Medicare Tax",
-  "publisher": "Internal Revenue Service",
-  "url": "https://www.irs.gov/taxtopics/tc560"
- },
- {
-  "id": "scotus-ieepa",
-  "title": "Learning Resources, Inc. v. Trump, No. 24-1287 (February 20, 2026)",
-  "publisher": "Supreme Court of the United States",
-  "url": "https://www.supremecourt.gov/opinions/25pdf/24-1287_4gcj.pdf"
- },
- {
-  "id": "cbo-multiplier-wp",
-  "title": "The Fiscal Multiplier and Economic Policy Analysis in the United States (Working Paper 2015-02)",
-  "publisher": "Congressional Budget Office",
-  "url": "https://www.cbo.gov/sites/default/files/114th-congress-2015-2016/workingpaper/49925-FiscalMultiplier_1.pdf"
- },
- {
-  "id": "cbo-options-2024",
-  "title": "Options for Reducing the Deficit, 2025 to 2034",
-  "publisher": "Congressional Budget Office",
-  "url": "https://www.cbo.gov/publication/60557",
-  "note": "Ten-year savings for each option in the Balance the budget tool."
- },
- {
-  "id": "principle-multipliers",
-  "title": "CBO, Estimated Impact of the American Recovery and Reinvestment Act on Employment and Economic Output in 2014 (Feb 2015), Table 3",
-  "publisher": "Congressional Budget Office",
-  "url": "https://www.cbo.gov/publication/49958"
- },
- {
-  "id": "principle-debt-growth",
-  "title": "CBO, The Long-Term Budget Outlook Under Alternative Scenarios for the Economy and the Budget (May 2025)",
-  "publisher": "Congressional Budget Office",
-  "url": "https://www.cbo.gov/publication/61332"
- },
- {
-  "id": "principle-gradual",
-  "title": "IMF, Fiscal Monitor: Putting a Lid on Public Debt (October 2024)",
-  "publisher": "International Monetary Fund",
-  "url": "https://www.imf.org/-/media/files/publications/fiscal-monitor/2024/october/english/text.pdf"
- },
- {
-  "id": "principle-composition",
-  "title": "IMF Working Paper 23/63, Fiscal Consolidation: Taking Stock of Success Factors, Impact, and Design (2023)",
-  "publisher": "International Monetary Fund",
-  "url": "https://www.imf.org/-/media/files/publications/wp/2023/english/wpiea2023063-print-pdf.pdf"
- },
- {
-  "id": "news-wh",
-  "title": "Presidential Actions (RSS feed)",
-  "publisher": "The White House",
-  "url": "https://www.whitehouse.gov/presidential-actions/",
-  "note": "Executive orders, proclamations and memoranda. The main menu's Headlines line shows the ones about taxes, tariffs, spending, the budget or the debt, in their own words, with the time posted (Eastern). Other White House releases are left out. Feed: https://www.whitehouse.gov/presidential-actions/feed/"
- },
- {
-  "id": "news-cbo",
-  "title": "CBO Publications (RSS feed)",
-  "publisher": "Congressional Budget Office",
-  "url": "https://www.cbo.gov/most-recent",
-  "note": "Cost estimates and reports from Congress's nonpartisan budget office, newest first, with the time posted. Feed: https://www.cbo.gov/publications/all/rss.xml"
- },
- {
-  "id": "news-congress",
-  "title": "Senate Floor Today, House Floor Today, Bills Presented to the President (RSS feeds)",
-  "publisher": "Congress.gov, Library of Congress",
-  "url": "https://www.congress.gov/rss",
-  "note": "Spending and tax bills considered on each chamber's floor that day, and bills sent to the President. Read live in the visitor's browser on the public site, and when the site is built."
- }
+  {
+    "id": "ssa-tr2026",
+    "title": "The 2026 Annual Report of the Board of Trustees of the Federal OASI and DI Trust Funds (highlights)",
+    "publisher": "Social Security Administration",
+    "url": "https://www.ssa.gov/oact/tr/2026/II_A_highlights.html",
+    "note": "Depletion dates, percent payable, 75-year actuarial deficit, and the payroll-tax and benefit changes needed (full report: https://www.ssa.gov/oact/TR/2026/tr2026.pdf). Figures read from ssa.gov via search; ssa.gov blocks automated downloads."
+  },
+  {
+    "id": "ssa-press",
+    "title": "Social Security Board of Trustees: Projection for Combined Trust Funds Remains Consistent with Prior Year (June 9, 2026)",
+    "publisher": "Social Security Administration",
+    "url": "https://www.ssa.gov/news/en/press/releases/2026-06-09.html"
+  },
+  {
+    "id": "ssa-facts",
+    "title": "Fact Sheet on the Old-Age, Survivors, and Disability Insurance Program, June 30, 2026",
+    "publisher": "Social Security Administration, Office of the Chief Actuary",
+    "url": "https://www.ssa.gov/OACT/FACTS/"
+  },
+  {
+    "id": "cms-tr2026",
+    "title": "2026 Annual Report of the Boards of Trustees of the Federal Hospital Insurance and Federal Supplementary Medical Insurance Trust Funds",
+    "publisher": "Centers for Medicare & Medicaid Services",
+    "url": "https://www.cms.gov/files/document/2026-medicare-trustees-report.pdf",
+    "note": "HI trust fund depletion in the second quarter of 2033; 89% of costs payable then."
+  },
+  {
+    "id": "irs-rp2532",
+    "title": "Rev. Proc. 2025-32: tax year 2026 inflation adjustments (brackets, standard deduction)",
+    "publisher": "Internal Revenue Service",
+    "url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+  },
+  {
+    "id": "irs-p15",
+    "title": "Publication 15 (2026), Employer’s Tax Guide: Social Security wage base and Medicare tax rates",
+    "publisher": "Internal Revenue Service",
+    "url": "https://www.irs.gov/pub/irs-pdf/p15.pdf"
+  },
+  {
+    "id": "irs-tc560",
+    "title": "Topic 560, Additional Medicare Tax",
+    "publisher": "Internal Revenue Service",
+    "url": "https://www.irs.gov/taxtopics/tc560"
+  },
+  {
+    "id": "scotus-ieepa",
+    "title": "Learning Resources, Inc. v. Trump, No. 24-1287 (February 20, 2026)",
+    "publisher": "Supreme Court of the United States",
+    "url": "https://www.supremecourt.gov/opinions/25pdf/24-1287_4gcj.pdf"
+  },
+  {
+    "id": "cbo-multiplier-wp",
+    "title": "The Fiscal Multiplier and Economic Policy Analysis in the United States (Working Paper 2015-02)",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/sites/default/files/114th-congress-2015-2016/workingpaper/49925-FiscalMultiplier_1.pdf"
+  },
+  {
+    "id": "cbo-options-2024",
+    "title": "Options for Reducing the Deficit, 2025 to 2034",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/publication/60557",
+    "note": "Ten-year savings for each option in the Balance the budget tool."
+  },
+  {
+    "id": "principle-multipliers",
+    "title": "CBO, Estimated Impact of the American Recovery and Reinvestment Act on Employment and Economic Output in 2014 (Feb 2015), Table 3",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/publication/49958"
+  },
+  {
+    "id": "principle-debt-growth",
+    "title": "CBO, The Long-Term Budget Outlook Under Alternative Scenarios for the Economy and the Budget (May 2025)",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/publication/61332"
+  },
+  {
+    "id": "principle-gradual",
+    "title": "IMF, Fiscal Monitor: Putting a Lid on Public Debt (October 2024)",
+    "publisher": "International Monetary Fund",
+    "url": "https://www.imf.org/-/media/files/publications/fiscal-monitor/2024/october/english/text.pdf"
+  },
+  {
+    "id": "principle-composition",
+    "title": "IMF Working Paper 23/63, Fiscal Consolidation: Taking Stock of Success Factors, Impact, and Design (2023)",
+    "publisher": "International Monetary Fund",
+    "url": "https://www.imf.org/-/media/files/publications/wp/2023/english/wpiea2023063-print-pdf.pdf"
+  },
+  {
+    "id": "news-wh",
+    "title": "Presidential Actions (RSS feed)",
+    "publisher": "The White House",
+    "url": "https://www.whitehouse.gov/presidential-actions/",
+    "note": "Executive orders, proclamations and memoranda. The main menu's Headlines line shows the ones about taxes, tariffs, spending, the budget or the debt, in their own words, with the time posted (Eastern). Other White House releases are left out. Feed: https://www.whitehouse.gov/presidential-actions/feed/"
+  },
+  {
+    "id": "news-cbo",
+    "title": "CBO Publications (RSS feed)",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/most-recent",
+    "note": "Cost estimates and reports from Congress's nonpartisan budget office, newest first, with the time posted. Feed: https://www.cbo.gov/publications/all/rss.xml"
+  },
+  {
+    "id": "news-congress",
+    "title": "Senate Floor Today, House Floor Today, Bills Presented to the President (RSS feeds)",
+    "publisher": "Congress.gov, Library of Congress",
+    "url": "https://www.congress.gov/rss",
+    "note": "Spending and tax bills considered on each chamber's floor that day, and bills sent to the President. Read live in the visitor's browser on the public site, and when the site is built."
+  },
+  {
+    "id": "dts-cash",
+    "title": "Daily Treasury Statement, Tables I and II: Operating Cash Balance; Deposits and Withdrawals of Operating Cash",
+    "publisher": "U.S. Department of the Treasury, Bureau of the Fiscal Service",
+    "url": "https://fiscaldata.treasury.gov/datasets/daily-treasury-statement/",
+    "note": "The main menu's running deficit for this fiscal year: the new borrowing from the public since Oct. 1 (Debt to the Penny) less the cash it added to the Treasury General Account, and the cash deposited without borrowing, put on the Monthly Treasury Statement's footing with last year's totals. Refreshed every few hours (scripts/fetch-dts.mjs) and in the visitor's browser."
+  }
 ]

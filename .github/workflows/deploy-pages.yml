@@ -36,6 +36,8 @@ jobs:
       - run: npm ci
       - name: Fetch the latest official news
         run: node scripts/fetch-news.mjs || echo "News fetch failed; building with the news already in the repo."
+      - name: Fetch the Treasury's latest daily figures
+        run: node scripts/fetch-dts.mjs || echo "Treasury fetch failed; building with the figures already in the repo."
       - run: npm run build
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
