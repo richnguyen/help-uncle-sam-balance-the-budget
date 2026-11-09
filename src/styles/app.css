@@ -1302,7 +1302,8 @@ html.modal-open { overflow: hidden; }
 .ab-extras { display: flex; flex-direction: column; gap: 6px; }
 
 /* ---------- Turnstile: shown only if Cloudflare needs an interaction ---------- */
-.ts-box { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 1200; max-width: min(340px, calc(100vw - 32px)); }
+/* The person check sits above the action bar, so it never covers a step's Continue button. */
+.ts-box { position: fixed; right: 16px; bottom: max(calc(var(--abh, 0px) + 12px), calc(16px + env(safe-area-inset-bottom, 0px))); z-index: 1200; max-width: min(340px, calc(100vw - 32px)); }
 .ts-box .ts-label { display: none; margin: 0 0 8px; font-size: 0.875rem; color: var(--ink); }
 .ts-box[data-show="true"] { padding: 12px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--ring), 0 8px 24px rgba(0, 0, 0, 0.18); }
 .ts-box[data-show="true"] .ts-label { display: block; }
