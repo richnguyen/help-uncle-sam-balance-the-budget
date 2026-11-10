@@ -207,6 +207,20 @@ budget adviser.
   player; public results group ballots only by state or by 3-digit ZIP area, for groups of 10 or
   more (`ballot_area_totals()`, in `supabase/migrations/20261112000000_ballot_zip.sql`). In the
   claude.ai copy, where every viewer can read every ballot, a saved ZIP stays in the browser.
+- **Your county** (mission 1.4's next step; `src/game/county.tsx`): who paid the federal income
+  tax in the player's county, by income, next to the whole country. The county comes from the ZIP
+  typed a step earlier (kept for that visit only; this step saves nothing) or from this step's own
+  ZIP box, and a picker lists every county in the state, plus "All of" the state. A ZIP that
+  crosses county lines starts with the county holding most of its land and offers the others as
+  chips. It shows the county's federal income tax and its average per return against the U.S.
+  average, a sentence on the $200,000-and-up group's share of returns and of the tax (here and
+  nationally), and two 100% bars (tax returns, income tax) split into five income groups, each
+  over a thin U.S. bar, with hover details and a table view. Odd cases say what they are: groups
+  the IRS folded together for privacy show as one, the IRS leaves out counties with fewer than 20
+  returns (Kalawao County, HI), its county data leaves out Puerto Rico and the territories, and
+  single-address ZIPs (no area of their own) fall back to the whole state. The figures are the
+  IRS Statistics of Income county data for tax year 2023, one small file per state in
+  `public/county/` (about 760 KB in all, loaded only for the player's state).
   - 1.5, the ripple: save $100 billion four ways and watch the ripple it sends through the
     economy, its area sized by CBO's estimate; a slider walks from CBO's low estimate to its high
     one, and a dashed ring marks dollar for dollar.
@@ -526,6 +540,7 @@ Lines without a recording fall back to the browser's own speech, so nothing brea
 npm run data           # fetch every source (cached in data/raw/) and rebuild src/data/generated/
 npm run data:build     # rebuild from the cache only
 node scripts/fetch-all.mjs --refresh   # ignore the cache
+npm run data:county    # county income tax and ZIP-to-county files, public/county/<ST>.json
 ```
 
 `scripts/check-hosts.mjs` reports which source hosts are reachable. Behind an HTTP proxy, Node's
@@ -538,6 +553,8 @@ node scripts/fetch-all.mjs --refresh   # ignore the cache
 | FY1962–FY2025 mandatory / discretionary / net interest, revenue history, debt held by the public, GDP; projections | OMB Historical Tables, FY2027 Budget (Tables 1.1, 2.1, 7.1, 8.1, 10.1) | XLSX from whitehouse.gov (`scripts/build-cbo.mjs`) |
 | Federal awards by state and congressional district, top agencies and programs | USAspending.gov | USAspending API (`scripts/fetch-usaspending.mjs`) |
 | Population, households | Census Bureau (Vintage 2025 estimate; Housing Vacancy Survey) | census.gov releases (`scripts/fetch-census.mjs`) |
+| Tax returns and income tax after credits by county and income (tax year 2023) | IRS Statistics of Income, county data (`23incyallagi.csv`) | irs.gov file (`scripts/fetch-county-tax.mjs`; the 36 MB download isn't committed) |
+| Which county a ZIP is in | Census Bureau 2020 ZCTA relationship files (to counties and, for Connecticut, to towns) and the Connecticut planning-region crosswalk | www2.census.gov files (`scripts/fetch-county-tax.mjs`; Connecticut's nine planning regions replaced its counties in 2022, so its ZIPs go to towns, then regions) |
 | 2026 tax brackets, standard deduction, payroll tax parameters | IRS Rev. Proc. 2025-32, Publication 15, Topic 560 | irs.gov documents, recorded in `src/data/curated/tax.json` |
 | Social Security and Medicare trust fund projections | 2026 Social Security and Medicare Trustees Reports | `src/data/curated/trustees.json` (cited) |
 | Laws' deficit effects; budget-process history; who benefits | CBO/JCT cost estimates; CRS reports; agency statistics | `src/data/curated/*.json` (each entry cites its official URL) |

@@ -64,8 +64,8 @@ export function BarList({
 // Segmented bar: one whole split into parts. Tall (28px) prints shares where they fit.
 // =====================================================================================
 export function SegBar({
-  parts, thin = false, label, format = money,
-}: { parts: { label: string; value: number; color: string; ink?: string }[]; thin?: boolean; label: string; format?: (v: number) => string }) {
+  parts, thin = false, label, format = money, valueLabel = 'Amount',
+}: { parts: { label: string; value: number; color: string; ink?: string }[]; thin?: boolean; label: string; format?: (v: number) => string; valueLabel?: string }) {
   const [ref, width] = useWidth<HTMLDivElement>(600);
   const { show, hide } = useTooltip();
   const total = parts.reduce((s, p) => s + Math.max(0, p.value), 0);
@@ -87,9 +87,9 @@ export function SegBar({
             key={p.label}
             tabIndex={0}
             style={{ flex: `${Math.max(p.value, 0)} 0 0`, background: p.color, color: p.ink ?? '#fff' }}
-            onPointerMove={(e) => show(<><TipTitle>{p.label}</TipTitle><TipRow color={p.color} line={false} label="Amount" value={format(p.value)} /><TipRow label="Share" value={pct(share)} /></>, e.clientX, e.clientY)}
+            onPointerMove={(e) => show(<><TipTitle>{p.label}</TipTitle><TipRow color={p.color} line={false} label={valueLabel} value={format(p.value)} /><TipRow label="Share" value={pct(share)} /></>, e.clientX, e.clientY)}
             onPointerLeave={hide}
-            onFocus={(e) => { const pt = focusPoint(e.currentTarget); show(<><TipTitle>{p.label}</TipTitle><TipRow color={p.color} line={false} label="Amount" value={format(p.value)} /><TipRow label="Share" value={pct(share)} /></>, pt.x, pt.y); }}
+            onFocus={(e) => { const pt = focusPoint(e.currentTarget); show(<><TipTitle>{p.label}</TipTitle><TipRow color={p.color} line={false} label={valueLabel} value={format(p.value)} /><TipRow label="Share" value={pct(share)} /></>, pt.x, pt.y); }}
             onBlur={hide}
           >
             {fits ? text : null}

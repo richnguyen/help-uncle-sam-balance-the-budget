@@ -8,3 +8,7 @@ data/raw/cms/*.html
 .kokoro/
 .venv/
 *.log
+
+# Large source files for the county tax view (npm run data:county downloads them again)
+data/raw/irs/23incyallagi.csv
+data/raw/census/tab20_*.txt

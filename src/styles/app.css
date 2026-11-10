@@ -2605,3 +2605,20 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 .zip-area { margin: 0; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
 .zip-picker summary { cursor: pointer; color: var(--ink-2); }
 .zip-picker[open] summary { margin-bottom: 8px; }
+
+/* ---------- Mission 1.4: who paid the income tax in your county ---------- */
+.county .zip-form { align-items: flex-end; }
+.cty-pick { min-width: 0; flex: 1 1 220px; max-width: 360px; }
+.cty-pick .select { width: 100%; }
+.cty-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cty-chips .chip[aria-pressed="true"] .muted { color: inherit; opacity: 0.75; }
+.cty-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 24px; }
+.cty-lede { margin: 0; max-width: 62ch; }
+.cty-chart { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+.cty-group { grid-column: 1 / -1; font-size: 0.8125rem; font-weight: 700; color: var(--ink-2); margin-top: 6px; }
+.cty-group:first-child { margin-top: 0; }
+.cty-k { font-size: 0.8125rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cty-k.muted { color: var(--ink-3, var(--muted)); }
+@media (max-width: 520px) {
+  .cty-chart { grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr); gap: 6px 8px; }
+}

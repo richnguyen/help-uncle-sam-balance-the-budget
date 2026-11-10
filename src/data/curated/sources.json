@@ -134,5 +134,17 @@
     "publisher": "Congressional Research Service",
     "url": "https://www.congress.gov/crs-product/R46240",
     "note": "The basis for missions 1.3 (Paying the bills), 2.2 (Who's who), 2.4 (Rules of the road) and 3.3 (Brakes and the debt limit): budget authority, obligations and outlays; the Antideficiency Act; the President's budget and the congressional timetable; the budget resolution, points of order and reconciliation; Statutory PAYGO, sequestration, the debt limit and what is on or off budget. Games that practice a rule with a made-up example say so."
+  },
+  {
+    "id": "irs-soi-county",
+    "title": "SOI Tax Stats, county data, tax year 2023 (returns and income tax after credits by adjusted gross income)",
+    "publisher": "Internal Revenue Service, Statistics of Income",
+    "url": "https://www.irs.gov/statistics/soi-tax-stats-county-data"
+  },
+  {
+    "id": "census-zcta-county",
+    "title": "2020 ZIP Code Tabulation Area relationship files (to counties and county subdivisions) and the Connecticut planning-region crosswalk",
+    "publisher": "U.S. Census Bureau",
+    "url": "https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2020.html"
   }
 ]

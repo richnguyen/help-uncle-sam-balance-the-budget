@@ -10,6 +10,7 @@ import { OPTIONS_DATA } from '../lib/planData';
 import { backendOn, rpc } from '../lib/backend';
 import { useVotes } from '../lib/votes';
 import { areaForZip, isZip } from '../lib/zip';
+import { CountyTry, rememberZip } from './county';
 import { ReceiptTeaser, useWages, WageControls } from '../components/TaxReceipt';
 import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
@@ -228,7 +229,7 @@ function StateTry() {
     if (!a) { setMsg('A ZIP code is five digits.'); return; }
     if (a.kind === 'military') { setMsg('That’s a military ZIP, which has no state. Pick a state instead.'); setPicker(true); return; }
     if (a.kind === 'unknown' || !states.some((x) => x.abbr === a.abbr)) { setMsg('That ZIP doesn’t match a state. Check it, or pick a state instead.'); return; }
-    setMsg(null); setAbbr(a.abbr);
+    setMsg(null); setAbbr(a.abbr); rememberZip(z);
     if (keep) { votes.setZip(z, a.abbr); save('zip', inDb ? '' : z); }
   };
   const saveNow = () => { const a = areaForZip(zip.trim()); if (a?.kind === 'state') { votes.setZip(zip.trim(), a.abbr); save('zip', inDb ? '' : zip.trim()); } };
@@ -359,7 +360,7 @@ const CHAPTERS: Level[] = [
     sources: ['mts9', 'mts5', 'omb-hist'],
   },
   {
-    id: 'level-3', n: 3, title: 'Back home', topic: 'Federal money in your state', difficulty: 'Easy', minutes: 4, icon: 'home', badge: 'Federal money at home',
+    id: 'level-3', n: 3, title: 'Back home', topic: 'Federal money in your state', difficulty: 'Easy', minutes: 5, icon: 'home', badge: 'Federal money at home',
     steps: [
       { id: 'intro', label: 'Neighbors', kind: 'story', mood: 'happy', sam: <>A lot of what I spend ends up right in your neighborhood: Social Security checks, Medicaid, highways, schools, and military bases. Let’s play higher or lower with the states.</> },
       { id: 'game', label: 'Higher or lower', kind: 'game', game: {
@@ -372,6 +373,7 @@ const CHAPTERS: Level[] = [
         explain: <>{topProgram} is the biggest federal program in {topProgramCounts[0]?.[1] ?? 'most'} of {geo.states.length} states and territories in FY{geo.fy} (not counting Medicare).</> } },
         ] } },
       { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Type your ZIP code and I’ll find your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}; the needle shows how your state compares, per person, with the whole country. Saving your ZIP with your votes is up to you.</>, body: () => <StateTry /> },
+      { id: 'county', label: 'Your county', kind: 'try', mood: 'thinking', sam: <>Now the other side of the ledger: taxes. Here’s who paid federal income tax in your county, by income, on 2023 tax returns, next to the whole country.</>, body: () => <CountyTry /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>States count on federal grants for roads, transit, and schools. Here’s a cut CBO has priced.</>, vote: { kind: 'option', optionId: 'cut-transport-education-grants' } },
 
     ],
