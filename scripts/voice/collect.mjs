@@ -33,11 +33,14 @@ const banks = await page.evaluate(async () => {
   const S = await import('/src/game/script.ts');
   const U = await import('/src/game/UncleSam.tsx');
   const V = await import('/src/game/voice.tsx');
+  const G = await import('/src/game/minigame.tsx');
   const out = {};
   const add = (bank, text) => { for (const s of V.toSentences(text)) (out[bank] ??= []).push(s); };
   for (const l of L.LEVELS) {
     for (const st of l.steps) {
       if (st.sam) add(l.id, U.plain(st.sam));
+      // A mission's game: each round's opening line and every way it can be scored.
+      if (st.game) for (const t of G.gameLines(st.game)) add(l.id, t);
       if (st.quiz?.guess) {
         // A guess: asked first, then the answer, right or not.
         const q = st.quiz, ex = U.plain(q.explain), Q = S.QUIZ_LINES;
@@ -56,6 +59,9 @@ const banks = await page.evaluate(async () => {
   }
   for (const s of L.STOPS) add('common', S.lockedLine(L.unlockText(s.id)));
   Object.values(S.CHEER).forEach((t) => add('common', t));
+  // What every game says when it ends, and the lines a custom round shares.
+  Object.values(G.ROUND_LINES.over).forEach((t) => add('common', t));
+  [G.ROUND_LINES.spot, G.ROUND_LINES.close, G.ROUND_LINES.far, G.ROUND_LINES.bonusWrong, 'That one’s tricky. Here’s the answer.'].forEach((t) => add('common', t));
   Object.values(S.DESK_PARTY).forEach((t) => add('desk', t));
   Object.values(S.COACH).forEach((t) => add('desk', t));
   Object.values(S.REACT).forEach((t) => add('desk', t));

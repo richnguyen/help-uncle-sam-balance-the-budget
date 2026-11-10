@@ -8,6 +8,7 @@ import { dollars, money, moneyWords, pct } from '../lib/format';
 import { MULT, mid } from '../lib/plan';
 import { simulate, ZERO } from '../lib/sandbox';
 import { useHaptics } from './haptics';
+import type { Done } from './minigame';
 
 const fmtMult = (v: number) => `$${v.toFixed(2)}`;
 
@@ -54,16 +55,24 @@ export function Dial({ value, max, zones, label, readout, note }: { value: numbe
 
 // ---------- 2.1: the interest rate, and the interest bill it sets ----------
 /** Debt held by the public times an average interest rate: a simple version of the interest bill. */
-export function InterestRateSim({ defense, medicare, fy }: { defense: number; medicare: number; fy: number }) {
+export function InterestRateSim({ defense, medicare, fy, game }: { defense: number; medicare: number; fy: number; game?: { done: Done } }) {
   const held = debt.latest.public;
   const now = debt.rates.at(-1)!;
   const recent = debt.rates.filter((r) => r.date >= '2018-01-01');
   const low = recent.reduce((a, b) => (b.marketable < a.marketable ? b : a));
-  const [rate, setRate] = useState(Math.round(now.marketable * 10) / 10);
+  const [rate, setRate] = useState(game ? 1.5 : Math.round(now.marketable * 10) / 10);
+  const [locked, setLocked] = useState(false);
   const buzz = useHaptics();
   const bill = held * rate / 100;
   const perPoint = held / 100;
   const cross = (defense / held) * 100;
+  const hide = !!game && !locked; // in the game, the crossing point is the answer
+  const lock = () => {
+    if (!game || locked) return;
+    setLocked(true);
+    const off = Math.abs(rate - cross);
+    game.done(off <= 0.1 ? 100 : off <= 0.3 ? 60 : off <= 0.6 ? 30 : 10, `Interest passes defense at ${cross.toFixed(1)}%. You locked in ${rate.toFixed(1)}%.`);
+  };
   const rows = [
     { id: 'interest', label: `Interest at ${rate.toFixed(1)}%`, value: bill, color: 'var(--c-interest)' },
     { id: 'defense', label: `National defense (FY${fy})`, value: defense, color: 'var(--c-defense)' },
@@ -76,7 +85,8 @@ export function InterestRateSim({ defense, medicare, fy }: { defense: number; me
       <label className="sim-slider">
         <span className="sim-k">Average interest rate on the debt</span>
         <strong className="sim-v num">{rate.toFixed(1)}%</strong>
-        <input type="range" min={1} max={7} step={0.1} value={rate} onChange={(e) => setRate(Number(e.target.value))} onPointerUp={() => buzz('tap')}
+        <input type="range" min={1} max={7} step={0.1} value={rate} disabled={locked} onChange={(e) => setRate(Number(e.target.value))} onPointerUp={() => buzz('tap')}
+          onKeyDown={(e) => { if (game && e.key === 'Enter') { e.preventDefault(); lock(); } }}
           aria-valuetext={`${rate.toFixed(1)} percent: interest of ${moneyWords(bill, 2)} a year`} />
         <span className="sim-scale" aria-hidden="true"><span>1%</span><span>7%</span></span>
         <span className="sim-marks" aria-hidden="true">
@@ -87,8 +97,9 @@ export function InterestRateSim({ defense, medicare, fy }: { defense: number; me
       <div className="sim-result" aria-live="polite">
         <span className="stat-label">A year’s interest on {money(held)} of debt held by the public</span>
         <strong className="concept-big">{moneyWords(bill, 2)} a year, about {dollars(bill / POP)} a person</strong>
-        <span className="small muted">Every point of interest rate costs about {moneyWords(perPoint, 0)} a year. Above {cross.toFixed(1)}%, interest costs more than defense.</span>
+        <span className="small muted">Every point of interest rate costs about {moneyWords(perPoint, 0)} a year.{hide ? '' : ` Above ${cross.toFixed(1)}%, interest costs more than defense.`}</span>
       </div>
+      {game && !locked && <button type="button" className="btn btn-primary estimate-lock sim-lock" onClick={lock}>Lock in {rate.toFixed(1)}%</button>}
       <ul className="sim-bars" aria-label="Interest at this rate next to defense and Medicare">
         {rows.map((r) => (
           <li key={r.id} data-row={r.id}>
@@ -109,7 +120,7 @@ export function InterestRateSim({ defense, medicare, fy }: { defense: number; me
 
 // ---------- 3.1: close Social Security's 75-year gap, mixing a tax increase and a benefit cut ----------
 const parse = (s: string | undefined, fallback: number) => { const n = Number(String(s ?? '').replace(/[^0-9.]/g, '')); return Number.isFinite(n) && n > 0 ? n : fallback; };
-export function SsMixer() {
+export function SsMixer({ late: forceLate, game }: { late?: boolean; game?: { done: Done } } = {}) {
   const NOW_RATE = 12.4;
   // The trustees' two ways to close the gap alone, starting now, and how much bigger each gets by 2034.
   const fixes = ssa.fixes ?? [];
@@ -117,29 +128,38 @@ export function SsMixer() {
   const taxLate = parse(fixes[0]?.label.match(/\(([\d.]+)%/)?.[1], 17.3), cutLate = parse(fixes[1]?.label.match(/\(([\d.]+)%/)?.[1], 28.5);
   const [tax, setTax] = useState(NOW_RATE);
   const [cut, setCut] = useState(0);
-  const [late, setLate] = useState(false);
+  const [lateSet, setLate] = useState(false);
+  const late = forceLate ?? lateSet;
+  const [locked, setLocked] = useState(false);
   const buzz = useHaptics();
   const T = late ? taxLate : taxNow, C = late ? cutLate : cutNow;
   const closed = (tax - NOW_RATE) / (T - NOW_RATE) + cut / C;
   const worker = ((tax - NOW_RATE) / 100 / 2) * 60000;
   const done = closed >= 0.995;
+  const lock = () => {
+    if (!game || locked) return;
+    setLocked(true);
+    const off = Math.abs(closed - 1);
+    game.done(off <= 0.01 ? 100 : off <= 0.03 ? 70 : off <= 0.08 ? 40 : 15, `You closed ${Math.round(closed * 100)}% of the gap${off <= 0.01 ? ', right on the mark' : closed > 1 ? ', more than it needed' : ''}.`);
+  };
   return (
     <div className="sim">
       <div className="sim-two">
         <label className="sim-slider">
           <span className="sim-k">Social Security payroll tax (worker and employer together)</span>
           <strong className="sim-v num">{tax.toFixed(2)}%</strong>
-          <input type="range" min={NOW_RATE} max={18} step={0.05} value={tax} onChange={(e) => setTax(Number(e.target.value))} onPointerUp={() => buzz('tap')} aria-valuetext={`${tax.toFixed(2)} percent`} />
+          <input type="range" min={NOW_RATE} max={18} step={0.05} value={tax} disabled={locked} onChange={(e) => setTax(Number(e.target.value))} onPointerUp={() => buzz('tap')} aria-valuetext={`${tax.toFixed(2)} percent`} />
           <span className="sim-scale" aria-hidden="true"><span>12.4% today</span><span>18%</span></span>
         </label>
         <label className="sim-slider">
           <span className="sim-k">Cut to every benefit check</span>
           <strong className="sim-v num">{cut.toFixed(1)}%</strong>
-          <input type="range" min={0} max={30} step={0.1} value={cut} onChange={(e) => setCut(Number(e.target.value))} onPointerUp={() => buzz('tap')} aria-valuetext={`${cut.toFixed(1)} percent cut`} />
+          <input type="range" min={0} max={30} step={0.1} value={cut} disabled={locked} onChange={(e) => setCut(Number(e.target.value))} onPointerUp={() => buzz('tap')} aria-valuetext={`${cut.toFixed(1)} percent cut`} />
           <span className="sim-scale" aria-hidden="true"><span>no cut</span><span>30%</span></span>
         </label>
       </div>
-      <label className="switch"><input type="checkbox" checked={late} onChange={(e) => setLate(e.target.checked)} /> Wait until 2034 to start</label>
+      {forceLate == null ? <label className="switch"><input type="checkbox" checked={late} onChange={(e) => setLate(e.target.checked)} /> Wait until 2034 to start</label>
+        : late ? <p className="small"><strong>Congress waited until 2034 to start.</strong></p> : null}
       <div className="sim-gauge-row">
         <Dial value={closed * 100} max={120} label="Share of the 75-year gap closed" readout={`${Math.round(closed * 100)}%`}
           zones={[{ to: 99.5, label: 'gap remains', tone: 'warning' }, { to: 120, label: 'gap closed', tone: 'good' }]} />
@@ -149,17 +169,18 @@ export function SsMixer() {
           <span className="small muted">
             {tax > NOW_RATE ? `A worker earning $60,000 pays about ${dollars(worker)} more a year (the employer pays the same again). ` : ''}
             {cut > 0 ? `Every retiree’s check is ${cut.toFixed(1)}% smaller, current retirees included. ` : ''}
-            Alone, closing it takes {T.toFixed(2)}% or a {C.toFixed(1)}% cut{late ? ' when Congress waits until 2034' : ' starting now'}.
+            {game && !locked ? 'Mix the two any way you like; get the gauge to 100%.' : `Alone, closing it takes ${T.toFixed(2)}% or a ${C.toFixed(1)}% cut${late ? ' when Congress waits until 2034' : ' starting now'}.`}
           </span>
         </div>
       </div>
+      {game && !locked && <button type="button" className="btn btn-primary estimate-lock sim-lock" onClick={lock}>Lock in this fix</button>}
       <p className="small muted">From the {ssa.report}: each change alone, starting now or in 2034. Mixing the two is simplified as a straight line between them.</p>
     </div>
   );
 }
 
 // ---------- 1.4: pour the spending into the revenue tank ----------
-export function RevenueTank() {
+export function RevenueTank({ game }: { game?: { done: Done } } = {}) {
   const b = bucketYear(cbo.history.filter((h) => h.actual).at(-1)!.fy);
   const y = b.y;
   const blocks = [
@@ -177,7 +198,17 @@ export function RevenueTank() {
   const buzz = useHaptics();
   const cap = y.revenues;
   const scale = cap * 1.42; // the drawing has room above the brim for what spills over
-  const pour = (id: string) => { if (poured.includes(id)) return; buzz('card'); setPoured((p) => [...p, id]); };
+  const pour = (id: string) => {
+    if (poured.includes(id)) return;
+    buzz('card');
+    const nx = [...poured, id];
+    setPoured(nx);
+    if (game && nx.length === blocks.length) {
+      const first = nx.slice(0, 5).filter((b) => blocks.find((x) => x.id === b)!.kind !== 'discretionary').length;
+      game.done((100 * first) / 5, first === 5 ? 'All five bills on autopilot went in first.' : `${first} of the 5 bills on autopilot went in first. The other two are the ones Congress votes on each year.`);
+    }
+  };
+  const over2 = game && poured.length === blocks.length; // the game's tank shows each bill's kind once it's full
   const inTank = blocks.filter((x) => poured.includes(x.id));
   const total = inTank.reduce((s, x) => s + x.v, 0);
   const mi = blocks.filter((x) => x.kind !== 'discretionary').reduce((s, x) => s + x.v, 0);
@@ -212,7 +243,7 @@ export function RevenueTank() {
           <span className="stat-label">In the tank</span>
           <strong className="concept-big">{pct(total / cap, 0)} of revenue</strong>
           <span className="small muted">
-            {poured.length === 0 ? 'Tap or drag the bills into the tank, starting with the ones on autopilot.'
+            {poured.length === 0 ? (game ? 'Pour in the bills on autopilot first, then the ones Congress votes on each year.' : 'Tap or drag the bills into the tank, starting with the ones on autopilot.')
               : over > 0 ? `It overflows: ${money(over)} had to be borrowed. That’s the deficit.`
               : inTank.every((x) => x.kind !== 'discretionary') && inTank.length === blocks.filter((x) => x.kind !== 'discretionary').length ? `Mandatory programs and interest alone fill ${pct(mi / cap, 0)} of the tank. Now add what Congress votes on.`
               : `${money(cap - total)} of room left.`}
@@ -221,7 +252,7 @@ export function RevenueTank() {
       </div>
       <div className="tank-tray" role="group" aria-label="Bills to pour in" onPointerMove={onMove}>
         {blocks.map((x) => (
-          <button key={x.id} type="button" className="tank-chip" data-kind={x.kind} data-done={poured.includes(x.id) || undefined} disabled={poured.includes(x.id)}
+          <button key={x.id} type="button" className="tank-chip" data-kind={!game || over2 ? x.kind : undefined} data-done={poured.includes(x.id) || undefined} disabled={poured.includes(x.id)}
             onPointerDown={onDown(x.id)} onPointerUp={onUp(x.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pour(x.id); } }}
             data-drag={drag?.id === x.id || undefined} aria-label={`Pour in ${x.label}, ${money(x.v)}`}>
             <span className="tank-swatch" style={{ background: x.color }} aria-hidden="true" />
@@ -231,8 +262,8 @@ export function RevenueTank() {
         ))}
       </div>
       <div className="sim-actions">
-        {next && <button type="button" className="btn" onClick={() => pour(next.id)}>Pour the next one: {next.label}</button>}
-        {poured.length > 0 && <button type="button" className="btn" onClick={() => setPoured([])}>Empty the tank</button>}
+        {next && !game && <button type="button" className="btn" onClick={() => pour(next.id)}>Pour the next one: {next.label}</button>}
+        {poured.length > 0 && !game && <button type="button" className="btn" onClick={() => setPoured([])}>Empty the tank</button>}
       </div>
       {drag && <span className="tank-ghost" style={{ left: drag.x, top: drag.y }} aria-hidden="true">{blocks.find((x) => x.id === drag.id)?.label}</span>}
       <p className="small muted">{b.label}</p>
@@ -251,6 +282,8 @@ function neededFrom(start: number) {
   for (let k = 0; k < 50; k++) { const mid = (lo + hi) / 2; if (ok(mid)) hi = mid; else lo = mid; }
   return { share: hi, sim: run(hi) };
 }
+/** The yearly fix needed for each start year, from now to the next-to-last year. */
+export const waitShares = () => CTX.baseline.slice(0, -1).map((b, i) => ({ fy: b.fy, share: neededFrom(i).share }));
 export function WaitSim() {
   const base = CTX.baseline;
   const starts = useMemo(() => base.slice(0, -1).map((b, i) => ({ fy: b.fy, ...neededFrom(i) })), [base]);
@@ -319,89 +352,43 @@ const CAL = [
   { id: 'bills', when: 'Spring and summer', what: 'The House and Senate pass 12 spending bills, and the President signs them' },
   { id: 'oct', when: 'October 1', what: 'The new fiscal year begins, with every bill in place' },
 ];
-export function CalendarSim() {
-  const [order, setOrder] = useState(['bills', 'pres', 'oct', 'res']);
-  const [checked, setChecked] = useState(false);
+export const BUDGET_CALENDAR = CAL;
+/** October 1 arrives with the bills unfinished: a stopgap or a shutdown, each told from the record. */
+export function OctoberChoice() {
   const [path, setPath] = useState<'cr' | 'shutdown' | null>(null);
-  const [drag, setDrag] = useState<string | null>(null);
-  const rows = useRef<Record<string, HTMLLIElement | null>>({});
   const buzz = useHaptics();
-  const right = order.every((id, i) => CAL[i].id === id);
-  const move = (id: string, to: number) => setOrder((o) => {
-    const from = o.indexOf(id);
-    if (to < 0 || to >= o.length || to === from) return o;
-    const nx = o.filter((x) => x !== id); nx.splice(to, 0, id); return nx;
-  });
-  const onMove = (e: React.PointerEvent) => {
-    if (!drag) return;
-    const mids = order.map((id) => { const r = rows.current[id]?.getBoundingClientRect(); return r ? r.top + r.height / 2 : 0; });
-    const to = mids.filter((m) => e.clientY > m).length;
-    const from = order.indexOf(drag);
-    move(drag, to > from ? to - 1 : to);
-  };
   const yrs = process.years;
   const crs = yrs.reduce((a, y) => a + y.crs, 0);
   const none = yrs.filter((y) => y.onTime === 0 && !/^Not final/.test(y.final)).length;
   const lapses = yrs.filter((y) => y.shutdownDays > 0);
   const now = yrs.at(-1)!;
   return (
-    <div className="sim cal-sim">
-      <div className="small muted">{checked && right ? 'That’s the plan on paper.' : 'Put the budget calendar in order: drag a step, or use the arrows.'}</div>
-      <ol className="cal-list" onPointerMove={onMove} onPointerUp={() => { if (drag) buzz('tap'); setDrag(null); }} onPointerCancel={() => setDrag(null)}>
-        {order.map((id, i) => {
-          const c = CAL.find((x) => x.id === id)!;
-          const ok = CAL[i].id === id;
-          return (
-            <li key={id} ref={(el) => { rows.current[id] = el; }} className="cal-row" data-drag={drag === id || undefined} data-ok={checked ? ok : undefined}>
-              <span className="cal-grip" aria-hidden="true" onPointerDown={(e) => { if (checked && right) return; e.currentTarget.parentElement?.parentElement?.setPointerCapture?.(e.pointerId); setDrag(id); setChecked(false); }}>⋮⋮</span>
-              <span className="cal-n num" aria-hidden="true">{checked ? (ok ? '✓' : '✕') : i + 1}</span>
-              <span className="cal-text"><strong>{c.what}</strong>{checked && right && <span className="small muted"> {c.when}</span>}</span>
-              {!(checked && right) && (
-                <span className="cal-btns">
-                  <button type="button" className="btn btn-sm cal-arrow" disabled={i === 0} aria-label={`Move “${c.what}” up`} onClick={() => { move(id, i - 1); setChecked(false); buzz('tap'); }}>↑</button>
-                  <button type="button" className="btn btn-sm cal-arrow" disabled={i === order.length - 1} aria-label={`Move “${c.what}” down`} onClick={() => { move(id, i + 1); setChecked(false); buzz('tap'); }}>↓</button>
-                </span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-      {!(checked && right) && (
-        <div className="sim-actions">
-          <button type="button" className="btn btn-primary cal-check" onClick={() => { setChecked(true); buzz(right ? 'right' : 'wrong'); }}>Check the order</button>
-          {checked && !right && <span className="small" role="status">{order.filter((id, i) => CAL[i].id === id).length} of {CAL.length} in the right spot. Try again.</span>}
-        </div>
-      )}
-      {checked && right && (
-        <div className="cal-oct" role="group" aria-labelledby="cal-oct-q">
-          <strong id="cal-oct-q">Now October 1 arrives, and the 12 bills aren’t all signed. What happens?</strong>
-          <div className="sim-actions">
-            <button type="button" className="btn cal-pick" aria-pressed={path === 'cr'} onClick={() => { setPath('cr'); buzz('tap'); }}>Pass a stopgap</button>
-            <button type="button" className="btn cal-pick" aria-pressed={path === 'shutdown'} onClick={() => { setPath('shutdown'); buzz('wrong'); }}>No deal</button>
-          </div>
-          {path && (
-            <div className="sim-result" aria-live="polite">
-              {path === 'cr' ? (
-                <>
-                  <span className="stat-label">A continuing resolution</span>
-                  <strong className="concept-big">Agencies keep running at about last year’s funding until the bills pass.</strong>
-                  <span className="small muted">Congress passed {crs} stopgaps for FY{yrs[0].fy}–FY{now.fy}. In {none} of those years, not one regular bill was on time.{/^Not final/.test(now.final) ? ` Right now, FY${now.fy} is running on one: ${now.final.replace(/^Not final yet\.\s*/, '')}` : ''}</span>
-                </>
-              ) : (
-                <>
-                  <span className="stat-label">A shutdown</span>
-                  <strong className="concept-big">Funding lapses. Agencies stop all but essential work, and essential employees keep working without a paycheck until it ends.</strong>
-                  <span className="small muted">Since FY{yrs[0].fy}, funding lapsed in {lapses.length} fiscal years: {lapses.map((y) => `FY${y.fy}, ${y.shutdownDays} day${y.shutdownDays === 1 ? '' : 's'}`).join('; ')}.</span>
-                </>
-              )}
-            </div>
+    <div className="cal-oct" role="group" aria-labelledby="cal-oct-q">
+      <strong id="cal-oct-q">Now October 1 arrives, and the 12 bills aren’t all signed. What happens?</strong>
+      <div className="sim-actions">
+        <button type="button" className="btn cal-pick" aria-pressed={path === 'cr'} onClick={() => { setPath('cr'); buzz('tap'); }}>Pass a stopgap</button>
+        <button type="button" className="btn cal-pick" aria-pressed={path === 'shutdown'} onClick={() => { setPath('shutdown'); buzz('wrong'); }}>No deal</button>
+      </div>
+      {path && (
+        <div className="sim-result" aria-live="polite">
+          {path === 'cr' ? (
+            <>
+              <span className="stat-label">A continuing resolution</span>
+              <strong className="concept-big">Agencies keep running at about last year’s funding until the bills pass.</strong>
+              <span className="small muted">Congress passed {crs} stopgaps for FY{yrs[0].fy}–FY{now.fy}. In {none} of those years, not one regular bill was on time.{/^Not final/.test(now.final) ? ` Right now, FY${now.fy} is running on one: ${now.final.replace(/^Not final yet\.\s*/, '')}` : ''}</span>
+            </>
+          ) : (
+            <>
+              <span className="stat-label">A shutdown</span>
+              <strong className="concept-big">Funding lapses. Agencies stop all but essential work, and essential employees keep working without a paycheck until it ends.</strong>
+              <span className="small muted">Since FY{yrs[0].fy}, funding lapsed in {lapses.length} fiscal years: {lapses.map((y) => `FY${y.fy}, ${y.shutdownDays} day${y.shutdownDays === 1 ? '' : 's'}`).join('; ')}.</span>
+            </>
           )}
         </div>
       )}
     </div>
   );
 }
-
 // ---------- 2.3: let the debt grow, and see the slice of income it takes ----------
 /** CBO's comparison for 2055: debt rising to 156% of GDP under current law, or held at about 100%, which leaves income per person about 4% higher. */
 const CBO_HELD = 100, CBO_PROJ = 156, CBO_GAIN = 4;

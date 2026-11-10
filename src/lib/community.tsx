@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { LEVELS, STOPS } from '../game/levels';
+import { LEVELS, quizzesOf, STOPS } from '../game/levels';
 import { useJourney } from '../game/state';
 import { BackendError, backendOn, rpc, upsertOwn } from './backend';
 import { load, save } from './storage';
@@ -77,7 +77,7 @@ const fromServer = (s: ServerTotals): CommunityTotals => ({
 });
 
 const Ctx = createContext<CommunityState | null>(null);
-const QUIZ_IDS = LEVELS.flatMap((l) => l.steps.filter((s) => s.quiz).map((s) => s.quiz!.id));
+const QUIZ_IDS = LEVELS.flatMap((l) => quizzesOf(l).map((q) => q.id));
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function CommunityProvider({ children }: { children: ReactNode }) {

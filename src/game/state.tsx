@@ -19,6 +19,7 @@ export interface JourneyState {
   marks: string[]; // things the player has done outside the levels (documents opened, pages read, shares)
   medals: string[]; // medals already awarded (so each is announced once)
   plans?: Record<string, SavedPlan>; // the latest plan that met each budget-desk level's goal
+  games?: Record<string, { best: number; stars: number; plays: number }>; // each mission game's best score
   settings: { text: TextSize; theme: ThemeChoice; freeRoam: boolean; narration: boolean; voice: string; haptics: boolean; sounds: boolean; voiceV?: number };
 }
 
@@ -58,6 +59,8 @@ function migrate(s: Partial<JourneyState> & { v?: number }): Partial<JourneyStat
 interface Journey extends JourneyState {
   completeStep: (level: string, step: number) => void;
   completeLevel: (level: string, stars: number) => void;
+  /** Record a finished play of a mission's game; the best score and stars are kept. */
+  scoreGame: (game: string, score: number, stars: number) => void;
   answer: (quizId: string, correct: boolean) => void;
   /** Clear quiz answers so a replay can earn stars again. */
   retry: (quizIds: string[]) => void;
@@ -104,6 +107,11 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
       done: p.done.includes(level) ? p.done : [...p.done, level],
       stars: { ...p.stars, [level]: Math.max(p.stars[level] ?? 0, stars) },
     })),
+    scoreGame: (game, score, stars) => update((p) => {
+      const cur = p.games?.[game];
+      const best = Math.max(cur?.best ?? 0, score);
+      return { ...p, games: { ...(p.games ?? {}), [game]: { best, stars: Math.max(cur?.stars ?? 0, stars), plays: (cur?.plays ?? 0) + 1 } } };
+    }),
     answer: (quizId, correct) => update((p) => {
       const q = p.quiz[quizId] ?? { tries: 0, correct: false };
       return { ...p, quiz: { ...p.quiz, [quizId]: { tries: q.tries + 1, correct: q.correct || correct } } };
@@ -115,7 +123,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     award: (ids) => update((p) => ({ ...p, medals: [...p.medals, ...ids.filter((x) => !p.medals.includes(x))] })),
     savePlan: (level, plan) => update((p) => ({ ...p, plans: { ...(p.plans ?? {}), [level]: plan } })),
     start: () => update((p) => (p.started ? p : { ...p, started: new Date().toISOString() })),
-    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, settings: p.settings })),
+    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, settings: p.settings })),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

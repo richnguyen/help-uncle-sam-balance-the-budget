@@ -112,20 +112,39 @@ budget adviser.
   what it cuts; none is presented as advice. Ideas can be read any time and loaded with one tap
   once the player has met that desk's goal on their own (or in free roam); a loaded plan is the
   player's to change. They are hidden during a friend's challenge or a duel.
-- **Guesses, steps, checks and votes.** Each chapter is 4–6 short steps (at most about 80 words
-  each) with a segmented progress bar. Most chapters open with a guess, asked before the step
-  that shows the answer: one pick, then the answer and why, and it never counts toward stars.
-  Quick checks come after the lesson, give explanatory feedback, and reveal the answer after two
-  tries; stars count only those (three for right the first time, two for right on the second try).
-  Each chapter ends with one vote on a real policy choice. Level 7 lists the major laws, and
-  tapping one explains what it did and why its official estimate came out so large.
-- **Guesses by slider** (`EstimateCard` in `LevelPage.tsx`, the `estimate` field on a quiz): in
-  missions 1.4, 1.6, 2.1, 2.2, 2.4, 3.1 and 3.2, the guess is a number to drag to (the last
-  surplus year, the "gentle" limit, the interest bill next to defense, the last year every
-  spending bill was on time, non-defense spending's share of the economy, the share of benefits
-  still payable, interest in FY2031). Lock it in, and the real number appears on the track with
-  how far off you were: spot on, close, or not this time. Guesses still never count toward stars,
-  and the guess is remembered in this browser.
+- **Every lesson mission is a game** (`src/game/minigame.tsx`, a `game` step). The 13 lesson
+  missions each run: Uncle Sam's setup line, one scored game, a step to explore (your tax
+  receipt, your state, the laws, the ripple, the pie, the bridge and so on), and one vote on a
+  real policy choice. A game is 2–4 short rounds worth up to 100 points each, with a score bar
+  (round dots, points, a meter toward three stars) that stays in view. After each round a banner
+  shows the points and why; at the end, the final score, stars (three at 85% of the points, two
+  at 60%, one for finishing) and what the game showed (the mission's takeaways), with Play again.
+  The best score is kept, sets the mission's stars, and greets the player on a return visit.
+  Continue waits until the game has been played once.
+  - The games: 1.1 Fill the piggy bank (the total, split the $100, your pay stub); 1.2 Size the
+    bills (size the four biggest, which is bigger, Congress's share); 1.3 Higher or lower (eight
+    states against the national average per person); 1.4 Fill the tank (the last surplus, pour
+    the bills on autopilot in first); 1.5 Ripple ranking (rank four ways to save $100 billion by
+    their ripple); 1.6 Keep it gentle (the gentle limit, the biggest plan without a steep year);
+    1.7 Who pays (sort six cards, the biggest bite); 2.1 Rate shock (the interest bill, stop the
+    rate where interest passes defense); 2.2 Beat the deadline (the last on-time year, the budget
+    calendar, then October 1); 2.3 Grow the pie (what debt does, cards that help or hold back
+    growth); 2.4 Bridge inspector (how far public investment fell, investment or not, by OMB's
+    definition); 3.1 Close the gap (what's still paid, close Social Security's gap now and after
+    waiting); 3.2 Wait and see (interest ahead, how much bigger the fix gets by waiting).
+  - Scoring: a slider guess earns 100 spot on, 60 close and 20 for trying; a split loses 3 points
+    per misplaced dollar; sized bars earn half for making the biggest one biggest and half for
+    closeness; sorts, orders, pairs and higher-or-lower score the share right; each mission's old
+    quick check is now a bonus round (100 on the first try, 50 on the second). Simulation rounds
+    score how close the player lands (the crossover rate, the gap closed, the plan's size and
+    pace). Every round works from the same official numbers as the rest of the game.
+  - Answers to every question still count toward the community's first-try rates on "How
+    everyone played".
+- **Guesses by slider** (`EstimateGuess` in `guesses.tsx`, the `estimate` field on a quiz): the
+  number rounds (the last surplus year, the "gentle" limit, the interest bill next to defense,
+  the last year every spending bill was on time, non-defense spending's share of the economy, the
+  share of benefits still payable, interest in FY2031, how much bigger waiting makes the fix).
+  Lock it in, and the real number appears on the track with how far off you were.
 - **Guesses by hand** (`src/game/guesses.tsx`, the `split`, `sizes` and `sort` fields on a quiz):
   - 1.1, split the $100: drag three dividers to share out each $100 of revenue among income,
     payroll, corporate and other taxes; the real split slides in below, scored by how many
@@ -176,8 +195,7 @@ budget adviser.
   he coaches in real time as the plan changes. Speech is on by default and can be switched off
   from the top bar or in settings.
 - **Rewards.**
-  - Up to three stars per level (all questions right on the first try, or the budget-desk
-    star rules).
+  - Up to three stars per level (the mission game's best score, or the budget-desk star rules).
   - A celebration card on finishing a level, with the certificate earned, a quote from American
     history on citizenship, responsibility, the future or the economy, and a preview of the next
     level.

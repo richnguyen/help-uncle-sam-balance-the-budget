@@ -2,25 +2,37 @@ import { type ReactNode, useRef, useState } from 'react';
 import { load, save } from '../lib/storage';
 import { useHaptics } from './haptics';
 import type { Quiz } from './levels';
+import type { Done } from './minigame';
 import { useJourney } from './state';
 import { plain, SamSays } from './UncleSam';
 import { QUIZ_LINES } from './script';
 
-// Guesses made by hand instead of by picking: split a bar, size the bars, sort the cards. Each is
-// locked in, then the real answer appears beside the guess with how close it came. Like every
-// guess, it never counts toward stars, and it's remembered in this browser.
+// Guesses made by hand instead of by picking: drag a slider, split a bar, size the bars, sort
+// the cards. Each is locked in, then the real answer appears beside the guess with how close it
+// came. As a quiz guess it never counts toward stars and is remembered in this browser; as a
+// round of a mission's game it scores points instead, and starts fresh on every play.
 
 type Grade = 'spot' | 'close' | 'far';
+/** A round of a mission's game: Uncle Sam's opening line, and where the points go. */
+export interface RoundCtx { intro: ReactNode; onDone: Done }
+export const ROUND = {
+  spot: 'Spot on! Full points.',
+  close: 'Close! Good points.',
+  far: 'Not this time, but you’ll know it next time.',
+  farSay: (answer: string) => `Not this time. It’s ${answer}.`,
+};
+export const POINTS: Record<Grade, number> = { spot: 100, close: 60, far: 20 };
 
-function useGuess<T>(quiz: Quiz, init: T) {
+function useGuess<T>(quiz: Quiz, init: T, round?: RoundCtx) {
   const j = useJourney();
   const key = 'guess:' + quiz.id;
-  const [value, setValue] = useState<T>(() => load<T | null>(key, null) ?? init);
-  const [locked, setLocked] = useState<boolean>(() => !!j.quiz[quiz.id] && load<T | null>(key, null) != null);
+  const [value, setValue] = useState<T>(() => (round ? init : load<T | null>(key, null) ?? init));
+  const [locked, setLocked] = useState<boolean>(() => !round && !!j.quiz[quiz.id] && load<T | null>(key, null) != null);
   const buzz = useHaptics();
-  const lock = (grade: Grade) => {
+  const lock = (grade: Grade, points: number, verdict: string) => {
     if (locked) return;
     setLocked(true);
+    if (round) { j.answer(quiz.id, grade !== 'far'); round.onDone(points, verdict); return; }
     save(key, value);
     buzz(grade === 'far' ? 'wrong' : 'right');
     j.answer(quiz.id, grade !== 'far');
@@ -29,14 +41,18 @@ function useGuess<T>(quiz: Quiz, init: T) {
 }
 
 /** Uncle Sam's line, the card with the question, and the lock-in button or the verdict. */
-function GuessFrame({ quiz, kind, locked, grade, canLock = true, lockLabel, onLock, verdict, children }: {
-  quiz: Quiz; kind: string; locked: boolean; grade: Grade; canLock?: boolean; lockLabel: string; onLock: () => void; verdict: ReactNode; children: ReactNode;
+function GuessFrame({ quiz, kind, locked, grade, canLock = true, lockLabel, onLock, verdict, round, children }: {
+  quiz: Quiz; kind: string; locked: boolean; grade: Grade; canLock?: boolean; lockLabel: string; onLock: () => void; verdict: ReactNode; round?: RoundCtx; children: ReactNode;
 }) {
   const Q = QUIZ_LINES;
   const ex = plain(quiz.explain);
   const good = grade !== 'far';
-  const line = locked ? (good ? Q.guessRight : Q.guessReveal) : Q.guessPrompt;
-  const say = locked ? (good ? `${Q.guessRight} ${ex}` : `${Q.guessRevealSay(quiz.choices[0])} ${ex}`) : Q.guessAsk(quiz.question);
+  const line = round
+    ? (locked ? ROUND[grade] : round.intro)
+    : locked ? (good ? Q.guessRight : Q.guessReveal) : Q.guessPrompt;
+  const say = round
+    ? (locked ? (grade === 'far' ? `${ROUND.farSay(quiz.choices[0])} ${ex}` : `${ROUND[grade]} ${ex}`) : `${plain(round.intro)} ${quiz.question}`)
+    : locked ? (good ? `${Q.guessRight} ${ex}` : `${Q.guessRevealSay(quiz.choices[0])} ${ex}`) : Q.guessAsk(quiz.question);
   return (
     <div className="quiz">
       <SamSays mood={locked ? (good ? 'proud' : 'surprised') : 'happy'} compact auto say={say}>{line}</SamSays>
@@ -58,6 +74,32 @@ function GuessFrame({ quiz, kind, locked, grade, canLock = true, lockLabel, onLo
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
+// ---------- drag a slider to a number ----------
+export function EstimateGuess({ quiz, round }: { quiz: Quiz; round?: RoundCtx }) {
+  const e = quiz.estimate!;
+  const g = useGuess<number>(quiz, e.start, round);
+  const value = g.value;
+  const off = Math.abs(value - e.answer);
+  const rel = e.relative ? off / Math.abs(e.answer) : off;
+  const grade: Grade = rel <= e.spot ? 'spot' : rel <= e.close ? 'close' : 'far';
+  // Where a value sits along the slider: the thumb travels between half its width from each end.
+  const at = (v: number) => `calc(9px + (100% - 18px) * ${((v - e.min) / (e.max - e.min)).toFixed(4)})`;
+  const lock = () => g.lock(grade, POINTS[grade], `You said ${e.format(value)}; it’s ${e.format(e.answer)}${grade === 'spot' ? '' : ` (${e.diff(off)} off)`}.`);
+  return (
+    <GuessFrame quiz={quiz} kind="estimate" locked={g.locked} grade={grade} lockLabel={`Lock in ${e.format(value)}`} onLock={lock} round={round}
+      verdict={<>You said {e.format(value)}; it’s {e.format(e.answer)}{grade === 'spot' ? '' : ` (${e.diff(off)} off)`}.</>}>
+      <div className="estimate-value num" aria-hidden="true">{e.format(value)}</div>
+      <div className="estimate-track">
+        <input type="range" min={e.min} max={e.max} step={e.step} value={value} disabled={g.locked} aria-label={e.prompt} aria-valuetext={e.format(value)}
+          onChange={(ev) => g.setValue(Number(ev.target.value))} onKeyDown={(ev) => { if (ev.key === 'Enter') { ev.preventDefault(); lock(); } }} />
+        {e.marks?.map((m) => <span key={m.label} className="estimate-mark" style={{ left: at(m.at) }}><i>{m.label}</i></span>)}
+        {g.locked && <span className="estimate-answer" style={{ left: at(e.answer) }} aria-hidden="true"><i>{e.format(e.answer)}</i></span>}
+      </div>
+      <div className="estimate-scale" aria-hidden="true"><span>{e.format(e.min)}</span><span>{e.format(e.max)}</span></div>
+    </GuessFrame>
+  );
+}
+
 // ---------- split a bar: drag the dividers to share out $100 ----------
 export interface SplitGuess {
   parts: { id: string; label: string; color: string; answer: number }[]; // answer: share in percent
@@ -65,10 +107,10 @@ export interface SplitGuess {
   /** How many of the $100 can be in the wrong place and still count as spot on, or close. */
   spot: number; close: number;
 }
-export function SplitCard({ quiz }: { quiz: Quiz }) {
+export function SplitCard({ quiz, round }: { quiz: Quiz; round?: RoundCtx }) {
   const s = quiz.split!;
   const n = s.parts.length;
-  const g = useGuess<number[]>(quiz, Array.from({ length: n - 1 }, (_, k) => Math.round(((k + 1) * 100) / n)));
+  const g = useGuess<number[]>(quiz, Array.from({ length: n - 1 }, (_, k) => Math.round(((k + 1) * 100) / n)), round);
   const cuts = g.value;
   const shares = [...cuts, 100].map((c, k) => c - (k ? cuts[k - 1] : 0));
   const off = Math.round(s.parts.reduce((a, p, k) => a + Math.abs(shares[k] - p.answer), 0) / 2);
@@ -81,6 +123,8 @@ export function SplitCard({ quiz }: { quiz: Quiz }) {
     nx[k] = Math.round(clamp(v, (k ? c[k - 1] : 0) + MIN, (k < c.length - 1 ? c[k + 1] : 100) - MIN));
     return nx;
   });
+  const verdictText = off === 0 ? 'Every dollar in the right place.' : `${off} of the $100 ${off === 1 ? 'was' : 'were'} in the wrong place.`;
+  const lock = () => g.lock(grade, Math.max(10, 100 - 3 * off), verdictText);
   const xAt = (x: number) => { const r = bar.current!.getBoundingClientRect(); return r.width ? ((x - r.left) / r.width) * 100 : 50; };
   const down = (e: React.PointerEvent) => {
     if (g.locked) return;
@@ -93,7 +137,7 @@ export function SplitCard({ quiz }: { quiz: Quiz }) {
   const up = () => { if (drag != null) g.buzz('tap'); setDrag(null); };
   const key = (k: number) => (e: React.KeyboardEvent) => {
     const d = e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : 0;
-    if (e.key === 'Enter') { e.preventDefault(); g.lock(grade); return; }
+    if (e.key === 'Enter') { e.preventDefault(); lock(); return; }
     if (!d) return;
     e.preventDefault(); setCut(k, cuts[k] + d * (e.shiftKey ? 5 : 1));
   };
@@ -109,8 +153,7 @@ export function SplitCard({ quiz }: { quiz: Quiz }) {
     });
   };
   return (
-    <GuessFrame quiz={quiz} kind="split" locked={g.locked} grade={grade} lockLabel="Lock in my split" onLock={() => g.lock(grade)}
-      verdict={<>{off === 0 ? 'Every dollar in the right place.' : `${off} of the $100 ${off === 1 ? 'was' : 'were'} in the wrong place.`}</>}>
+    <GuessFrame quiz={quiz} kind="split" locked={g.locked} grade={grade} lockLabel="Lock in my split" onLock={lock} round={round} verdict={<>{verdictText}</>}>
       <div className="split-label small muted">{g.locked ? 'Your guess' : s.prompt}</div>
       <div className="split-bar" ref={bar} data-drag={drag != null || undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
         {seg(shares, false)}
@@ -147,9 +190,9 @@ export interface SizeGuess {
   format: (v: number) => string;
   prompt: string;
 }
-export function SizesCard({ quiz }: { quiz: Quiz }) {
+export function SizesCard({ quiz, round }: { quiz: Quiz; round?: RoundCtx }) {
   const s = quiz.sizes!;
-  const g = useGuess<number[]>(quiz, s.parts.map(() => s.start));
+  const g = useGuess<number[]>(quiz, s.parts.map(() => s.start), round);
   const vals = g.value;
   const answers = s.parts.map((p) => p.answer);
   const top = (a: number[]) => a.indexOf(Math.max(...a));
@@ -159,6 +202,9 @@ export function SizesCard({ quiz }: { quiz: Quiz }) {
   const [drag, setDrag] = useState<number | null>(null);
   const set = (k: number, v: number) => g.setValue((c) => { const nx = [...c]; nx[k] = clamp(Math.round(v / s.step) * s.step, 0, s.max); return nx; });
   const yAt = (el: HTMLElement, y: number) => { const r = el.getBoundingClientRect(); return r.height ? ((r.bottom - y) / r.height) * s.max : s.start; };
+  const big = s.parts[top(answers)];
+  const verdictText = `${tallest ? `You made ${big.label} the biggest, and it is.` : `The biggest is ${big.label}.`} Your bars were off by ${Math.round(meanOff * 100)}% on average.`;
+  const lock = () => g.lock(grade, Math.max(10, (tallest ? 50 : 0) + 50 * Math.max(0, 1 - meanOff / 0.5)), verdictText);
   const down = (k: number) => (e: React.PointerEvent<HTMLElement>) => {
     if (g.locked) return;
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -167,18 +213,16 @@ export function SizesCard({ quiz }: { quiz: Quiz }) {
   const move = (k: number) => (e: React.PointerEvent<HTMLElement>) => { if (drag === k) set(k, yAt(e.currentTarget, e.clientY)); };
   const up = () => { if (drag != null) g.buzz('tap'); setDrag(null); };
   const key = (k: number) => (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); g.lock(grade); return; }
-    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 4, PageDown: -4 }[e.key];
+    if (e.key === 'Enter') { e.preventDefault(); lock(); return; }
+    const d = ({ ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 4, PageDown: -4 } as Record<string, number>)[e.key];
     if (e.key === 'Home') { e.preventDefault(); set(k, 0); return; }
     if (e.key === 'End') { e.preventDefault(); set(k, s.max); return; }
     if (!d) return;
     e.preventDefault(); set(k, vals[k] + d * s.step);
   };
   const h = (v: number) => `${(Math.min(v, s.max) / s.max) * 100}%`;
-  const big = s.parts[top(answers)];
   return (
-    <GuessFrame quiz={quiz} kind="sizes" locked={g.locked} grade={grade} lockLabel="Lock in my bars" onLock={() => g.lock(grade)}
-      verdict={<>{tallest ? `You made ${big.label} the biggest, and it is.` : `The biggest is ${big.label}.`} Your bars were off by {Math.round(meanOff * 100)}% on average.</>}>
+    <GuessFrame quiz={quiz} kind="sizes" locked={g.locked} grade={grade} lockLabel="Lock in my bars" onLock={lock} round={round} verdict={<>{verdictText}</>}>
       {!g.locked && <div className="small muted">{s.prompt}</div>}
       <div className="sizes-chart" style={{ gridTemplateColumns: `repeat(${s.parts.length}, minmax(0, 1fr))` }}>
         {s.parts.map((p, k) => (
@@ -204,9 +248,9 @@ export interface SortGuess {
   items: { id: string; label: string; bin: string }[];
   prompt: string;
 }
-export function SortCard({ quiz }: { quiz: Quiz }) {
+export function SortCard({ quiz, round }: { quiz: Quiz; round?: RoundCtx }) {
   const s = quiz.sort!;
-  const g = useGuess<Record<string, string>>(quiz, {});
+  const g = useGuess<Record<string, string>>(quiz, {}, round);
   const at = g.value;
   const [sel, setSel] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; moved: boolean } | null>(null);
@@ -215,6 +259,8 @@ export function SortCard({ quiz }: { quiz: Quiz }) {
   const n = s.items.length;
   const grade: Grade = right === n ? 'spot' : right >= n - 2 ? 'close' : 'far';
   const all = s.items.every((it) => at[it.id]);
+  const verdictText = `You put ${right} of ${n} in the right place.`;
+  const lock = () => g.lock(grade, (100 * right) / n, verdictText);
   const place = (id: string, bin: string | null) => {
     g.setValue((c) => { const nx = { ...c }; if (bin) nx[id] = bin; else delete nx[id]; return nx; });
     setSel(null); g.buzz('card');
@@ -258,8 +304,7 @@ export function SortCard({ quiz }: { quiz: Quiz }) {
   };
   const tray = s.items.filter((it) => !at[it.id]);
   return (
-    <GuessFrame quiz={quiz} kind="sort" locked={g.locked} grade={grade} canLock={all} lockLabel={all ? 'Lock in my sort' : `Sort ${n - Object.keys(at).length} more`} onLock={() => g.lock(grade)}
-      verdict={<>You put {right} of {n} in the right place.</>}>
+    <GuessFrame quiz={quiz} kind="sort" locked={g.locked} grade={grade} canLock={all} lockLabel={all ? 'Lock in my sort' : `Sort ${n - Object.keys(at).length} more`} onLock={lock} round={round} verdict={<>{verdictText}</>}>
       {!g.locked && <div className="small muted">{s.prompt}</div>}
       {tray.length > 0 && <div className="sort-tray" data-bin="tray" role="group" aria-label="Cards to sort">{tray.map(chip)}</div>}
       <div className="sort-bins" style={{ gridTemplateColumns: `repeat(${s.bins.length}, minmax(0, 1fr))` }}>

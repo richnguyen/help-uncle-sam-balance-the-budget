@@ -9,12 +9,13 @@ import { Stars } from '../components/game';
 import { ActionBar } from '../components/ActionBar';
 import { useHaptics } from './haptics';
 import { LevelIcon } from './icons';
-import { campaignOf, chapterStars, checksOf, diffKey, isUnlocked, LEVELS, type Level, missionLong, missionShort, nextOf, type Quiz, type Step, STOP_BY_ID, STOPS, unlockText, type VoteSpec } from './levels';
+import { campaignOf, chapterStars, checksOf, diffKey, gameOf, isUnlocked, LEVELS, type Level, missionLong, missionShort, nextOf, type Quiz, type Step, STOP_BY_ID, STOPS, unlockText, type VoteSpec } from './levels';
 import { useJourney } from './state';
 import { finishLevelTime, levelMinutes, resetLevelTime, useLevelTimer } from './levelTime';
 import { plain, SamSays, UncleSam } from './UncleSam';
 import { lockedLine, QUIZ_LINES } from './script';
-import { SizesCard, SortCard, SplitCard } from './guesses';
+import { EstimateGuess, SizesCard, SortCard, SplitCard } from './guesses';
+import { GameStep } from './minigame';
 
 const CHOICE_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -74,7 +75,8 @@ function LevelRun({ level }: { level: Level }) {
   const finishStep = () => {
     j.completeStep(level.id, i);
     if (i === level.steps.length - 1) {
-      const stars = chapterStars(level, j.quiz);
+      const g = gameOf(level);
+      const stars = g ? (j.games?.[g.id]?.stars ?? 1) : chapterStars(level, j.quiz);
       j.completeLevel(level.id, stars);
       finishLevelTime(level.id);
       setMins(levelMinutes(level.id));
@@ -85,7 +87,8 @@ function LevelRun({ level }: { level: Level }) {
 
   const step = level.steps[i];
   // A quick check needs the right answer (or two tries); a guess needs any one pick.
-  const quizOk = step?.kind !== 'quiz' || !!j.quiz[step.quiz!.id]?.correct || (j.quiz[step.quiz!.id]?.tries ?? 0) >= (step.quiz!.guess ? 1 : 2);
+  const quizOk = step?.kind === 'game' ? !!j.games?.[step.game!.id]
+    : step?.kind !== 'quiz' || !!j.quiz[step.quiz!.id]?.correct || (j.quiz[step.quiz!.id]?.tries ?? 0) >= (step.quiz!.guess ? 1 : 2);
 
   // Uncle Sam says each step's line from the top bar, where it runs across the strip; nothing
   // covers the step, so Continue always moves on and Back always goes back.
@@ -121,11 +124,11 @@ function LevelRun({ level }: { level: Level }) {
       {step ? (
         <section className="level-stage" aria-live="polite" aria-labelledby="step-label">
           <div className="step-count" id="step-label">Step {i + 1} of {level.steps.length} · {step.label}</div>
-          <StepBody key={level.id + step.id} step={step} />
+          <StepBody key={level.id + step.id} level={level} step={step} />
           <ActionBar className="level-nav" label="Step">
             <button type="button" className="btn" onClick={back} disabled={i === 0}>Back</button>
             <button type="button" className="btn btn-primary" onClick={primary} disabled={!quizOk}>
-              {!quizOk ? (step.quiz?.guess ? 'Make a guess to continue' : 'Answer to continue') : step.kind === 'vote' ? (hasVoted(step.vote!, j.choices) ? 'Finish the mission' : 'Skip the vote and finish') : i === level.steps.length - 1 ? 'Finish the mission' : 'Continue'}
+              {!quizOk ? (step.kind === 'game' ? 'Finish the game to continue' : step.quiz?.guess ? 'Make a guess to continue' : 'Answer to continue') : step.kind === 'vote' ? (hasVoted(step.vote!, j.choices) ? 'Finish the mission' : 'Skip the vote and finish') : i === level.steps.length - 1 ? 'Finish the mission' : 'Continue'}
             </button>
             <span className="keyhint small muted" aria-hidden="true">{step.kind === 'quiz' ? <><kbd>1</kbd>–<kbd>{step.quiz!.choices.length}</kbd> answer · </> : null}<kbd>Enter</kbd> continue · <kbd>←</kbd> back</span>
           </ActionBar>
@@ -170,8 +173,9 @@ function StepTrack({ level, at, done, finished, onGo }: { level: Level; at: numb
   );
 }
 
-function StepBody({ step }: { step: Step }) {
+function StepBody({ step, level }: { step: Step; level: Level }) {
   if (step.kind === 'story') return <SamSays mood={step.mood} size={150} auto>{step.sam}</SamSays>;
+  if (step.kind === 'game') return <GameStep game={step.game!} takeaways={level.takeaways} />;
   if (step.kind === 'quiz') return <QuizCard quiz={step.quiz!} />;
   if (step.kind === 'vote') return (
     <>
@@ -187,64 +191,8 @@ function StepBody({ step }: { step: Step }) {
   );
 }
 
-/**
- * A guess by slider: set a number, lock it in, then see the real one slide into place and how
- * close you came. It never counts toward stars; the guess is kept in this browser to show again.
- */
-function EstimateCard({ quiz }: { quiz: Quiz }) {
-  const e = quiz.estimate!;
-  const j = useJourney();
-  const rec = j.quiz[quiz.id];
-  const key = 'guess:' + quiz.id;
-  const [value, setValue] = useState<number>(() => load<number | null>(key, null) ?? e.start);
-  const [locked, setLocked] = useState<boolean>(() => !!rec && load<number | null>(key, null) != null);
-  const buzz = useHaptics();
-  const off = Math.abs(value - e.answer);
-  const rel = e.relative ? off / Math.abs(e.answer) : off;
-  const grade = rel <= e.spot ? 'spot' : rel <= e.close ? 'close' : 'far';
-  const lock = () => {
-    if (locked) return;
-    setLocked(true);
-    save(key, value);
-    buzz(grade === 'far' ? 'wrong' : 'right');
-    j.answer(quiz.id, grade !== 'far');
-  };
-  // Where a value sits along the slider: the thumb travels between half its width from each end.
-  const at = (v: number) => `calc(9px + (100% - 18px) * ${((v - e.min) / (e.max - e.min)).toFixed(4)})`;
-  const Q = QUIZ_LINES;
-  const ex = plain(quiz.explain);
-  const good = grade !== 'far';
-  const line = locked ? (good ? Q.guessRight : Q.guessReveal) : Q.guessPrompt;
-  const say = locked ? (good ? `${Q.guessRight} ${ex}` : `${Q.guessRevealSay(quiz.choices[0])} ${ex}`) : Q.guessAsk(quiz.question);
-  const howFar = `${e.diff(off)} off`;
-  return (
-    <div className="quiz">
-      <SamSays mood={locked ? (good ? 'proud' : 'surprised') : 'happy'} compact auto say={say}>{line}</SamSays>
-      <div className="card quiz-card estimate" role="group" aria-labelledby={'q-' + quiz.id} data-locked={locked || undefined} data-grade={locked ? grade : undefined}>
-        <h2 className="quiz-q" id={'q-' + quiz.id}>{quiz.question}</h2>
-        <div className="estimate-value num" aria-hidden="true">{e.format(value)}</div>
-        <div className="estimate-track">
-          <input type="range" min={e.min} max={e.max} step={e.step} value={value} disabled={locked} aria-label={e.prompt} aria-valuetext={e.format(value)}
-            onChange={(ev) => setValue(Number(ev.target.value))} onKeyDown={(ev) => { if (ev.key === 'Enter') { ev.preventDefault(); lock(); } }} />
-          {e.marks?.map((m) => <span key={m.label} className="estimate-mark" style={{ left: at(m.at) }}><i>{m.label}</i></span>)}
-          {locked && <span className="estimate-answer" style={{ left: at(e.answer) }} aria-hidden="true"><i>{e.format(e.answer)}</i></span>}
-        </div>
-        <div className="estimate-scale" aria-hidden="true"><span>{e.format(e.min)}</span><span>{e.format(e.max)}</span></div>
-        {!locked
-          ? <button type="button" className="btn btn-primary estimate-lock" onClick={lock}>Lock in {e.format(value)}</button>
-          : (
-            <div className="quiz-feedback" data-ok={good} role="status">
-              <strong>{grade === 'spot' ? 'Spot on!' : grade === 'close' ? 'Close!' : 'Not this time.'}</strong>{' '}
-              You said {e.format(value)}; it’s {e.format(e.answer)}{grade === 'spot' ? '' : ` (${howFar})`}. {quiz.explain}
-            </div>
-          )}
-      </div>
-    </div>
-  );
-}
-
 function QuizCard({ quiz }: { quiz: Quiz }) {
-  if (quiz.estimate) return <EstimateCard quiz={quiz} />;
+  if (quiz.estimate) return <EstimateGuess quiz={quiz} />;
   if (quiz.split) return <SplitCard quiz={quiz} />;
   if (quiz.sizes) return <SizesCard quiz={quiz} />;
   if (quiz.sort) return <SortCard quiz={quiz} />;
@@ -412,6 +360,8 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
   const quizzes = checksOf(level).map((q) => j.quiz[q.id]);
   const firstTry = quizzes.filter((q) => q?.correct && q.tries === 1).length;
   const levelsDone = STOPS.filter((l) => j.done.includes(l.id)).length;
+  const game = gameOf(level);
+  const score = game ? j.games?.[game.id] : undefined;
   const stars = j.stars[level.id] ?? chapterStars(level, j.quiz);
   return (
     <section className="complete card" aria-labelledby="complete-t">
@@ -420,7 +370,7 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
         <div>
           <div className="eyebrow">{missionShort(STOP_BY_ID[level.id])} complete · <span className="complete-stars" aria-label={`${stars} of 3 stars`}>{'★'.repeat(stars)}<span className="muted">{'★'.repeat(3 - stars)}</span></span></div>
           <h2 className="complete-title" id="complete-t">{level.badge}: explained</h2>
-          <p className="small muted">{firstTry === quizzes.length ? `${quizzes.length === 1 ? 'The quick check' : 'Every quick check'} right on the first try. ` : `${firstTry} of ${quizzes.length} quick check${quizzes.length === 1 ? '' : 's'} right on the first try; replay for three stars. `}{levelsDone} of {STOPS.length} missions done.</p>
+          <p className="small muted">{game ? `${game.title}: your best is ${score?.best ?? 0} of ${game.rounds.length * 100} points${(score?.stars ?? 0) < 3 ? '; replay for three stars' : ''}. ` : firstTry === quizzes.length ? `${quizzes.length === 1 ? 'The quick check' : 'Every quick check'} right on the first try. ` : `${firstTry} of ${quizzes.length} quick check${quizzes.length === 1 ? '' : 's'} right on the first try; replay for three stars. `}{levelsDone} of {STOPS.length} missions done.</p>
         </div>
       </div>
       <div className="stat-label">What we figured out together</div>

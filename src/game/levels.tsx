@@ -12,7 +12,9 @@ import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
 import { QUOTES, type Quote } from './quotes';
 import { CONCEPT_LEVELS } from './concepts';
-import { CalendarSim, Dial, InterestRateSim, RevenueTank, SsMixer } from './sims';
+import { BUDGET_CALENDAR, Dial, InterestRateSim, OctoberChoice, RevenueTank, SsMixer } from './sims';
+import type { GameSpec } from './minigame';
+import { HigherLowerRound, OrderRound, PairsRound } from './rounds';
 import type { SizeGuess, SortGuess, SplitGuess } from './guesses';
 
 // ---------------------------------------------------------------------------------------------
@@ -39,12 +41,14 @@ export type VoteSpec =
 export interface Step {
   id: string;
   label: string;
-  kind: 'story' | 'facts' | 'try' | 'quiz' | 'vote';
+  /** `game`: the mission's scored game, a few rounds that set its stars. */
+  kind: 'story' | 'facts' | 'try' | 'quiz' | 'vote' | 'game';
   mood?: Mood;
   sam?: ReactNode; // what Uncle Sam says on this step
   body?: () => ReactNode;
   quiz?: Quiz;
   vote?: VoteSpec;
+  game?: GameSpec;
 }
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Super hard';
@@ -103,6 +107,32 @@ const SPLIT_PARTS = [
 ];
 const SPLIT_ANSWER = wholeDollars(SPLIT_PARTS.map((x) => x.v));
 const SPLIT: SplitGuess = { parts: SPLIT_PARTS.map((x, i) => ({ id: x.id, label: x.label, color: x.color, answer: SPLIT_ANSWER[i] })), prompt: 'Drag the dividers to split the $100.', spot: 6, close: 15 };
+/** 1.1: the taxes on a pay stub, and where each one goes. */
+const STUB: Quiz = {
+  id: 'g1stub', question: 'Where does each tax on your pay stub go?',
+  choices: ['the income tax to the general fund, both Social Security taxes to Social Security’s trust funds, and the Medicare tax to Medicare’s hospital trust fund'], correct: 0,
+  sort: {
+    bins: [{ id: 'general', label: 'The Treasury’s general fund' }, { id: 'ss', label: 'Social Security’s trust funds' }, { id: 'hi', label: 'Medicare’s hospital trust fund' }],
+    items: [
+      { id: 'fit', label: 'Federal income tax withheld', bin: 'general' },
+      { id: 'oasdi', label: 'Social Security tax (6.2%)', bin: 'ss' },
+      { id: 'hi', label: 'Medicare tax (1.45%)', bin: 'hi' },
+      { id: 'match', label: 'Your employer’s matching Social Security tax', bin: 'ss' },
+    ],
+    prompt: 'Drag each tax to where it goes, or tap a tax and then a fund.',
+  },
+  explain: <>Payroll taxes are dedicated by law. In FY{FY} the retirement and disability <Term id="trust-fund">trust funds</Term> received {money(budget.payroll.filter((p) => /OASI|\(DI\)/.test(p.name)).reduce((s, p) => s + p.amount, 0))} from them, and the Medicare tax goes to Medicare’s hospital insurance fund. Income taxes go into the Treasury’s general fund, which pays for everything else.</>,
+};
+/** 1.2: two bills at a time; the player taps the bigger one. */
+const catOf = (id: string) => CATS.find((c) => c.id === id)!;
+const PAIRS = ([['defense', 'interest'], ['medicare', 'defense'], ['income', 'veterans'], ['health', 'interest'], ['medicare', 'health']] as const)
+  .map(([a, b]) => [a, b].map((id) => ({ id, label: catOf(id).label, value: catOf(id).amount, color: catOf(id).color })) as [ReturnType<typeof catOf> & { value: number }, ReturnType<typeof catOf> & { value: number }]);
+const DISC_SHARE = (BUCKET.y.discretionary / BUCKET.y.outlays) * 100;
+/** 1.3: states well above or below the national average per person (the near-average ones would be coin flips). */
+const HILO = ['VA', 'GA', 'NM', 'NJ', 'AK', 'UT', 'MD', 'IL']
+  .map((a) => geo.states.find((x) => x.abbr === a))
+  .filter((x): x is NonNullable<typeof x> => !!x && Math.abs(x.perCapita / geo.national.perCapita - 1) > 0.15)
+  .map((x) => ({ id: x.abbr, label: x.name, value: x.perCapita }));
 const BILLS: SizeGuess = {
   parts: [{ id: 'defense', label: 'Defense' }, { id: 'medicare', label: 'Medicare' }, { id: 'ss', label: 'Social Security' }, { id: 'interest', label: 'Interest' }]
     .map((b) => ({ ...b, color: CATS.find((c) => c.id === b.id)!.color, answer: cat(b.id) })),
@@ -206,19 +236,22 @@ const CHAPTERS: Level[] = [
   {
     id: 'level-1', n: 1, title: 'Uncle Sam’s paycheck', topic: 'Where the money comes from', difficulty: 'Easy', minutes: 4, icon: 'paycheck', badge: 'Revenue basics',
     steps: [
-      { id: 'meet', label: 'Meet Uncle Sam', kind: 'story', mood: 'happy', sam: <>Howdy, I’m Uncle Sam. I’m a regular guy with a very big household: {people(POP)} of you. Like plenty of families, I spend more than I bring in, and I could use your help sorting it out. Let’s start with my paycheck.</> },
-      { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l1q1', guess: true, question: 'Of every $100 Uncle Sam takes in, how much comes from each source?',
+      { id: 'meet', label: 'Meet Uncle Sam', kind: 'story', mood: 'happy', sam: <>Howdy, I’m Uncle Sam. I’m a regular guy with a very big household: {people(POP)} of you. Like plenty of families, I spend more than I bring in, and I could use your help sorting it out. Let’s start with a game about my paycheck: three rounds, up to a hundred points each.</> },
+      { id: 'game', label: 'Fill the piggy bank', kind: 'game', game: {
+        id: 'g-paycheck', title: 'Fill the piggy bank', goal: 'Guess where Uncle Sam’s money comes from, and where the taxes on your paycheck go.',
+        rounds: [
+          { kind: 'estimate', id: 'take', label: 'The whole paycheck', sam: <>Round one: the big number. How much did I bring in last year?</>, quiz: { id: 'g1take', question: `How much did Uncle Sam take in during FY${FY}?`, choices: [moneyWords(T.receipts)], correct: 0,
+            estimate: { min: 1e12, max: 10e12, step: 0.05e12, start: 3e12, answer: T.receipts, spot: 0.05, close: 0.15, relative: true, format: (v) => moneyWords(v), diff: (d) => moneyWords(d), prompt: 'Drag to the total' },
+            explain: <>{moneyWords(T.receipts)}, about {dollars(T.receipts / POP)} for every person in the country.</> } },
+          { kind: 'split', id: 'split', label: 'Split the $100', sam: <>Round two. Out of every hundred dollars I take in, how much comes from each source?</>, quiz: {
+        id: 'l1q1', question: 'Of every $100 Uncle Sam takes in, how much comes from each source?',
         choices: [`about $${SPLIT_ANSWER[0]} from income taxes, $${SPLIT_ANSWER[1]} from payroll taxes, $${SPLIT_ANSWER[2]} from corporate taxes, and $${SPLIT_ANSWER[3]} from everything else`], correct: 0, split: SPLIT,
         explain: <>{REVENUE_BY_ID[REC[0].id].label} brought in {money(REC[0].amount)}, {pct(REC[0].amount / REC_TOTAL, 0)} of all revenue in FY{FY}. Add payroll taxes and {pct(EARN / REC_TOTAL, 0)} of the money comes from taxes on what people earn.</> } },
-      { id: 'sources', label: 'Where it comes from', kind: 'facts', mood: 'thinking', sam: <>Last year I brought in {moneyWords(T.receipts)}. Most of it comes from your paychecks.</>,
-        body: () => <ChartFrame title={`Revenue by source, FY${FY}`} sourceIds={['mts9']}><BarList items={REC.map((r) => ({ id: r.id, label: REVENUE_BY_ID[r.id].label, value: r.amount, color: REVENUE_BY_ID[r.id].color }))} total={REC_TOTAL} /></ChartFrame> },
+          { kind: 'sort', id: 'stub', label: 'Your pay stub', sam: <>Last round: the taxes on your pay stub. Send each one where it really goes.</>, quiz: STUB },
+        ] } },
       { id: 'you', label: 'Your share', kind: 'try', mood: 'happy', sam: <>Now your part. Slide to your salary, and I’ll print your own tax receipt.</>, body: () => <TaxTry /> },
-      { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
-        id: 'l1q2', question: 'Where does the Social Security tax on your paycheck go?',
-        choices: ['Into the general pot, like income taxes', 'Into Social Security’s trust funds, which can only pay its benefits', 'To your state government'], correct: 1,
-        explain: <>Payroll taxes are dedicated by law. In FY{FY} the retirement and disability <Term id="trust-fund">trust funds</Term> received {money(budget.payroll.filter((p) => /OASI|\(DI\)/.test(p.name)).reduce((s, p) => s + p.amount, 0))} from them. Income taxes, by contrast, go into the Treasury’s general fund.</> } },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>This year, the Social Security tax stops at {dollars(tax.ssWageBase)} of wages. Here’s an idea CBO has priced.</>, vote: { kind: 'option', optionId: 'ss-tax-earnings-over-250k' } },
+
     ],
     takeaways: [`About ${pct(EARN / REC_TOTAL, 0)} of federal revenue comes from taxes on what people earn.`, 'Payroll taxes are set aside for Social Security and Medicare; income taxes go into the general fund.', `For every dollar spent in FY${FY}, about ${Math.round(BORROWED * 100)} cents was borrowed.`],
     shareFact: `For every dollar Uncle Sam spent in FY${FY}, about ${Math.round(BORROWED * 100)} cents was borrowed.`,
@@ -228,30 +261,22 @@ const CHAPTERS: Level[] = [
   {
     id: 'level-2', n: 2, title: 'Uncle Sam’s bills', topic: 'Where the money goes', difficulty: 'Easy', minutes: 5, icon: 'bills', badge: 'Spending basics',
     steps: [
-      { id: 'intro', label: 'The bills', kind: 'story', mood: 'thinking', sam: <>Now the bills. I spent {moneyWords(T.outlays)} last year. That’s about {money(T.outlays / 365)} a day, or {dollars(T.outlays / HH)} for every household.</> },
-      { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l2q1', guess: true, question: `Uncle Sam’s four biggest bills: how much did each cost in FY${FY}?`,
+      { id: 'intro', label: 'The bills', kind: 'story', mood: 'thinking', sam: <>Now the bills. I spent {moneyWords(T.outlays)} last year. That’s about {money(T.outlays / 365)} a day, or {dollars(T.outlays / HH)} for every household. Let’s see how well you know them.</> },
+      { id: 'game', label: 'Size the bills', kind: 'game', game: {
+        id: 'g-bills', title: 'Size the bills', goal: 'Size up Uncle Sam’s biggest bills, pick the bigger of two, and find the share Congress votes on.',
+        rounds: [
+          { kind: 'sizes', id: 'sizes', label: 'The four biggest', sam: <>Round one. Here are my four biggest bills. Drag each one to how big you think it is.</>, quiz: {
+        id: 'l2q1', question: `Uncle Sam’s four biggest bills: how much did each cost in FY${FY}?`,
         choices: [`Social Security, the biggest, at ${moneyWords(cat('ss'))}`], correct: 0, sizes: BILLS,
         explain: <>Social Security paid out {money(cat('ss'))} in FY{FY}, about {pct(cat('ss') / T.outlays, 0)} of all spending, to roughly {ssa.beneficiaries ? people(ssa.beneficiaries.total) : '71 million'} people. Then Medicare ({money(cat('medicare'))}), interest on the debt ({money(cat('interest'))}), and defense ({money(cat('defense'))}).</> } },
+          { kind: 'custom', id: 'pairs', label: 'Which is bigger?', sam: <>Round two, quick fire. Two bills at a time: tap the bigger one.</>, play: ({ done, intro }) => <PairsRound pairs={PAIRS} intro={intro} done={done} format={(v) => money(v)} prompt={`Which cost more in FY${FY}?`} /> },
+          { kind: 'estimate', id: 'share', label: 'Congress’s share', sam: <>Last round. Most of my bills are on autopilot. What share of my spending does Congress vote on each year?</>, quiz: { id: 'l2q2', question: 'What share of spending does Congress vote on each year?', choices: [`about ${Math.round(DISC_SHARE)} percent`], correct: 0,
+            estimate: { min: 0, max: 100, step: 1, start: 50, answer: DISC_SHARE, spot: 3, close: 8, format: (v) => `${Math.round(v)}%`, diff: (d) => `${Math.round(d)} points`, prompt: 'Drag to the share' },
+            explain: <>Discretionary spending, the part set in the 12 yearly appropriations bills, was {pct(BUCKET.y.discretionary / BUCKET.y.outlays, 0)} of spending in FY{BUCKET.y.fy}; {pct(BUCKET.y.defense / BUCKET.y.discretionary, 0)} of it was defense. The rest runs on permanent law, like Social Security and Medicare, or is interest.</> } },
+        ] } },
       { id: 'every100', label: 'Every $100', kind: 'facts', mood: 'thinking', sam: <>Here’s where every $100 went. Point at a row to light it up.</>, body: () => <WaffleBlock /> },
-      { id: 'kinds', label: 'Three kinds of bills', kind: 'facts', mood: 'worried', sam: <>Most of my bills are on autopilot. They’re set by permanent laws, so they get paid without a yearly vote.</>,
-        body: () => (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <SegBar label={`FY${BUCKET.y.fy} outlays`} parts={BUCKETS.map((b) => ({ label: b.label, value: BUCKET.y[b.id], color: b.color, ink: b.id === 'otherMandatory' ? '#0b0b0b' : '#fff' }))} />
-            <Legend items={BUCKETS.map((b) => ({ label: b.label, color: b.color }))} />
-            <div className="grid-3" style={{ gap: 12 }}>
-              <Stat label={<Term id="mandatory">Mandatory</Term>} value={pct(BUCKET.y.mandatory / BUCKET.y.outlays, 0)} note="Social Security, Medicare, Medicaid, and more, set by permanent law" />
-              <Stat label={<Term id="discretionary">Discretionary</Term>} value={pct(BUCKET.y.discretionary / BUCKET.y.outlays, 0)} note={`Voted on yearly; ${pct(BUCKET.y.defense / BUCKET.y.discretionary, 0)} of it is defense`} />
-              <Stat label={<Term id="net-interest">Net interest</Term>} value={pct(BUCKET.y.netInterest / BUCKET.y.outlays, 0)} note="The cost of past borrowing" />
-            </div>
-            <p className="small muted">{BUCKET.label}</p>
-          </div>
-        ) },
-      { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
-        id: 'l2q2', question: 'About how much of the budget does Congress actually vote on each year?',
-        choices: ['Nearly all of it', 'About half', 'About a quarter'], correct: 2,
-        explain: <>Discretionary spending, the part set in the 12 yearly appropriations bills, was {pct(BUCKET.y.discretionary / BUCKET.y.outlays, 0)} of spending in FY{BUCKET.y.fy}. The rest runs on permanent law or is interest.</> } },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>Defense is the biggest bill Congress votes on every year. Here’s one option CBO priced.</>, vote: { kind: 'option', optionId: 'cut-defense-budget' } },
+
     ],
     takeaways: [`Social Security is the biggest program: about $${Math.round((cat('ss') / CATS.reduce((s, c) => s + c.amount, 0)) * 100)} of every $100.`, `Only about ${pct(BUCKET.y.discretionary / BUCKET.y.outlays, 0)} of spending is voted on each year.`, interestBeatsDefense ? 'Interest on the debt now costs more than national defense.' : 'Interest on the debt is approaching what defense costs.'],
     shareFact: `Uncle Sam spends about ${moneyWords(T.outlays / 365, 1)} a day.`,
@@ -261,13 +286,19 @@ const CHAPTERS: Level[] = [
   {
     id: 'level-3', n: 3, title: 'Back home', topic: 'Federal money in your state', difficulty: 'Easy', minutes: 4, icon: 'home', badge: 'Federal money at home',
     steps: [
-      { id: 'intro', label: 'Neighbors', kind: 'story', mood: 'happy', sam: <>A lot of what I spend ends up right in your neighborhood: Social Security checks, Medicaid, highways, schools, and military bases. Let’s look at your state.</> },
-      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Pick your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}. The needle shows how your state compares, per person, with the country as a whole.</>, body: () => <StateTry /> },
-      { id: 'q1', label: 'Quick check', kind: 'quiz', quiz: {
+      { id: 'intro', label: 'Neighbors', kind: 'story', mood: 'happy', sam: <>A lot of what I spend ends up right in your neighborhood: Social Security checks, Medicaid, highways, schools, and military bases. Let’s play higher or lower with the states.</> },
+      { id: 'game', label: 'Higher or lower', kind: 'game', game: {
+        id: 'g-home', title: 'Higher or lower', goal: 'Guess which states get more federal money per person than the national average.',
+        rounds: [
+          { kind: 'custom', id: 'hilo', label: 'Higher or lower', sam: <>Here’s how it works. I name a state; you tell me if it gets more or less federal money per person than the national average.</>, play: ({ done, intro }) => <HigherLowerRound items={HILO} avg={geo.national.perCapita} intro={intro} done={done} format={(v) => dollars(v)} unit="a person" prompt={(name) => `Federal awards per person in ${name}: more or less than the national average?`} /> },
+          { kind: 'choice', id: 'top', label: 'Bonus round', sam: <>Bonus round, for up to a hundred more points.</>, quiz: {
         id: 'l3q1', question: 'Which federal program sends the most money to the most states?',
         choices: [topProgram === 'Grants to States for Medicaid' ? 'Highway Planning and Construction' : 'Grants to States for Medicaid', topProgram, 'Federal Pell Grant Program'], correct: 1,
         explain: <>{topProgram} is the biggest federal program in {topProgramCounts[0]?.[1] ?? 'most'} of {geo.states.length} states and territories in FY{geo.fy} (not counting Medicare).</> } },
+        ] } },
+      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Pick your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}. The needle shows how your state compares, per person, with the country as a whole.</>, body: () => <StateTry /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>States count on federal grants for roads, transit, and schools. Here’s a cut CBO has priced.</>, vote: { kind: 'option', optionId: 'cut-transport-education-grants' } },
+
     ],
     takeaways: [`Federal awards averaged ${dollars(geo.national.perCapita)} per person in FY${geo.fy}, not counting Medicare.`, `${topProgram} is the largest program in most states.`, 'Defense contracts and national labs make some states rank high per person.'],
     shareFact: `Federal awards averaged ${dollars(geo.national.perCapita)} per person in FY${geo.fy}, not counting Medicare.`,
@@ -278,20 +309,25 @@ const CHAPTERS: Level[] = [
     id: 'level-4', n: 4, title: 'Spending more than I make', topic: 'Deficits and the structural gap', difficulty: 'Medium', minutes: 5, icon: 'gap', badge: 'Deficits',
     steps: [
       { id: 'intro', label: 'The problem', kind: 'story', mood: 'worried', sam: <>Here’s my real problem. It isn’t one bad month. Last year the gap was {moneyWords(T.deficit)}, and it’s been a long time since I took in more than I spent.</> },
-      { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l4q1', guess: true, question: 'When did Uncle Sam last take in more than he spent?',
+      { id: 'game', label: 'Fill the tank', kind: 'game', game: {
+        id: 'g-gap', title: 'Fill the tank', goal: 'Guess the last surplus, pour the bills on autopilot in first, and see what spills over.',
+        rounds: [
+          { kind: 'estimate', id: 'surplus', label: 'The last surplus', sam: <>Round one. When did I last take in more than I spent?</>, quiz: {
+        id: 'l4q1', question: 'When did Uncle Sam last take in more than he spent?',
         choices: [`FY${LAST_SURPLUS}`], correct: 0,
         estimate: { min: 1962, max: FY, step: 1, start: 1985, answer: LAST_SURPLUS, spot: 0, close: 3, format: (v) => `FY${v}`, diff: (d) => `${d} year${d === 1 ? '' : 's'}`, prompt: 'Drag to the year' },
         explain: <>FY{LAST_SURPLUS} was the last surplus. Deficits jumped in the 2008–09 financial crisis and the pandemic, and have stayed large since.</> } },
-      { id: 'gap', label: 'The gap', kind: 'try', mood: 'worried', sam: <>Think of everything I take in as a tank. Pour in my bills, the ones on autopilot first, then interest, then what Congress votes on each year. Watch what happens when it fills up.</>, body: () => <RevenueTank /> },
-      { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
+          { kind: 'custom', id: 'tank', label: 'Fill the tank', sam: <>Round two. Everything I take in fits in this tank. Pour in the bills on autopilot first, then the ones Congress votes on. Watch what happens when it fills up.</>, play: ({ done, intro }) => <RevenueTank game={{ done }} /> },
+          { kind: 'choice', id: 'share', label: 'Bonus round', sam: <>Bonus round.</>, quiz: {
         id: 'l4q2', question: `In FY${BUCKET.y.fy}, how much of all revenue did mandatory programs plus interest use up?`,
         choices: ['About a quarter', 'About half', `About ${Math.round(MI_SHARE * 100)}%`], correct: 2,
         explain: <>Mandatory programs and interest cost {money(BUCKET.y.mandatory + BUCKET.y.netInterest)} against {money(BUCKET.y.revenues)} of revenue, {pct(MI_SHARE, 0)}. That left almost nothing for defense and everything else Congress votes on, so those were mostly borrowed.</> } },
+        ] } },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>When it’s time to close the gap, folks disagree on how. What do you think should do most of the work?</>,
         vote: { kind: 'issue', id: 'mix', question: 'What should do most of the work in closing the gap?', choices: mixChoices, context: (
           <>CBO’s estimates suggest tax increases on higher earners slow the economy less in the short run than spending cuts. An IMF study of past deficit cuts found tax-based cuts slowed growth more. Economists disagree. {principle('multipliers') && <a href={principle('multipliers')!.source.url} target="_blank" rel="noreferrer">CBO</a>}{principle('composition') && <> · <a href={principle('composition')!.source.url} target="_blank" rel="noreferrer">IMF</a></>}</>
         ) } },
+
     ],
     takeaways: [`The government last ran a surplus in FY${LAST_SURPLUS}.`, `In FY${BUCKET.y.fy}, mandatory programs plus interest used ${pct(MI_SHARE, 0)} of all revenue.`, 'A deficit that persists in good times is called structural.'],
     shareFact: `Uncle Sam’s deficit in FY${FY} was ${moneyWords(T.deficit, 2)}, about ${dollars(T.deficit / HH)} for every household.`,
@@ -303,11 +339,20 @@ const CHAPTERS: Level[] = [
     id: 'level-6', n: 6, title: 'The credit card', topic: 'Debt and interest', difficulty: 'Medium', minutes: 5, icon: 'card', badge: 'Debt and interest',
     steps: [
       { id: 'intro', label: 'The balance', kind: 'story', mood: 'worried', sam: <>All that borrowing goes on the card. My total debt was {money(D.total)} on {dateLabel(D.date)}. That’s about {dollars(D.total / HH)} per household.</> },
-      { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l5q1', guess: true, question: `National defense cost ${money(cat('defense'))} in FY${FY}. What did interest on the debt cost?`,
+      { id: 'game', label: 'Rate shock', kind: 'game', game: {
+        id: 'g-card', title: 'Rate shock', goal: 'Size the interest bill, then find the rate where it overtakes defense.',
+        rounds: [
+          { kind: 'estimate', id: 'bill', label: 'The interest bill', sam: <>Round one. Defense is one of my biggest bills. How does interest compare?</>, quiz: {
+        id: 'l5q1', question: `National defense cost ${money(cat('defense'))} in FY${FY}. What did interest on the debt cost?`,
         choices: [money(cat('interest'))], correct: 0,
         estimate: { min: 200e9, max: 2000e9, step: 10e9, start: Math.round(cat('defense') / 1e10) * 1e10, answer: cat('interest'), spot: 0.05, close: 0.15, relative: true, format: (v) => money(v), diff: (d) => money(d), prompt: 'Drag to the interest bill', marks: [{ at: cat('defense'), label: 'defense' }] },
         explain: <>Net interest was {money(cat('interest'))} and national defense was {money(cat('defense'))} in FY{FY}.</> } },
+          { kind: 'custom', id: 'cross', label: 'The crossover', sam: <>Round two. Slide the interest rate and stop it right where interest catches up with defense. Watch the bars.</>, play: ({ done, intro }) => <InterestRateSim defense={cat('defense')} medicare={cat('medicare')} fy={FY} game={{ done }} /> },
+          { kind: 'choice', id: 'why', label: 'Bonus round', sam: <>Bonus round.</>, quiz: {
+        id: 'l5q2', question: 'Why is Uncle Sam’s interest bill climbing?',
+        choices: ['The Treasury raised the rate on bonds it already sold', 'Old low-rate debt is being replaced with new debt at higher rates, and the debt keeps growing', 'Interest depends only on this year’s deficit'], correct: 1,
+        explain: <>Treasury bonds keep the rate they were sold at. As older, cheaper debt matures, it is refinanced at today’s higher rates, and new borrowing adds to the total. That is why interest grows even in years when the deficit doesn’t.</> } },
+        ] } },
       { id: 'who', label: 'Who I owe', kind: 'facts', mood: 'thinking', sam: <>Most of it I owe to investors, banks, other countries, and the Federal Reserve. The rest I owe to my own trust funds, like Social Security.</>,
         body: () => (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -319,12 +364,6 @@ const CHAPTERS: Level[] = [
             </ChartFrame>
           </div>
         ) },
-      { id: 'rates', label: 'The interest rate', kind: 'try', mood: 'worried', sam: <>Interest rates matter too. Slide the rate and watch my interest bill. A few years ago I paid very little; now my old cheap loans are being replaced by new ones at higher rates.</>,
-        body: () => <InterestRateSim defense={cat('defense')} medicare={cat('medicare')} fy={FY} /> },
-      { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
-        id: 'l5q2', question: 'Why is Uncle Sam’s interest bill climbing?',
-        choices: ['The Treasury raised the rate on bonds it already sold', 'Old low-rate debt is being replaced with new debt at higher rates, and the debt keeps growing', 'Interest depends only on this year’s deficit'], correct: 1,
-        explain: <>Treasury bonds keep the rate they were sold at. As older, cheaper debt matures, it is refinanced at today’s higher rates, and new borrowing adds to the total. That is why interest grows even in years when the deficit doesn’t.</> } },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>So, how hard should I work to pay this down? Pick the goal you think Congress should aim for over the next five years.</>,
         vote: { kind: 'issue', id: 'goal', question: 'What should Congress aim for over the next five years?', choices: [
           { value: 'stabilize', label: 'Stop the debt from outgrowing the economy' },
@@ -332,6 +371,7 @@ const CHAPTERS: Level[] = [
           { value: 'balance', label: 'Balance the budget' },
           { value: 'other', label: 'Focus on other priorities for now' },
         ], context: <>{principle('debt-stabilize')?.claim} {principle('debt-stabilize') && <a href={principle('debt-stabilize')!.source.url} target="_blank" rel="noreferrer">CBO</a>}</> } },
+
     ],
     takeaways: [`The debt was ${money(D.total)}, about ${dollars(D.total / HH)} per household.`, interestBeatsDefense ? `Interest (${money(cat('interest'))}) now costs more than defense (${money(cat('defense'))}).` : 'Interest is approaching what defense costs.', 'Refinancing old low-rate debt at higher rates pushes interest up.'],
     shareFact: `The national debt is ${moneyWords(D.total, 1)}, about ${dollars(D.total / HH)} for every household.`,
@@ -342,32 +382,27 @@ const CHAPTERS: Level[] = [
     id: 'level-7', n: 7, title: 'Who writes my budget?', topic: 'How Congress budgets, and the laws that moved the needle', difficulty: 'Medium', minutes: 7, icon: 'capitol', badge: 'The budget process',
     steps: [
       { id: 'intro', label: 'Kitchen table', kind: 'story', mood: 'thinking', sam: <>In my house we sit down at the kitchen table once a year and plan. Congress is supposed to do the same, with a deadline of October 1. Let’s see how that’s going.</> },
-      { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l6q1', guess: true, question: 'When did Congress last pass all of its regular spending bills on time?',
+      { id: 'game', label: 'Beat the deadline', kind: 'game', game: {
+        id: 'g-process', title: 'Beat the deadline', goal: 'Guess the last on-time year, put the budget calendar in order, and see what happens on October 1.',
+        rounds: [
+          { kind: 'estimate', id: 'ontime', label: 'The last on-time year', sam: <>Round one. When did Congress last get all of its spending bills done on time?</>, quiz: {
+        id: 'l6q1', question: 'When did Congress last pass all of its regular spending bills on time?',
         choices: [`FY${process.lastAllOnTime?.fy ?? 1997}`], correct: 0,
         estimate: { min: 1977, max: FY, step: 1, start: 2010, answer: process.lastAllOnTime?.fy ?? 1997, spot: 0, close: 3, format: (v) => `FY${v}`, diff: (d) => `${d} year${d === 1 ? '' : 's'}`, prompt: 'Drag to the year' },
         explain: <>{process.lastAllOnTime?.note ?? 'All regular bills were last enacted on time in FY1997.'}</> } },
-      { id: 'paper', label: 'On paper vs. practice', kind: 'try', mood: 'worried', sam: <>On paper it’s orderly. Put my budget calendar in order. Then see what happens when the deadline comes and the bills aren’t done. Usually Congress passes a stopgap called a <Term id="cr">continuing resolution</Term>.</>,
-        body: () => (
-          <>
-          <CalendarSim />
-          <div className="grid-3" style={{ gap: 12, marginTop: 16 }}>
-            <Stat label="Continuing resolutions" value={`${totalCRs}`} note={`for FY${process.years[0].fy}–FY${process.years.at(-1)!.fy}, about ${(totalCRs / process.years.length).toFixed(1)} a year`} />
-            <Stat label="Last time all bills were on time" value={`FY${process.lastAllOnTime?.fy ?? 1997}`} note="before the fiscal year began" />
-            <Stat label="Budget plan not adopted" value={`${process.years.filter((y) => !y.resolution).length} years`} note={`of the ${process.years.length} shown`} />
-          </div>
-          </>
-        ) },
-      { id: 'laws', label: 'Laws that moved it', kind: 'facts', mood: 'surprised', sam: <>Deficits are written into law. Here are the biggest laws of the past 25 years. Tap one to see what it did.</>,
-        body: () => <LawExplorer /> },
-      { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
+          { kind: 'custom', id: 'calendar', label: 'The calendar', sam: <>Round two. On paper it’s orderly. Put my budget calendar in order. Then see what happens when the deadline comes and the bills aren’t done.</>, play: ({ done, intro }) => <OrderRound items={BUDGET_CALENDAR.map((c) => ({ id: c.id, label: c.what, detail: c.when }))} start={['bills', 'pres', 'oct', 'res']} intro={intro} done={done} prompt="Put the budget calendar in order." after={<OctoberChoice />} /> },
+          { kind: 'choice', id: 'law', label: 'Bonus round', sam: <>Bonus round. Deficits are written into law.</>, quiz: {
         id: 'l6q2', question: 'Which of these laws was officially estimated to reduce deficits?',
         choices: lawChoices.map((l) => `${l.name} (${l.signed.slice(0, 4)})`), correct: 1,
         explain: <>{lawReduce.name} was estimated to cut deficits by {money(Math.abs(lawReduce.deficitEffect) * 1e9)} over {lawReduce.window}. {lawChoices[0].shortName} and {lawChoices[2].shortName} were estimated to add {money(lawChoices[0].deficitEffect * 1e9)} and {money(lawChoices[2].deficitEffect * 1e9)}.</> } },
+        ] } },
+      { id: 'laws', label: 'Laws that moved it', kind: 'facts', mood: 'surprised', sam: <>Deficits are written into law. Here are the biggest laws of the past 25 years. Tap one to see what it did.</>,
+        body: () => <LawExplorer /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>Shutdowns are hard on everyone. One fix lawmakers have proposed is an automatic stopgap. Where do you stand?</>,
         vote: { kind: 'issue', id: 'auto-cr', question: 'Should Congress adopt an automatic continuing resolution?', choices: [{ value: 'support', label: 'Support' }, { value: 'oppose', label: 'Oppose' }, { value: 'unsure', label: 'Not sure' }], context: (
           <>If Congress missed the October 1 deadline, agencies would keep running at about last year’s funding until new bills passed, so shutdowns would not happen. Supporters say it protects workers and services. Critics say it takes pressure off Congress to finish on time and locks in last year’s priorities. <a href="https://www.congress.gov/crs_external_products/R/PDF/R41948/R41948.13.pdf" target="_blank" rel="noreferrer">CRS overview of proposals</a></>
         ) } },
+
     ],
     takeaways: [`Congress passed ${totalCRs} continuing resolutions for FY${process.years[0].fy}–FY${process.years.at(-1)!.fy}.`, `All regular spending bills were last on time in FY${process.lastAllOnTime?.fy ?? 1997}.`, 'Tax cuts, emergency packages, and spending increases from both parties added trillions to projected deficits.'],
     shareFact: `Congress passed ${totalCRs} stopgap funding bills (continuing resolutions) for FY${process.years[0].fy}–FY${process.years.at(-1)!.fy}.`,
@@ -379,28 +414,24 @@ const CHAPTERS: Level[] = [
     id: 'level-9', n: 9, title: 'Keeping my promises', topic: 'Social Security’s future', difficulty: 'Medium', minutes: 6, icon: 'shield', badge: 'Social Security',
     steps: [
       { id: 'intro', label: 'A promise', kind: 'story', mood: 'proud', sam: <>I made a promise to the folks who worked their whole lives. Social Security pays about {ssa.beneficiaries ? people(ssa.beneficiaries.total) : '71 million'} people. But its savings are running down.</> },
-      { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l7q1', guess: true, question: `When the retirement fund runs out in late ${ssa.depletion.oasi.year}, what share of scheduled benefits can still be paid?`,
+      { id: 'game', label: 'Close the gap', kind: 'game', game: {
+        id: 'g-ss', title: 'Close the gap', goal: 'Guess what can still be paid, then close Social Security’s 75-year gap, now and after waiting.',
+        rounds: [
+          { kind: 'estimate', id: 'payable', label: 'What’s still paid', sam: <>Round one. When the retirement fund runs out, the checks don’t stop. How much can still be paid?</>, quiz: {
+        id: 'l7q1', question: `When the retirement fund runs out in late ${ssa.depletion.oasi.year}, what share of scheduled benefits can still be paid?`,
         choices: [`about ${ssa.depletion.oasi.payablePct}%`], correct: 0,
         estimate: { min: 0, max: 100, step: 1, start: 50, answer: ssa.depletion.oasi.payablePct, spot: 2, close: 8, format: (v) => `${v}%`, diff: (d) => `${d} points`, prompt: 'Drag to the share still paid' },
         explain: <>Benefits don’t stop. By law they can be paid only from incoming taxes, which would cover about {ssa.depletion.oasi.payablePct}% of scheduled retirement and survivor benefits, unless Congress acts first.</> } },
-      { id: 'fund', label: 'The savings', kind: 'try', mood: 'worried', sam: <>Since FY{ssa.oasdi.find((r) => r.year >= 2015 && r.cost > r.income)?.year ?? 2021} I’ve paid out more than I take in, so the fund is shrinking. The trustees name two fixes: a higher payroll tax, or smaller checks. Mix them yourself.</>,
-        body: () => (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div className="grid-3" style={{ gap: 12 }}>
-              <Stat label="Retirement fund runs out" value={`Late ${ssa.depletion.oasi.year}`} note={`then ${ssa.depletion.oasi.payablePct}% of benefits payable`} />
-              <Stat label="Combined funds run out" value={`${ssa.depletion.oasdi.year}`} note={`then ${ssa.depletion.oasdi.payablePct}% payable`} />
-              {ssa.depletion.hi && <Stat label="Medicare hospital fund" value={`${ssa.depletion.hi.year}`} note={`then ${ssa.depletion.hi.payablePct}% payable`} />}
-            </div>
-            <SsMixer />
-          </div>
-        ) },
-      { id: 'you', label: 'What it means for you', kind: 'try', mood: 'thinking', sam: <>Let’s make it personal. What year were you born?</>, body: () => <AgeTry /> },
-      { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
+          { kind: 'custom', id: 'now', label: 'Close it now', sam: <>Round two. The trustees name two fixes: a higher payroll tax, or smaller checks. Mix them any way you like, and close the gap exactly.</>, play: ({ done, intro }) => <SsMixer late={false} game={{ done }} /> },
+          { kind: 'custom', id: 'late', label: 'Close it late', sam: <>Round three. Now Congress waits until 2034 to act. Close the gap again, and see how much bigger the fix gets.</>, play: ({ done, intro }) => <SsMixer late game={{ done }} /> },
+          { kind: 'choice', id: 'fix', label: 'Bonus round', sam: <>Bonus round.</>, quiz: {
         id: 'l7q2', question: 'According to the trustees, which single change made now would close Social Security’s 75-year gap?',
         choices: ['Raise the payroll tax from 12.4% to 13%', 'Cut all benefits by 5%', `Raise the payroll tax from 12.4% to ${ssa.fixes?.[0]?.value ?? '16.65%'}`], correct: 2,
         explain: <>The trustees estimate the gap at {ssa.actuarialDeficit?.toFixed(2)}% of taxable payroll. Closing it right away would take a payroll tax of about {ssa.fixes?.[0]?.value ?? '16.65%'} or an across-the-board benefit cut of about {ssa.fixes?.[1]?.value.replace('−', '') ?? '25%'}. Waiting makes the changes bigger.</> } },
+        ] } },
+      { id: 'you', label: 'What it means for you', kind: 'try', mood: 'thinking', sam: <>Let’s make it personal. What year were you born?</>, body: () => <AgeTry /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>Here’s one change CBO has priced. It would phase in slowly and not touch anyone already collecting.</>, vote: { kind: 'option', optionId: 'raise-full-retirement-age-70' } },
+
     ],
     takeaways: [`The retirement fund runs out in late ${ssa.depletion.oasi.year}; then about ${ssa.depletion.oasi.payablePct}% of benefits would be payable.`, 'Benefits would be cut automatically, not stopped.', `Closing the gap now would take a payroll tax of about ${ssa.fixes?.[0]?.value ?? '16.65%'} or a benefit cut of about ${ssa.fixes?.[1]?.value.replace('−', '') ?? '25%'}.`],
     shareFact: `Social Security paid out ${moneyWords(cat('ss'), 2)} in FY${FY}, about ${moneyWords(cat('ss') / 365, 1)} a day.`,
@@ -469,6 +500,10 @@ export function unlockText(id: string) {
 /** Stars for a chapter level: three for every question right on the first try. */
 /** The quick checks that count toward a level's stars (guesses never do). */
 export const checksOf = (level: Level) => level.steps.filter((s) => s.quiz && !s.quiz.guess).map((s) => s.quiz!);
+/** Every question in a mission: its quiz steps, and the rounds of its game that are questions. */
+export const quizzesOf = (level: Level): Quiz[] => level.steps.flatMap((s) => (s.quiz ? [s.quiz] : s.game ? s.game.rounds.flatMap((r) => (r.kind === 'custom' ? [] : [r.quiz])) : []));
+/** A mission's game, if it has one. */
+export const gameOf = (level: Level) => level.steps.find((s) => s.game)?.game;
 
 /** Three stars for every quick check right on the first try; two for right on the second try (or half the points); otherwise one. */
 export function chapterStars(level: Level, quiz: Record<string, { tries: number; correct: boolean }>) {

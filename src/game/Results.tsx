@@ -10,7 +10,7 @@ import { OPTIONS_DATA } from '../lib/planData';
 import { load } from '../lib/storage';
 import { useVotes } from '../lib/votes';
 import { LevelIcon } from './icons';
-import { LEVELS, MAX_STARS, missionShort, STOP_BY_ID, STOPS } from './levels';
+import { LEVELS, MAX_STARS, missionShort, quizzesOf, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { useJourney } from './state';
 
@@ -174,8 +174,7 @@ export default function Results() {
   });
 
   const [allCards, setAllCards] = useState(false);
-  const quizCols: (Col & { question: string })[] = LEVELS.flatMap((l) => l.steps.filter((st) => st.quiz).map((st, k) => {
-    const q = st.quiz!;
+  const quizCols: (Col & { question: string })[] = LEVELS.flatMap((l) => quizzesOf(l).map((q, k) => {
     const f = t.firstTry[q.id] ?? { right: 0, n: 0 };
     const me = j.quiz[q.id];
     const v = f.n ? f.right / f.n : 0;
