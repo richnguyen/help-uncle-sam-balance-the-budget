@@ -233,7 +233,7 @@ function StateTry() {
     if (keep) { votes.setZip(z, a.abbr); save('zip', inDb ? '' : z); }
   };
   const saveNow = () => { const a = areaForZip(zip.trim()); if (a?.kind === 'state') { votes.setZip(zip.trim(), a.abbr); save('zip', inDb ? '' : zip.trim()); } };
-  const remove = () => { votes.setZip(null, null); save('zip', ''); setZip(''); setKeep(false); setArea(undefined); };
+  const remove = () => { votes.setZip(null, null); save('zip', ''); setZip(''); setKeep(false); setArea(undefined); rememberZip(''); };
   const top = area ? Object.entries(area.options).filter(([, t]) => t.support + t.oppose >= AREA_MIN).sort((x, y) => y[1].support / (y[1].support + y[1].oppose) - x[1].support / (x[1].support + x[1].oppose))[0] : undefined;
   const topName = top ? OPTIONS_DATA.options.find((o) => o.id === top[0])?.name : undefined;
   return (
