@@ -113,5 +113,19 @@
     "publisher": "U.S. Department of the Treasury, Bureau of the Fiscal Service",
     "url": "https://fiscaldata.treasury.gov/datasets/daily-treasury-statement/",
     "note": "The main menu's running deficit for this fiscal year: the new borrowing from the public since Oct. 1 (Debt to the Penny) less the cash it added to the Treasury General Account, and the cash deposited without borrowing, put on the Monthly Treasury Statement's footing with last year's totals. Refreshed every few hours (scripts/fetch-dts.mjs) and in the visitor's browser."
+  },
+  {
+    "id": "cbo-crowding-wp",
+    "title": "The Long-Run Effects of Federal Budget Deficits on National Saving and Private Domestic Investment (Working Paper 2014-02)",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/publication/45140",
+    "note": "The basis for CBO's rule of thumb that each dollar of additional deficits reduces private investment by about 33 cents (a likely range of 15 to 50 cents)."
+  },
+  {
+    "id": "cbo-fed-investment",
+    "title": "The Macroeconomic and Budgetary Effects of Federal Investment (June 2016)",
+    "publisher": "Congressional Budget Office",
+    "url": "https://www.cbo.gov/publication/51628",
+    "note": "CBO's central estimate that federal nondefense investment (infrastructure, education, and research) earns an average return of about 5 percent, half the typical return on private investment. Mission 2.4's bridge uses it as a rule of thumb."
   }
 ]

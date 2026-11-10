@@ -120,11 +120,23 @@ budget adviser.
   Each chapter ends with one vote on a real policy choice. Level 7 lists the major laws, and
   tapping one explains what it did and why its official estimate came out so large.
 - **Guesses by slider** (`EstimateCard` in `LevelPage.tsx`, the `estimate` field on a quiz): in
-  missions 1.4, 1.6, 2.1, 3.1 and 3.2, the guess is a number to drag to (the last surplus year,
-  the "gentle" limit, the interest bill next to defense, the share of benefits still payable,
-  interest in FY2031). Lock it in, and the real number appears on the track with how far off you
-  were: spot on, close, or not this time. Guesses still never count toward stars, and the guess
-  is remembered in this browser.
+  missions 1.4, 1.6, 2.1, 2.2, 2.4, 3.1 and 3.2, the guess is a number to drag to (the last
+  surplus year, the "gentle" limit, the interest bill next to defense, the last year every
+  spending bill was on time, non-defense spending's share of the economy, the share of benefits
+  still payable, interest in FY2031). Lock it in, and the real number appears on the track with
+  how far off you were: spot on, close, or not this time. Guesses still never count toward stars,
+  and the guess is remembered in this browser.
+- **Guesses by hand** (`src/game/guesses.tsx`, the `split`, `sizes` and `sort` fields on a quiz):
+  - 1.1, split the $100: drag three dividers to share out each $100 of revenue among income,
+    payroll, corporate and other taxes; the real split slides in below, scored by how many
+    dollars were in the wrong place.
+  - 1.2, size the bills: drag Social Security, Medicare, defense and interest to how big you
+    think they are; the real amounts appear as dashed lines, and the grade asks whether you made
+    the biggest one the biggest.
+  - 1.7, sort the cards: drag (or tap, then tap a group) six deficit-cutting options into the
+    group each reaches first: current retirees, low-income families, or higher-income people.
+  - Every divider and bar works from the keyboard too (arrow keys; Shift or Page Up for bigger
+    steps).
 - **Simulations: move a cause, watch the effect** (`src/game/sims.tsx`), each from the game's own
   official numbers and saying where it simplifies:
   - 1.4, the revenue tank: tap or drag each bill into a tank the size of a year's revenue, the
@@ -141,6 +153,22 @@ budget adviser.
   - 3.2, wait and see: pick the year the fix starts, and the game's budget engine works out the
     same yearly savings needed from then on to keep the debt from outgrowing the economy by FY2031,
     growing with every year of waiting, plus the extra interest.
+  - 1.3, a per-person gauge: the needle shows your state's federal awards per person against the
+    national average (below, near, or above), shaded in one color since more isn't better or worse.
+  - 1.5, the ripple: save $100 billion four ways and watch the ripple it sends through the
+    economy, its area sized by CBO's estimate; a slider walks from CBO's low estimate to its high
+    one, and a dashed ring marks dollar for dollar.
+  - 2.2, the budget calendar: put the four steps in order (the President's request, the budget
+    resolution, the 12 spending bills, October 1), then choose what happens when the bills
+    aren't done: a stopgap or a shutdown, each told from the record since FY1998.
+  - 2.3, debt and your income: slide debt in 2055 from 100% to 200% of GDP and watch the slice
+    it takes out of income per person. A labeled rule of thumb: a straight line through CBO's May
+    2025 comparison (debt held near 100% instead of rising to 156% leaves income per person about
+    4% higher); past 156% it's the game's extension.
+  - 2.4, the bridge: cut grants for roads, transit and schools and watch the bridge wear down.
+    Hit one: the savings (CBO's estimate for the card) and the first year's drag on the economy.
+    Hit two: about 5 cents a year of lost output for every dollar not invested, CBO's average
+    return on federal investment (2016), simplified to leave out wear and delays.
 - **Uncle Sam talks and reacts.** His lines are pre-recorded with Kokoro, an open-weight
   neural voice model, so he sounds natural and the same on every device; his pace follows his
   mood. Visitors can switch to one of their device's voices in settings. His face,

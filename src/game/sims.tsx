@@ -1,19 +1,23 @@
 import { useMemo, useRef, useState } from 'react';
 import { TimeChart } from '../components/charts';
 import { ChartFrame } from '../components/ui';
-import { cbo, debt, POP, ssa } from '../data';
+import { cbo, debt, POP, process, ssa } from '../data';
 import { CTX } from '../lib/assess';
 import { bucketYear } from '../lib/derive';
 import { dollars, money, moneyWords, pct } from '../lib/format';
+import { MULT, mid } from '../lib/plan';
 import { simulate, ZERO } from '../lib/sandbox';
 import { useHaptics } from './haptics';
+
+const fmtMult = (v: number) => `$${v.toFixed(2)}`;
 
 // Simulations inside the missions: move a cause and watch the effect. Each works from the same
 // official numbers the rest of the game uses, and says so; where a step simplifies (an average
 // rate, a straight-line mix of two fixes), it says that too.
 
 // ---------- a dial: a needle over labeled zones (the pace speedometer, the gap gauge) ----------
-export interface DialZone { to: number; label: string; tone: 'good' | 'warning' | 'critical' | 'neutral' }
+/** Status tones for a good or bad state; s1 to s3, light to dark, for a plain amount that is neither. */
+export interface DialZone { to: number; label: string; tone: 'good' | 'warning' | 'critical' | 'neutral' | 's1' | 's2' | 's3'; short?: string }
 export function Dial({ value, max, zones, label, readout, note }: { value: number; max: number; zones: DialZone[]; label: string; readout: string; note?: string }) {
   const R = 80, cx = 100, cy = 96;
   const at = (v: number) => Math.PI * (1 - Math.min(1, Math.max(0, v / max)));
@@ -32,7 +36,7 @@ export function Dial({ value, max, zones, label, readout, note }: { value: numbe
         {zones.map((z, k) => {
           const from = k ? zones[k - 1].to : 0;
           const [x, y] = pt(at((from + Math.min(z.to, max)) / 2), R + 17);
-          return <text key={z.label + 't'} className="dial-zlabel" x={x} y={y} textAnchor="middle">{z.label}</text>;
+          return <text key={z.label + 't'} className="dial-zlabel" x={x} y={y} textAnchor="middle">{z.short ?? z.label}</text>;
         })}
         <g className="dial-needle" style={{ transform: `rotate(${deg}deg)` }}>
           <line x1={cx} y1={cy} x2={cx} y2={cy - R + 10} />
@@ -282,6 +286,247 @@ export function WaitSim() {
         ))}
       </ol>
       <p className="small muted">Worked out by the game’s budget engine on the {cbo.projShort.toLowerCase()}: the same yearly savings (taxes or cuts) from the start year on, until the debt in FY{base.at(-1)!.fy} is back to today’s share of the economy.</p>
+    </div>
+  );
+}
+
+// ---------- 1.5: a ripple, sized by how much a dollar of savings shrinks the economy at first ----------
+/** Area grows with the effect, so a ripple twice as big is twice the drag. The dashed ring is dollar for dollar. */
+export function Ripple({ value, max, base, label }: { value: number; max: number; base: number; label: string }) {
+  const R = 70, cx = 110, cy = 80;
+  const r = R * Math.sqrt(Math.max(0, value) / max);
+  const ref = R * Math.sqrt(base / max);
+  return (
+    <figure className="ripple" role="img" aria-label={label}>
+      <svg viewBox="0 0 220 160" aria-hidden="true">
+        <ellipse className="ripple-pond" cx={cx} cy={cy} rx={R + 30} ry={R + 4} />
+        <circle className="ripple-fill" cx={cx} cy={cy} r={r} />
+        <g key={value.toFixed(1)} className="ripple-rings">
+          {[0, 1, 2].map((k) => <circle key={k} className="ripple-ring" cx={cx} cy={cy} r={r} style={{ animationDelay: `${k * 0.32}s` }} />)}
+        </g>
+        <circle className="ripple-ref" cx={cx} cy={cy} r={ref} />
+        <text className="ripple-ref-label" x={cx} y={cy - ref - 4} textAnchor="middle">dollar for dollar</text>
+        <circle className="ripple-stone" cx={cx} cy={cy} r={4.5} />
+      </svg>
+    </figure>
+  );
+}
+
+// ---------- 2.2: put the budget calendar in order, then October 1 arrives ----------
+const CAL = [
+  { id: 'pres', when: 'First Monday in February', what: 'The President sends Congress a budget request' },
+  { id: 'res', when: 'By April 15', what: 'Congress adopts a budget resolution that sets the totals' },
+  { id: 'bills', when: 'Spring and summer', what: 'The House and Senate pass 12 spending bills, and the President signs them' },
+  { id: 'oct', when: 'October 1', what: 'The new fiscal year begins, with every bill in place' },
+];
+export function CalendarSim() {
+  const [order, setOrder] = useState(['bills', 'pres', 'oct', 'res']);
+  const [checked, setChecked] = useState(false);
+  const [path, setPath] = useState<'cr' | 'shutdown' | null>(null);
+  const [drag, setDrag] = useState<string | null>(null);
+  const rows = useRef<Record<string, HTMLLIElement | null>>({});
+  const buzz = useHaptics();
+  const right = order.every((id, i) => CAL[i].id === id);
+  const move = (id: string, to: number) => setOrder((o) => {
+    const from = o.indexOf(id);
+    if (to < 0 || to >= o.length || to === from) return o;
+    const nx = o.filter((x) => x !== id); nx.splice(to, 0, id); return nx;
+  });
+  const onMove = (e: React.PointerEvent) => {
+    if (!drag) return;
+    const mids = order.map((id) => { const r = rows.current[id]?.getBoundingClientRect(); return r ? r.top + r.height / 2 : 0; });
+    const to = mids.filter((m) => e.clientY > m).length;
+    const from = order.indexOf(drag);
+    move(drag, to > from ? to - 1 : to);
+  };
+  const yrs = process.years;
+  const crs = yrs.reduce((a, y) => a + y.crs, 0);
+  const none = yrs.filter((y) => y.onTime === 0 && !/^Not final/.test(y.final)).length;
+  const lapses = yrs.filter((y) => y.shutdownDays > 0);
+  const now = yrs.at(-1)!;
+  return (
+    <div className="sim cal-sim">
+      <div className="small muted">{checked && right ? 'That’s the plan on paper.' : 'Put the budget calendar in order: drag a step, or use the arrows.'}</div>
+      <ol className="cal-list" onPointerMove={onMove} onPointerUp={() => { if (drag) buzz('tap'); setDrag(null); }} onPointerCancel={() => setDrag(null)}>
+        {order.map((id, i) => {
+          const c = CAL.find((x) => x.id === id)!;
+          const ok = CAL[i].id === id;
+          return (
+            <li key={id} ref={(el) => { rows.current[id] = el; }} className="cal-row" data-drag={drag === id || undefined} data-ok={checked ? ok : undefined}>
+              <span className="cal-grip" aria-hidden="true" onPointerDown={(e) => { if (checked && right) return; e.currentTarget.parentElement?.parentElement?.setPointerCapture?.(e.pointerId); setDrag(id); setChecked(false); }}>⋮⋮</span>
+              <span className="cal-n num" aria-hidden="true">{checked ? (ok ? '✓' : '✕') : i + 1}</span>
+              <span className="cal-text"><strong>{c.what}</strong>{checked && right && <span className="small muted"> {c.when}</span>}</span>
+              {!(checked && right) && (
+                <span className="cal-btns">
+                  <button type="button" className="btn btn-sm cal-arrow" disabled={i === 0} aria-label={`Move “${c.what}” up`} onClick={() => { move(id, i - 1); setChecked(false); buzz('tap'); }}>↑</button>
+                  <button type="button" className="btn btn-sm cal-arrow" disabled={i === order.length - 1} aria-label={`Move “${c.what}” down`} onClick={() => { move(id, i + 1); setChecked(false); buzz('tap'); }}>↓</button>
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {!(checked && right) && (
+        <div className="sim-actions">
+          <button type="button" className="btn btn-primary cal-check" onClick={() => { setChecked(true); buzz(right ? 'right' : 'wrong'); }}>Check the order</button>
+          {checked && !right && <span className="small" role="status">{order.filter((id, i) => CAL[i].id === id).length} of {CAL.length} in the right spot. Try again.</span>}
+        </div>
+      )}
+      {checked && right && (
+        <div className="cal-oct" role="group" aria-labelledby="cal-oct-q">
+          <strong id="cal-oct-q">Now October 1 arrives, and the 12 bills aren’t all signed. What happens?</strong>
+          <div className="sim-actions">
+            <button type="button" className="btn cal-pick" aria-pressed={path === 'cr'} onClick={() => { setPath('cr'); buzz('tap'); }}>Pass a stopgap</button>
+            <button type="button" className="btn cal-pick" aria-pressed={path === 'shutdown'} onClick={() => { setPath('shutdown'); buzz('wrong'); }}>No deal</button>
+          </div>
+          {path && (
+            <div className="sim-result" aria-live="polite">
+              {path === 'cr' ? (
+                <>
+                  <span className="stat-label">A continuing resolution</span>
+                  <strong className="concept-big">Agencies keep running at about last year’s funding until the bills pass.</strong>
+                  <span className="small muted">Congress passed {crs} stopgaps for FY{yrs[0].fy}–FY{now.fy}. In {none} of those years, not one regular bill was on time.{/^Not final/.test(now.final) ? ` Right now, FY${now.fy} is running on one: ${now.final.replace(/^Not final yet\.\s*/, '')}` : ''}</span>
+                </>
+              ) : (
+                <>
+                  <span className="stat-label">A shutdown</span>
+                  <strong className="concept-big">Funding lapses. Agencies stop all but essential work, and essential employees keep working without a paycheck until it ends.</strong>
+                  <span className="small muted">Since FY{yrs[0].fy}, funding lapsed in {lapses.length} fiscal years: {lapses.map((y) => `FY${y.fy}, ${y.shutdownDays} day${y.shutdownDays === 1 ? '' : 's'}`).join('; ')}.</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- 2.3: let the debt grow, and see the slice of income it takes ----------
+/** CBO's comparison for 2055: debt rising to 156% of GDP under current law, or held at about 100%, which leaves income per person about 4% higher. */
+const CBO_HELD = 100, CBO_PROJ = 156, CBO_GAIN = 4;
+const PER_POINT = CBO_GAIN / (CBO_PROJ - CBO_HELD);
+export function PieSim() {
+  const [debtPct, setDebt] = useState(CBO_PROJ);
+  const buzz = useHaptics();
+  const loss = Math.max(0, (debtPct - CBO_HELD) * PER_POINT);
+  const today = (() => { const h = cbo.history.filter((x) => x.actual).at(-1)!; return { fy: h.fy, pct: (h.debtPublic / h.gdp) * 100 }; })();
+  const R = 74, cx = 90, cy = 90;
+  const a = (loss / 100) * Math.PI * 2;
+  const pt = (t: number, r = R) => [cx + r * Math.sin(t), cy - r * Math.cos(t)];
+  const [x1, y1] = pt(a);
+  const big = a > Math.PI ? 1 : 0;
+  // The slice that's gone, nudged out along its middle so it reads as missing.
+  const [ox, oy] = [Math.sin(a / 2) * 8, -Math.cos(a / 2) * 8];
+  const at = (v: number) => `${((v - 100) / 100) * 100}%`;
+  return (
+    <div className="sim">
+      <label className="sim-slider">
+        <span className="sim-k">Debt held by the public in 2055, as a share of the economy</span>
+        <strong className="sim-v num">{Math.round(debtPct)}%</strong>
+        <input type="range" min={100} max={200} step={1} value={debtPct} onChange={(e) => setDebt(Number(e.target.value))} onPointerUp={() => buzz('tap')}
+          aria-valuetext={`${debtPct} percent of GDP: income per person about ${loss.toFixed(1)} percent lower`} />
+        <span className="sim-scale" aria-hidden="true"><span>100%</span><span>200%</span></span>
+        <span className="sim-marks" aria-hidden="true">
+          <i data-edge="start" style={{ left: at(CBO_HELD) }}>held near today’s share</i>
+          <i style={{ left: at(CBO_PROJ) }}>CBO’s projection</i>
+        </span>
+      </label>
+      <div className="sim-gauge-row">
+        <figure className="pie" role="img" aria-label={`Income per person in 2055: about ${loss.toFixed(1)} percent lower than if debt were held at about 100 percent of GDP`}>
+          <svg viewBox="0 0 180 180" aria-hidden="true">
+            {loss <= 0
+              ? <circle className="pie-whole" cx={cx} cy={cy} r={R} />
+              : <>
+                  <path className="pie-whole" d={`M${cx} ${cy} L${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${1 - big} 1 ${cx} ${cy - R} Z`} />
+                  <path className="pie-lost" transform={`translate(${ox.toFixed(2)} ${oy.toFixed(2)})`} d={`M${cx} ${cy} L${cx} ${cy - R} A${R} ${R} 0 ${big} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`} />
+                </>}
+          </svg>
+          <figcaption className="small muted">The whole pie: income per person in 2055 if debt stays near today’s share</figcaption>
+        </figure>
+        <div className="sim-result" aria-live="polite">
+          <span className="stat-label">Income per person in 2055</span>
+          <strong className="concept-big">{loss < 0.05 ? 'The whole pie: debt stays near today’s share.' : `About ${loss.toFixed(1)}% smaller: $${loss.toFixed(1)} of every $100.`}</strong>
+          <span className="small muted">Why: CBO estimates each extra dollar of deficits crowds out about 33 cents of private investment, so workers have fewer machines, factories, and software to work with. And more of what the country earns goes to foreign lenders. Debt held by the public was {Math.round(today.pct)}% of GDP in FY{today.fy}.</span>
+        </div>
+      </div>
+      <p className="small muted">A rule of thumb, drawn as a straight line through one CBO comparison (May 2025): if debt were held at about 100% of GDP instead of rising to CBO’s projected 156% by 2055, income per person would be about 4% higher. Past 156%, the line is the game’s extension, not CBO’s estimate.</p>
+    </div>
+  );
+}
+
+// ---------- 2.4: cut public investment, and watch the bridge wear down ----------
+/** CBO (2016): federal nondefense investment returns about 5 cents a year per dollar, on average; half the private return. */
+const FED_RETURN = 0.05;
+export function BridgeSim() {
+  const o = CTX.options.find((x) => x.id === 'cut-transport-education-grants')!;
+  // CBO's ten-year estimate, spread over ten years in step with the economy (the engine's window is shorter).
+  const g10 = (() => { const g = CTX.baseline.map((b) => b.gdp); const r = g.at(-1)! / g.at(-2)!; while (g.length < 10) g.push(g.at(-1)! * r); return g.slice(0, 10); })();
+  const path = g10.map((x) => (o.savings10 * 1e9 * x) / g10.reduce((a, v) => a + v, 0));
+  const [cut, setCut] = useState(33);
+  const buzz = useHaptics();
+  const scale = cut / 33; // the card's cut of a third, at 33% on the slider
+  const save = path.map((v) => v * scale);
+  let k = 0;
+  const lost = save.map((v) => { const l = FED_RETURN * k; k += v; return l; });
+  const saved10 = save.reduce((a, v) => a + v, 0);
+  const lostAfter = FED_RETURN * saved10;
+  const first = save[0] * mid('stateInfra');
+  const wear = Math.min(1, cut / 50);
+  const top = Math.max(...save, ...lost, 1);
+  const yrs = path.map((_, i) => CTX.baseline[0].fy + i);
+  return (
+    <div className="sim">
+      <label className="sim-slider">
+        <span className="sim-k">Cut federal grants for roads, transit, and schools</span>
+        <strong className="sim-v num">{cut}%</strong>
+        <input type="range" min={0} max={50} step={1} value={cut} onChange={(e) => setCut(Number(e.target.value))} onPointerUp={() => buzz('tap')}
+          aria-valuetext={`${cut} percent cut: saves ${moneyWords(saved10, 0)} over ten years`} />
+        <span className="sim-scale" aria-hidden="true"><span>no cut</span><span>half</span></span>
+        <span className="sim-marks" aria-hidden="true"><i style={{ left: `${(33 / 50) * 100}%` }}>the card: a third</i></span>
+      </label>
+      <figure className="bridge" role="img" aria-label={cut === 0 ? 'A bridge in good repair' : `A bridge wearing down: ${cut} percent less to maintain and build`} data-wear={wear > 0.66 ? 'high' : wear > 0.25 ? 'mid' : wear > 0 ? 'low' : undefined}>
+        <svg viewBox="0 0 320 120" aria-hidden="true">
+          <path className="bridge-water" d="M0 104 Q40 98 80 104 T160 104 T240 104 T320 104 V120 H0 Z" />
+          <path className="bridge-arch" d={`M20 96 Q160 ${18 + wear * 16} 300 96`} />
+          {[60, 100, 140, 180, 220, 260].map((x, i) => {
+            const t = (x - 20) / 280, archY = (1 - t) * (1 - t) * 96 + 2 * (1 - t) * t * (18 + wear * 16) + t * t * 96;
+            return <line key={x} className="bridge-hanger" x1={x} y1={58 + wear * 8 * Math.sin(Math.PI * t)} x2={x} y2={archY} data-gone={wear > 0.4 && i % 3 === 1 ? true : undefined} />;
+          })}
+          <path className="bridge-deck" d={`M8 56 Q160 ${56 + wear * 16} 312 56`} />
+          <rect className="bridge-pier" x="12" y="56" width="12" height="50" />
+          <rect className="bridge-pier" x="296" y="56" width="12" height="50" />
+          <g className="bridge-cracks" style={{ opacity: wear }}>
+            <path d="M120 60 l6 6 l-3 5 l7 5" /><path d="M200 63 l-5 5 l4 6" /><path d="M150 70 l3 7 l-4 4" />
+          </g>
+          {wear > 0.66 && <g className="bridge-cone"><path d="M236 52 l6 -16 l6 16 Z" /><rect x="233" y="51" width="18" height="3" /></g>}
+        </svg>
+      </figure>
+      <div className="sim-two">
+        <div className="sim-result" aria-live="polite">
+          <span className="stat-label">Hit one: now</span>
+          <strong className="concept-big">Saves {moneyWords(saved10, 0)} over ten years</strong>
+          <span className="small muted">But the economy shrinks by about {moneyWords(first, 0)} in the first year, because that money would have been spent quickly (CBO: {fmtMult(MULT.stateInfra.lo)} to {fmtMult(MULT.stateInfra.hi)} per dollar of aid to states for infrastructure).</span>
+        </div>
+        <div className="sim-result">
+          <span className="stat-label">Hit two: later</span>
+          <strong className="concept-big">{cut === 0 ? 'Nothing lost' : `About ${moneyWords(lostAfter, 0)} less output every year after that`}</strong>
+          <span className="small muted">Each dollar of public investment not made would have added about 5 cents a year to the economy, for as long as the roads, skills, and research last.</span>
+        </div>
+      </div>
+      <figure className="bridge-bars" aria-label="Each year: savings and the economy's lost output">
+        <div className="bridge-bars-cols">
+          {yrs.map((fy, i) => (
+            <span key={fy} className="bridge-col" title={`FY${fy}: saves ${money(save[i])}; output lost ${money(lost[i])}`}>
+              <span className="bridge-bar" data-k="save" style={{ height: `${(save[i] / top) * 100}%` }} />
+              <span className="bridge-bar" data-k="lost" style={{ height: `${(lost[i] / top) * 100}%` }} />
+              <span className="phase-x">FY{String(fy).slice(2)}</span>
+            </span>
+          ))}
+        </div>
+        <figcaption className="small"><span className="bridge-key" data-k="save" /> saved that year <span className="bridge-key" data-k="lost" /> output lost that year, growing as the missing investment adds up</figcaption>
+      </figure>
+      <p className="small muted">A rule of thumb from CBO’s estimate that federal investment in infrastructure, education, and research earns about 5% a year on average, half the return on private investment (The Macroeconomic and Budgetary Effects of Federal Investment, 2016). Simplified: it leaves out wear and tear, and the payoff from schools and research can take a decade or more to arrive. Savings are CBO’s estimate for this card, scaled to the cut.</p>
     </div>
   );
 }

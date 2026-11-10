@@ -14,6 +14,7 @@ import { useJourney } from './state';
 import { finishLevelTime, levelMinutes, resetLevelTime, useLevelTimer } from './levelTime';
 import { plain, SamSays, UncleSam } from './UncleSam';
 import { lockedLine, QUIZ_LINES } from './script';
+import { SizesCard, SortCard, SplitCard } from './guesses';
 
 const CHOICE_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -103,7 +104,7 @@ function LevelRun({ level }: { level: Level }) {
       const c = keys.current;
       if (c.party != null || e.metaKey || e.ctrlKey || e.altKey) return;
       const t = e.target as HTMLElement;
-      if (t.closest('input, select, textarea, [contenteditable="true"]')) return;
+      if (t.closest('input, select, textarea, [contenteditable="true"], [role="slider"]')) return; // sliders use the arrows and Enter themselves
       if ((e.key === 'Enter' || e.key === 'ArrowRight') && c.step) {
         if (e.key === 'Enter' && t.closest('button, a')) return; // let the focused control act
         e.preventDefault();
@@ -244,6 +245,9 @@ function EstimateCard({ quiz }: { quiz: Quiz }) {
 
 function QuizCard({ quiz }: { quiz: Quiz }) {
   if (quiz.estimate) return <EstimateCard quiz={quiz} />;
+  if (quiz.split) return <SplitCard quiz={quiz} />;
+  if (quiz.sizes) return <SizesCard quiz={quiz} />;
+  if (quiz.sort) return <SortCard quiz={quiz} />;
   return <ChoiceCard quiz={quiz} />;
 }
 

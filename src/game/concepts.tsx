@@ -7,7 +7,8 @@ import { dollars, money, moneyWords, pct } from '../lib/format';
 import { MULT, type MultClass, mid, optionPath } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import type { Level } from './levels';
-import { Dial, WaitSim } from './sims';
+import { BridgeSim, Dial, PieSim, Ripple, WaitSim } from './sims';
+import type { SortGuess } from './guesses';
 
 // The six concept missions that come before each campaign's budget desk: how a policy hits the
 // economy, how fast is too fast, who a change reaches, what grows the economy, why public
@@ -61,18 +62,31 @@ const SAME = [
 ];
 function SameSavings() {
   const [pick, setPick] = useState(SAME[0].id);
+  const [where, setWhere] = useState(50);
   const o = opt(pick);
   const m = MULT[o.econ.cls];
   const per = 100; // $100 billion saved in a year
+  const mult = m.lo + ((m.hi - m.lo) * where) / 100;
+  const hit = Math.round(per * mult);
+  const pos = where === 50 ? 'the middle of CBO’s range, which the game uses' : where < 50 ? 'toward CBO’s low estimate' : 'toward CBO’s high estimate';
   return (
     <div className="concept-try">
       <Seg label="Save $100 billion this way" value={pick} onChange={setPick} options={SAME.map((s) => ({ value: s.id, label: s.label }))} />
-      <div className="concept-result" aria-live="polite">
-        <span className="stat-label">Save $100 billion in a year by: {o.name.toLowerCase()}</span>
-        <strong className="concept-big">The economy shrinks by about ${Math.round(per * mid(o.econ.cls))} billion at first</strong>
-        <span className="small muted">CBO’s range for {m.label.toLowerCase()}: ${Math.round(per * m.lo)} to ${Math.round(per * m.hi)} billion. {o.econ.why}</span>
-        <span className="concept-meter" aria-hidden="true"><span style={{ width: `${(mid(o.econ.cls) / 2.5) * 100}%` }} /></span>
+      <div className="sim-gauge-row">
+        <Ripple value={hit} max={250} base={per} label={`Saving $100 billion by ${o.name.toLowerCase()}: the economy shrinks by about $${hit} billion at first`} />
+        <div className="concept-result" aria-live="polite">
+          <span className="stat-label">Save $100 billion in a year by: {o.name.toLowerCase()}</span>
+          <strong className="concept-big">The economy shrinks by about ${hit} billion at first</strong>
+          <span className="small muted">That’s {pos}. CBO’s range for {m.label.toLowerCase()}: ${Math.round(per * m.lo)} to ${Math.round(per * m.hi)} billion. {o.econ.why}</span>
+        </div>
       </div>
+      <label className="sim-slider">
+        <span className="sim-k">Where in CBO’s range</span>
+        <strong className="sim-v num">{fmtMult(mult)} per dollar</strong>
+        <input type="range" min={0} max={100} step={5} value={where} onChange={(e) => setWhere(Number(e.target.value))} aria-valuetext={`${fmtMult(mult)} per dollar saved`} />
+        <span className="sim-scale" aria-hidden="true"><span>CBO’s low estimate</span><span>CBO’s high estimate</span></span>
+      </label>
+      <p className="small muted">The ripple’s area grows with the effect. The dashed ring is dollar for dollar: inside it, the economy shrinks by less than the money saved.</p>
     </div>
   );
 }
@@ -163,6 +177,19 @@ function InvestmentChart() {
   );
 }
 
+const WHO_SORT: SortGuess = {
+  bins: [{ id: 'retirees', label: 'Current retirees' }, { id: 'lowIncome', label: 'Low-income families' }, { id: 'higher', label: 'Higher-income people' }],
+  items: [
+    { id: 'chained-cpi', label: 'Slower cost-of-living raises (the chained CPI)', bin: 'retirees' },
+    { id: 'carried-interest', label: 'Tax carried interest as ordinary income', bin: 'higher' },
+    { id: 'medicaid-per-enrollee-caps', label: 'Cap federal Medicaid spending per enrollee', bin: 'lowIncome' },
+    { id: 'part-b-premium-35pct', label: 'Raise Medicare Part B premiums', bin: 'retirees' },
+    { id: 'limit-itemized-15pct', label: 'Limit what itemized deductions save', bin: 'higher' },
+    { id: 'ss-tax-earnings-over-250k', label: 'Social Security tax on earnings above $250,000', bin: 'higher' },
+  ],
+  prompt: 'Drag each card into a group, or tap a card and then a group.',
+};
+
 const link = (id: string) => { const p = principle(id); return p ? <> <a href={p.source.url} target="_blank" rel="noreferrer">{p.source.title.split(',')[0]}</a></> : null; };
 const links = (...ids: string[]) => ids.map((id) => principle(id)).filter(Boolean).map((p) => ({ title: p!.source.title, url: p!.source.url }));
 const steady = <span className="small muted">CBO’s ranges come from its review of the research; the game uses the middle of each.</span>;
@@ -180,7 +207,7 @@ export const CONCEPT_LEVELS: Level[] = [
         choices: ['Cutting what the government buys', 'Raising taxes on higher-income people', 'Cutting payments to people'], correct: 1,
         explain: <>CBO estimates a dollar raised from higher-income people shrinks output by {fmtMult(high.lo)} to {fmtMult(high.hi)} at first, because they’d have saved part of it anyway. A dollar less of government purchases: {fmtMult(purchases.lo)} to {fmtMult(purchases.hi)}. Payments to people: {fmtMult(people.lo)} to {fmtMult(people.hi)}.</> } },
       { id: 'ranges', label: 'The ranges', kind: 'facts', mood: 'thinking', sam: <>Here are CBO’s estimates for each kind of change. The longer the bar, the more economists disagree. The further right, the more a dollar of savings slows things down at first.</>, body: () => <><MultiplierRanges />{steady}</> },
-      { id: 'same', label: 'Same savings', kind: 'try', mood: 'happy', sam: <>Let’s save the same hundred billion dollars four ways. Tap each one and watch how much the economy feels it.</>, body: () => <SameSavings /> },
+      { id: 'same', label: 'Same savings', kind: 'try', mood: 'happy', sam: <>Let’s save the same hundred billion dollars four ways. Tap each one and watch the ripple it sends through the economy. Then slide across CBO’s range, from its low estimate to its high one.</>, body: () => <SameSavings /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'ceq2', question: 'Why does cutting what the government buys hit the economy hardest at first?',
         choices: ['Every dollar not spent is a dollar less of goods and services bought right away', 'Government purchases are taxed twice', 'The Federal Reserve can never respond to it'], correct: 0,
@@ -230,9 +257,9 @@ export const CONCEPT_LEVELS: Level[] = [
     steps: [
       { id: 'intro', label: 'Someone pays', kind: 'story', mood: 'thinking', sam: <>Every card asks something of somebody. Some reach the folks who can least afford it: families getting by on very little, and retirees who can’t go back to work.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'cfq1', guess: true, question: 'Which of these cards would reach people who are already retired?',
-        choices: ['Slower cost-of-living raises (the chained CPI)', 'Taxing carried interest as ordinary income', 'Limiting what itemized deductions save'], correct: 0,
-        explain: <>The chained CPI slows the yearly raise in Social Security benefits for everyone already collecting, and the effect grows with age. The other two reach investment-fund managers and higher-income filers.</> } },
+        id: 'cfq1', guess: true, question: 'Who would each of these cards reach first?',
+        choices: ['retirees for the chained CPI and Part B premiums, low-income families for the Medicaid cap, and higher-income people for the three taxes'], correct: 0, sort: WHO_SORT,
+        explain: <>The chained CPI slows the yearly raise in Social Security benefits for everyone already collecting, and higher Part B premiums cost Medicare enrollees more. A Medicaid cap shifts costs to states, which would likely cut coverage for low-income people. The three taxes fall mostly on higher-income people: fund managers, households with big itemized deductions, and earnings above $250,000.</> } },
       { id: 'who', label: 'Who it reaches', kind: 'try', mood: 'thinking', sam: <>Here’s every card, sorted by who it reaches. The budget desk watches three groups closely: current retirees, programs for low-income families, and public investment.</>, body: () => <WhoItTouches /> },
       { id: 'taxes', label: 'Taxes too', kind: 'facts', mood: 'worried', sam: <>Taxes can land unevenly too. A tax on carbon or a sales-style tax costs lower-income households a bigger share of what they earn, because they spend more of it. Rebates can fix that, but these cards don’t include them.</>, body: () => (
         <ul className="concept-cards">{['carbon-tax-25', 'vat-5pct'].map((id) => { const o = opt(id); return <li key={id} className="concept-card"><span className="rcard-kind" data-side="revenue">Tax</span><span><strong>{o.name}</strong><span className="small muted"> {o.econ.why}</span></span></li>; })}</ul>
@@ -262,6 +289,7 @@ export const CONCEPT_LEVELS: Level[] = [
         id: 'cgq1', guess: true, question: 'Over time, CBO finds that higher federal debt tends to…',
         choices: ['Raise private investment', 'Crowd out private investment and lower incomes', 'Have no effect on the economy'], correct: 1,
         explain: <>{principle('debt-growth')?.claim}</> } },
+      { id: 'pie', label: 'Debt and your income', kind: 'try', mood: 'worried', sam: <>Here’s how CBO sees it. Slide the debt up and watch the slice it takes out of everyone’s income by 2055. The more I borrow, the bigger the slice.</>, body: () => <PieSim /> },
       { id: 'split', label: 'Help or hold back', kind: 'try', mood: 'thinking', sam: <>Some cards make the economy work better over time: they trim tax breaks that steer money the wrong way, or price things that cost us all. Others blunt the reward for working and investing. Have a look.</>, body: () => <GrowthSplit /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'cgq2', question: 'Why do many economists see a tax on consumption, like a VAT, as easier on growth than higher income tax rates?',
@@ -270,10 +298,10 @@ export const CONCEPT_LEVELS: Level[] = [
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>Here’s one economists like for growth, and many voters don’t. What do you think?</>,
         vote: { kind: 'option', optionId: 'vat-5pct' } },
     ],
-    takeaways: ['Lower federal debt leaves more savings for private investment, which raises incomes over time.', 'Trimming tax breaks and pricing harmful activities can raise money while helping growth.', 'Higher tax rates on work and investment raise money but hold growth back a little.'],
+    takeaways: ['Lower federal debt leaves more savings for private investment, which raises incomes over time: CBO puts income per person in 2055 about 4% higher if debt is held near today’s share.', 'Trimming tax breaks and pricing harmful activities can raise money while helping growth.', 'Higher tax rates on work and investment raise money but hold growth back a little.'],
     shareFact: `Of the ${CTX.options.length} deficit-cutting options in the game, ${CTX.options.filter((o) => o.econ.growth > 0).length} are expected to help long-run growth while they raise money or save it.`,
     deepDive: [{ route: 'debt', label: 'Debt & interest' }],
-    sources: ['principle-debt-growth', 'cbo-options-2024'],
+    sources: ['principle-debt-growth', 'cbo-crowding-wp', 'cbo-options-2024'],
     links: links('debt-growth'),
   },
   {
@@ -282,10 +310,11 @@ export const CONCEPT_LEVELS: Level[] = [
       { id: 'intro', label: 'Investments', kind: 'story', mood: 'thinking', sam: <>Some of what I spend is really an investment: roads and bridges, research, schools. Cutting it saves money today. But it can cost the country more down the road.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
         id: 'ciq1', guess: true, question: `Non-defense spending that Congress votes on each year (roads, research, schools and more) was about 5% of the economy in 1980. And in FY${ND_FY}?`,
-        choices: ['Bigger, about 7%', 'About the same, 5%', `Smaller, about ${pct(ND_NOW, 0)}`], correct: 2,
+        choices: [`${pct(ND_NOW, 1)} of GDP`], correct: 0,
+        estimate: { min: 0, max: 8, step: 0.1, start: Math.round(ND_1980 * 1000) / 10, answer: ND_NOW * 100, spot: 0.2, close: 0.6, format: (v) => `${v.toFixed(1)}% of GDP`, diff: (d) => `${d.toFixed(1)} points`, prompt: 'Drag to the share', marks: [{ at: ND_1980 * 100, label: '1980' }] },
         explain: <>It fell from {pct(ND_1980, 1)} of GDP in FY1980 to {pct(ND_NOW, 1)} in FY{ND_FY}. It’s the part of the budget that has shrunk the most, because it’s the part Congress has to vote on every year.</> } },
       { id: 'chart', label: 'Over time', kind: 'facts', mood: 'worried', sam: <>Here’s that share of the economy since 1962. Programs that run on autopilot keep growing; this is the part that gets squeezed when money is tight.</>, body: () => <InvestmentChart /> },
-      { id: 'double', label: 'A double hit', kind: 'facts', mood: 'worried', sam: <>Cutting it is what economists call a double hit. Aid to states for roads and schools has one of the biggest effects on the economy at first. And it leaves less to grow on later.</>, body: () => <MultiplierRanges highlight={['stateInfra']} /> },
+      { id: 'double', label: 'A double hit', kind: 'try', mood: 'worried', sam: <>Cutting it is what economists call a double hit. Slide the cut and watch my bridge wear down. Aid to states for roads and schools slows the economy right away. And it leaves less to grow on later.</>, body: () => <BridgeSim /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'ciq2', question: 'Why do economists call cutting public investment a double hit?',
         choices: ['It slows the economy now and leaves less to grow on later', 'It raises taxes and cuts benefits at once', 'It only affects the federal government'], correct: 0,
@@ -300,7 +329,7 @@ export const CONCEPT_LEVELS: Level[] = [
     takeaways: [`Non-defense spending Congress votes on fell from ${pct(ND_1980, 1)} of GDP in FY1980 to ${pct(ND_NOW, 1)} in FY${ND_FY}.`, 'Cutting public investment slows the economy now and leaves less to grow on later.', `The transportation-and-education card saves ${moneyWords(opt('cut-transport-education-grants').savings10 * 1e9, 0)} over ten years, at the highest short-run cost of any cut.`],
     shareFact: `Federal non-defense spending that Congress votes on each year fell from ${pct(ND_1980, 1)} of the economy in 1980 to ${pct(ND_NOW, 1)} today.`,
     deepDive: [{ route: 'spending', label: 'Where it goes' }],
-    sources: ['omb-hist', 'cbo-multiplier-wp'],
+    sources: ['omb-hist', 'cbo-multiplier-wp', 'cbo-fed-investment'],
   },
   {
     id: 'level-future', n: 16, title: 'Who pays later', topic: 'Interest, waiting, and the generations who inherit the debt', difficulty: 'Medium', minutes: 5, icon: 'hourglass', badge: 'The long term',

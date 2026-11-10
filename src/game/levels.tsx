@@ -12,7 +12,8 @@ import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
 import { QUOTES, type Quote } from './quotes';
 import { CONCEPT_LEVELS } from './concepts';
-import { InterestRateSim, RevenueTank, SsMixer } from './sims';
+import { CalendarSim, Dial, InterestRateSim, RevenueTank, SsMixer } from './sims';
+import type { SizeGuess, SortGuess, SplitGuess } from './guesses';
 
 // ---------------------------------------------------------------------------------------------
 // The seven chapter levels. Every number Uncle Sam says, and every quiz answer, is computed from
@@ -27,10 +28,10 @@ import { InterestRateSim, RevenueTank, SsMixer } from './sims';
 export interface Estimate { min: number; max: number; step: number; start: number; answer: number; spot: number; close: number; relative?: boolean; format: (v: number) => string; diff: (d: number) => string; prompt: string; marks?: { at: number; label: string }[] }
 /**
  * `guess`: asked before the step that shows the answer. One pick (or, with `estimate`, one slider
- * setting), then the answer; it never counts toward stars. For an estimate, `choices` holds just the
- * answer, written out, so Uncle Sam can say it.
+ * setting), then the answer; it never counts toward stars. For an estimate, a split, sized bars or
+ * a sort, `choices` holds just the answer, written out, so Uncle Sam can say it.
  */
-export interface Quiz { id: string; question: string; choices: string[]; correct: number; explain: ReactNode; guess?: boolean; estimate?: Estimate }
+export interface Quiz { id: string; question: string; choices: string[]; correct: number; explain: ReactNode; guess?: boolean; estimate?: Estimate; split?: SplitGuess; sizes?: SizeGuess; sort?: SortGuess }
 export type VoteSpec =
   | { kind: 'option'; optionId: string }
   | { kind: 'issue'; id: string; question: string; context: ReactNode; choices: { value: string; label: string }[] };
@@ -84,6 +85,29 @@ const EARN = REC.filter((r) => r.id === 'individual' || r.id === 'payroll').redu
 const opt = (id: string) => OPTIONS_DATA.options.find((o) => o.id === id);
 const src = (id: string) => SOURCE_BY_ID[id];
 const principle = (id: string) => OPTIONS_DATA.principles.find((p) => p.id === id);
+/** Whole dollars out of $100 that add up to exactly $100 (largest remainder). */
+const wholeDollars = (vals: number[]) => {
+  const tot = vals.reduce((a, v) => a + v, 0);
+  const raw = vals.map((v) => (v / tot) * 100);
+  const out = raw.map(Math.floor);
+  const left = 100 - out.reduce((a, v) => a + v, 0);
+  raw.map((v, i) => ({ i, r: v - Math.floor(v) })).sort((a, b) => b.r - a.r).slice(0, left).forEach(({ i }) => { out[i] += 1; });
+  return out;
+};
+const recOf = (id: string) => REC.find((r) => r.id === id)?.amount ?? 0;
+const SPLIT_PARTS = [
+  { id: 'individual', label: 'Income taxes', color: REVENUE_BY_ID.individual.color, v: recOf('individual') },
+  { id: 'payroll', label: 'Payroll taxes', color: REVENUE_BY_ID.payroll.color, v: recOf('payroll') },
+  { id: 'corporate', label: 'Corporate taxes', color: REVENUE_BY_ID.corporate.color, v: recOf('corporate') },
+  { id: 'other', label: 'Everything else', color: REVENUE_BY_ID.customs.color, v: REC_TOTAL - recOf('individual') - recOf('payroll') - recOf('corporate') },
+];
+const SPLIT_ANSWER = wholeDollars(SPLIT_PARTS.map((x) => x.v));
+const SPLIT: SplitGuess = { parts: SPLIT_PARTS.map((x, i) => ({ id: x.id, label: x.label, color: x.color, answer: SPLIT_ANSWER[i] })), prompt: 'Drag the dividers to split the $100.', spot: 6, close: 15 };
+const BILLS: SizeGuess = {
+  parts: [{ id: 'defense', label: 'Defense' }, { id: 'medicare', label: 'Medicare' }, { id: 'ss', label: 'Social Security' }, { id: 'interest', label: 'Interest' }]
+    .map((b) => ({ ...b, color: CATS.find((c) => c.id === b.id)!.color, answer: cat(b.id) })),
+  max: 2e12, step: 25e9, start: 750e9, format: (v) => money(v), prompt: 'Drag each bar up or down to your guess.',
+};
 
 // ---------- small interactive pieces ----------
 function WaffleBlock() {
@@ -147,8 +171,12 @@ function StateTry() {
       <div className="field" style={{ maxWidth: 320 }}><label htmlFor="try-st">Your state</label>
         <select id="try-st" className="select" value={s.abbr} onChange={(e) => setAbbr(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}</select>
       </div>
-      <div className="grid-2" style={{ gap: 12 }}>
+      <div className="sim-gauge-row">
+        <Dial value={(s.perCapita / nat.perCapita) * 100} max={250} label={`Federal awards per person in ${s.name}, compared with the national average`} readout={`${dollars(s.perCapita)} a person`}
+          zones={[{ to: 85, label: 'below average', short: 'below', tone: 's1' }, { to: 115, label: 'near average', short: 'near', tone: 's2' }, { to: 250, label: 'above average', short: 'above', tone: 's3' }]} note={`${Math.round((s.perCapita / nat.perCapita) * 100)}% of the national ${dollars(nat.perCapita)}`} />
         <Stat label={`Federal awards to ${s.name}, FY${geo.fy}`} value={money(s.total)} note={`${dollars(s.perCapita)} per person, vs. ${dollars(nat.perCapita)} nationally`} />
+      </div>
+      <div>
         <div>
           <div className="stat-label" style={{ marginBottom: 6 }}>Biggest programs</div>
           <BarList items={s.programs.slice(0, 4).map((p) => ({ id: p.code, label: p.name, value: p.amount, color: 'var(--c-medicare)' }))} />
@@ -180,8 +208,8 @@ const CHAPTERS: Level[] = [
     steps: [
       { id: 'meet', label: 'Meet Uncle Sam', kind: 'story', mood: 'happy', sam: <>Howdy, I’m Uncle Sam. I’m a regular guy with a very big household: {people(POP)} of you. Like plenty of families, I spend more than I bring in, and I could use your help sorting it out. Let’s start with my paycheck.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l1q1', guess: true, question: 'Which source brings Uncle Sam the most money?',
-        choices: [REVENUE_BY_ID[REC[2].id].label, REVENUE_BY_ID[REC[0].id].label, REVENUE_BY_ID[REC[1].id].label], correct: 1,
+        id: 'l1q1', guess: true, question: 'Of every $100 Uncle Sam takes in, how much comes from each source?',
+        choices: [`about $${SPLIT_ANSWER[0]} from income taxes, $${SPLIT_ANSWER[1]} from payroll taxes, $${SPLIT_ANSWER[2]} from corporate taxes, and $${SPLIT_ANSWER[3]} from everything else`], correct: 0, split: SPLIT,
         explain: <>{REVENUE_BY_ID[REC[0].id].label} brought in {money(REC[0].amount)}, {pct(REC[0].amount / REC_TOTAL, 0)} of all revenue in FY{FY}. Add payroll taxes and {pct(EARN / REC_TOTAL, 0)} of the money comes from taxes on what people earn.</> } },
       { id: 'sources', label: 'Where it comes from', kind: 'facts', mood: 'thinking', sam: <>Last year I brought in {moneyWords(T.receipts)}. Most of it comes from your paychecks.</>,
         body: () => <ChartFrame title={`Revenue by source, FY${FY}`} sourceIds={['mts9']}><BarList items={REC.map((r) => ({ id: r.id, label: REVENUE_BY_ID[r.id].label, value: r.amount, color: REVENUE_BY_ID[r.id].color }))} total={REC_TOTAL} /></ChartFrame> },
@@ -202,9 +230,9 @@ const CHAPTERS: Level[] = [
     steps: [
       { id: 'intro', label: 'The bills', kind: 'story', mood: 'thinking', sam: <>Now the bills. I spent {moneyWords(T.outlays)} last year. That’s about {money(T.outlays / 365)} a day, or {dollars(T.outlays / HH)} for every household.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l2q1', guess: true, question: 'Which single program costs Uncle Sam the most?',
-        choices: ['National defense', 'Medicare', 'Social Security', 'Net interest on the debt'], correct: 2,
-        explain: <>Social Security paid out {money(cat('ss'))} in FY{FY}, about {pct(cat('ss') / T.outlays, 0)} of all spending, to roughly {ssa.beneficiaries ? people(ssa.beneficiaries.total) : '71 million'} people.</> } },
+        id: 'l2q1', guess: true, question: `Uncle Sam’s four biggest bills: how much did each cost in FY${FY}?`,
+        choices: [`Social Security, the biggest, at ${moneyWords(cat('ss'))}`], correct: 0, sizes: BILLS,
+        explain: <>Social Security paid out {money(cat('ss'))} in FY{FY}, about {pct(cat('ss') / T.outlays, 0)} of all spending, to roughly {ssa.beneficiaries ? people(ssa.beneficiaries.total) : '71 million'} people. Then Medicare ({money(cat('medicare'))}), interest on the debt ({money(cat('interest'))}), and defense ({money(cat('defense'))}).</> } },
       { id: 'every100', label: 'Every $100', kind: 'facts', mood: 'thinking', sam: <>Here’s where every $100 went. Point at a row to light it up.</>, body: () => <WaffleBlock /> },
       { id: 'kinds', label: 'Three kinds of bills', kind: 'facts', mood: 'worried', sam: <>Most of my bills are on autopilot. They’re set by permanent laws, so they get paid without a yearly vote.</>,
         body: () => (
@@ -234,7 +262,7 @@ const CHAPTERS: Level[] = [
     id: 'level-3', n: 3, title: 'Back home', topic: 'Federal money in your state', difficulty: 'Easy', minutes: 4, icon: 'home', badge: 'Federal money at home',
     steps: [
       { id: 'intro', label: 'Neighbors', kind: 'story', mood: 'happy', sam: <>A lot of what I spend ends up right in your neighborhood: Social Security checks, Medicaid, highways, schools, and military bases. Let’s look at your state.</> },
-      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Pick your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}.</>, body: () => <StateTry /> },
+      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Pick your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}. The needle shows how your state compares, per person, with the country as a whole.</>, body: () => <StateTry /> },
       { id: 'q1', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'l3q1', question: 'Which federal program sends the most money to the most states?',
         choices: [topProgram === 'Grants to States for Medicaid' ? 'Highway Planning and Construction' : 'Grants to States for Medicaid', topProgram, 'Federal Pell Grant Program'], correct: 1,
@@ -316,15 +344,19 @@ const CHAPTERS: Level[] = [
       { id: 'intro', label: 'Kitchen table', kind: 'story', mood: 'thinking', sam: <>In my house we sit down at the kitchen table once a year and plan. Congress is supposed to do the same, with a deadline of October 1. Let’s see how that’s going.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
         id: 'l6q1', guess: true, question: 'When did Congress last pass all of its regular spending bills on time?',
-        choices: ['FY2019', `FY${process.lastAllOnTime?.fy ?? 1997}`, 'FY2009'], correct: 1,
+        choices: [`FY${process.lastAllOnTime?.fy ?? 1997}`], correct: 0,
+        estimate: { min: 1977, max: FY, step: 1, start: 2010, answer: process.lastAllOnTime?.fy ?? 1997, spot: 0, close: 3, format: (v) => `FY${v}`, diff: (d) => `${d} year${d === 1 ? '' : 's'}`, prompt: 'Drag to the year' },
         explain: <>{process.lastAllOnTime?.note ?? 'All regular bills were last enacted on time in FY1997.'}</> } },
-      { id: 'paper', label: 'On paper vs. practice', kind: 'facts', mood: 'worried', sam: <>On paper it’s orderly. In practice, Congress usually misses the deadline and passes stopgaps called <Term id="cr">continuing resolutions</Term>.</>,
+      { id: 'paper', label: 'On paper vs. practice', kind: 'try', mood: 'worried', sam: <>On paper it’s orderly. Put my budget calendar in order. Then see what happens when the deadline comes and the bills aren’t done. Usually Congress passes a stopgap called a <Term id="cr">continuing resolution</Term>.</>,
         body: () => (
-          <div className="grid-3" style={{ gap: 12 }}>
+          <>
+          <CalendarSim />
+          <div className="grid-3" style={{ gap: 12, marginTop: 16 }}>
             <Stat label="Continuing resolutions" value={`${totalCRs}`} note={`for FY${process.years[0].fy}–FY${process.years.at(-1)!.fy}, about ${(totalCRs / process.years.length).toFixed(1)} a year`} />
             <Stat label="Last time all bills were on time" value={`FY${process.lastAllOnTime?.fy ?? 1997}`} note="before the fiscal year began" />
             <Stat label="Budget plan not adopted" value={`${process.years.filter((y) => !y.resolution).length} years`} note={`of the ${process.years.length} shown`} />
           </div>
+          </>
         ) },
       { id: 'laws', label: 'Laws that moved it', kind: 'facts', mood: 'surprised', sam: <>Deficits are written into law. Here are the biggest laws of the past 25 years. Tap one to see what it did.</>,
         body: () => <LawExplorer /> },
