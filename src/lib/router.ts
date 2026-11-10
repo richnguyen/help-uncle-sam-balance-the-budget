@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 export const ROUTES = [
   'journey', 'level-1', 'level-2', 'level-3', 'level-4', 'level-5', 'level-6', 'level-7', 'level-8',
   'level-9', 'level-10', 'level-economy', 'level-drag', 'level-fairness', 'level-growth', 'level-investment', 'level-future',
-  'level-spend', 'level-roles', 'level-rules', 'level-brakes',
+  'level-spend', 'level-roles', 'level-rules', 'level-brakes', 'level-yardstick',
   'overview', 'spending', 'revenue', 'gap', 'debt', 'laws', 'process', 'state', 'social-security',
   'receipt', 'glossary', 'sources', 'results', 'plan', 'story', 'daily', 'og-card', 'peoples', 'rooms', 'room', 'chain', 'stats',
   'me', 'clock', 'together', 'teach', 'duel', 'duels', 'levels', 'record', 'settings', 'guide',

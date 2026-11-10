@@ -119,6 +119,8 @@ export interface CBOData {
   vintage: string; // e.g. "February 2026 baseline"
   history: CBOYear[];
   baseline: CBOYear[];
+  /** OMB Table 1.2: receipts, outlays and the surplus (+) or deficit (−) as percentages of GDP, FY1930 on. */
+  long: { fy: number; rev: number; out: number; def: number }[];
   historySourceId: string;
   baselineSourceId: string;
   /** Who made the projection ("CBO" or "OMB"), a short label, and what it assumes. */

@@ -288,3 +288,74 @@ export function BalanceRound({ laws, offsets, pick, intro, done, prompt }: { law
     </div>
   );
 }
+
+// ---------- cut or increase? A baseline is a yardstick too ----------
+/**
+ * One made-up program: last year's funding, CBO's baseline for next year (current law projected
+ * forward), and a bill's amount. The player calls the bill against each yardstick; CBO scores it
+ * against the baseline. 50 points per right call.
+ */
+export function BaselineRound({ last, baseline, bill, intro, done }: { last: number; baseline: number; bill: number; intro: ReactNode; done: Done }) {
+  const [calls, setCalls] = useState<{ last?: 'up' | 'down'; base?: 'up' | 'down' }>({});
+  const buzz = useHaptics();
+  const truth = { last: bill > last ? 'up' : 'down', base: bill > baseline ? 'up' : 'down' } as const;
+  const asks = [
+    { key: 'last' as const, q: 'Compared with last year, the bill is…' },
+    { key: 'base' as const, q: 'Compared with CBO’s baseline, the bill is…' },
+  ];
+  const k = calls.last === undefined ? 0 : calls.base === undefined ? 1 : 2;
+  const call = (key: 'last' | 'base', c: 'up' | 'down') => {
+    if (calls[key]) return;
+    const next = { ...calls, [key]: c };
+    setCalls(next);
+    buzz(c === truth[key] ? 'right' : 'wrong');
+    if (next.last && next.base) {
+      const right = (next.last === truth.last ? 1 : 0) + (next.base === truth.base ? 1 : 0);
+      done(right * 50, `${right} of 2 calls right.`);
+    }
+  };
+  const word = (c: 'up' | 'down') => (c === 'up' ? 'an increase' : 'a cut');
+  const rows = [
+    { label: 'Last year', v: last },
+    { label: 'CBO’s baseline for next year', v: baseline, note: 'current law, projected forward' },
+    { label: 'The bill', v: bill },
+  ];
+  const max = Math.max(last, baseline, bill);
+  return (
+    <div className="quiz">
+      <SamSays mood="happy" compact auto>{intro}</SamSays>
+      <div className="card quiz-card baseline" role="group" aria-labelledby="base-q">
+        <h2 className="quiz-q" id="base-q">Is the bill a cut or an increase?</h2>
+        <Practice>A made-up program. The rule is real: CBO scores every bill against its baseline, which projects current law forward.</Practice>
+        <div className="base-rows">
+          {rows.map((r) => (
+            <div key={r.label} className="base-row">
+              <span className="base-k">{r.label}{r.note && <span className="small muted"> · {r.note}</span>}</span>
+              <span className="base-track" aria-hidden="true"><span style={{ width: `${(r.v / max) * 100}%` }} /></span>
+              <strong className="num">{usd(r.v)}</strong>
+            </div>
+          ))}
+        </div>
+        {asks.map((a, i) => i <= k && (
+          <div key={a.key} className="base-ask">
+            <p className="base-q"><strong>{a.q}</strong></p>
+            {!calls[a.key] ? (
+              <div className="pairs-row">
+                <button type="button" className="pairs-pick base-call" data-call="up" onClick={() => call(a.key, 'up')}><strong>An increase</strong></button>
+                <button type="button" className="pairs-pick base-call" data-call="down" onClick={() => call(a.key, 'down')}><strong>A cut</strong></button>
+              </div>
+            ) : (
+              <div className="quiz-feedback" data-ok={calls[a.key] === truth[a.key]} role="status">
+                <strong>{calls[a.key] === truth[a.key] ? 'Right.' : 'Not this time.'}</strong>{' '}
+                It’s {word(truth[a.key])} of {usd(Math.abs(bill - (a.key === 'last' ? last : baseline)))} {a.key === 'last' ? 'over last year' : 'against the baseline'}.
+              </div>
+            )}
+          </div>
+        ))}
+        {k === 2 && (
+          <p className="base-wrap">Both are true. CBO scores the bill as {word(truth.base)} of {usd(Math.abs(bill - baseline))}, because it measures every bill against current law. So one side can call it {word(truth.last)} and the other {word(truth.base)}. A baseline is a yardstick too.</p>
+        )}
+      </div>
+    </div>
+  );
+}

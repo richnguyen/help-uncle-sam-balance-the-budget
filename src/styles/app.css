@@ -2637,3 +2637,17 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 .stb-camp[data-here] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink-2); }
 @media (max-width: 520px) { .hud .ab-levelbar .stb-camps { gap: 4px; padding: 0 2px; } }
 @media (prefers-reduced-motion: reduce) { .stb-camp-fill { transition: none; } }
+
+/* ---------- Mission 2.4: cut or increase? ---------- */
+.base-rows { display: grid; gap: 8px; margin: 4px 0 12px; }
+.base-row { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.base-k { font-size: 0.875rem; color: var(--ink-2); min-width: 0; }
+.base-track { height: 14px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.base-track > span { display: block; height: 100%; border-radius: 4px; background: var(--c-ss); }
+.base-ask { margin-top: 10px; }
+.base-q { margin: 0 0 6px; }
+.base-wrap { margin: 12px 0 0; font-weight: 600; }
+@media (max-width: 520px) {
+  .base-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .base-track { grid-column: 1 / -1; grid-row: 2; }
+}

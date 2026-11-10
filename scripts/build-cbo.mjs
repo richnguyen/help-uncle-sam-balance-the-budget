@@ -2,6 +2,8 @@
 //  History (FY1962 to the latest actual year): OMB Historical Tables, FY2027 Budget
 //    Table 8.1 (outlays by Budget Enforcement Act category), 2.1 (receipts by source),
 //    7.1 (debt held by the public), 10.1 (GDP).
+//  Long history (FY1930 to the latest actual year): Table 1.2, receipts, outlays and the surplus or
+//    deficit as percentages of GDP (`long`).
 //  Projections: CBO's current-law baseline when its workbook is in data/raw/cbo/, otherwise
 //    OMB's estimates from the same tables (which assume the President's proposals are enacted).
 import { readFile } from 'node:fs/promises';
@@ -77,12 +79,18 @@ export async function buildCBO(addSource) {
   }
   addSource({
     id: 'omb-hist',
-    title: 'Historical Tables, Budget of the U.S. Government, Fiscal Year 2027 (Tables 1.1, 2.1, 7.1, 8.1, 10.1)',
+    title: 'Historical Tables, Budget of the U.S. Government, Fiscal Year 2027 (Tables 1.1, 1.2, 2.1, 7.1, 8.1, 10.1)',
     publisher: 'White House Office of Management and Budget',
     url: 'https://www.whitehouse.gov/omb/information-resources/budget/historical-tables/',
     retrieved,
     note: `Files: ${OMB_BASE}hist08z1_fy2027.xlsx and companions`,
   });
   console.log(`[build] long-run: history FY${history[0].fy}–FY${history.at(-1).fy}, projections FY${baseline[0]?.fy}–FY${baseline.at(-1)?.fy} (${vintage})`);
-  return { vintage, history, baseline, historySourceId: 'omb-hist', baselineSourceId, historyBy: 'OMB', ...proj };
+  // Table 1.2: receipts, outlays and the surplus or deficit as percentages of GDP, FY1930 on.
+  const long = [];
+  for (const [fy, { r, estimate }] of rowsByYear(await sheet('hist01z2'))) {
+    if (estimate || fy > history.at(-1).fy) continue;
+    long.push({ fy, rev: n(r[2]), out: n(r[3]), def: n(r[4]) });
+  }
+  return { vintage, history, baseline, long, historySourceId: 'omb-hist', baselineSourceId, historyBy: 'OMB', ...proj };
 }

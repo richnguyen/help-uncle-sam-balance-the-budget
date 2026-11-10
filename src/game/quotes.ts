@@ -24,5 +24,6 @@ export const QUOTES: Record<string, Quote> = {
   'level-roles': { text: 'The Buck Stops Here!', who: 'Harry S. Truman', where: 'The sign on his desk in the Oval Office' },
   'level-rules': { text: 'If men were angels, no government would be necessary.', who: 'James Madison', where: 'The Federalist No. 51, 1788' },
   'level-brakes': { text: 'Beware of little Expences; a small Leak will sink a great Ship.', who: 'Benjamin Franklin', where: 'The Way to Wealth, 1758' },
+  'level-yardstick': { text: 'Facts are stubborn things; and whatever may be our wishes … they cannot alter the state of facts and evidence.', who: 'John Adams', where: 'Argument in defense of the soldiers in the Boston Massacre trials, December 1770' },
   'level-10': { text: 'We cannot always build the future for our youth, but we can build our youth for the future.', who: 'Franklin D. Roosevelt', where: 'Address at the University of Pennsylvania, September 20, 1940' },
 };

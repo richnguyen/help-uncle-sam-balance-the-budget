@@ -80,9 +80,10 @@ budget adviser.
   comes from him in the middle of the top bar, and nothing pops up over the page: a step's
   Continue always moves on, and Back always goes back. (The pop-up opens under the bar, so he
   cheers from his usual place.)
-- **Three campaigns, sixteen missions.** Each campaign has one goal and ends at a budget desk:
-  (1) stop the debt from outgrowing the economy (8 missions), (2) cut the deficit to 3% of GDP
-  (5 missions), (3) balance the budget (3 missions). Missions are numbered Campaign · Mission
+- **Three campaigns, twenty-one missions.** Each campaign has one goal and ends at a budget desk:
+  (1) stop the debt from outgrowing the economy (9 missions), (2) cut the deficit to 3% of GDP
+  (7 missions), (3) balance the budget (5 missions). The top bar shows one progress bar per
+  campaign, filled by the share of its missions finished, with a ring on the current one. Missions are numbered Campaign · Mission
   ("Mission 1.5"), go from easy to hard, and unlock in order (`CAMPAIGNS` and `STOPS` in
   `src/game/levels.tsx`). Learning missions explain one idea each: his paycheck, his bills, back
   home, the structural gap, the credit card (debt), who writes the budget, and keeping his
@@ -95,7 +96,7 @@ budget adviser.
   (interest against defense, per person). Every number in them comes from the same data and CBO
   ranges the desk uses. The internal codes stay stable (`level-1` … `level-10`, the desks at 5, 8
   and 10, the new missions at 11–16), so old share links, rooms and duels keep working.
-- **The budget desks** (the final missions 1.8, 2.5 and 3.3) are the hard "wall" missions, where
+- **The budget desks** (the final missions 1.9, 2.7 and 3.5) are the hard "wall" missions, where
   the player fixes the budget with CBO-priced options. Each keeps a thin scoreboard pinned at the
   top while the player scrolls through policy cards, each linked to the closest real proposal in
   Congress. Only the first desk has a hint, to ease the jump: Uncle Sam marks one card that would
@@ -156,14 +157,33 @@ budget adviser.
     Congressional Budget Act.
   - 2.4 Rules of the road: referee six bills against a subcommittee's $50 billion limit (call a
     point of order, or let it through; 60 votes waive one in the Senate), strike what the Byrd
-    rule would strike from a reconciliation bill, the 20-hour debate cap, and a table of Senate
-    math.
+    rule would strike from a reconciliation bill, the 20-hour debate cap, cut or increase? (a
+    made-up program at $100 billion last year, $110 billion in CBO's baseline, $105 billion in the
+    bill: an increase over last year, a cut against the baseline, and CBO scores it as the cut),
+    and a table of Senate math.
   - 3.3 Brakes and the debt limit: sort what's on budget, off budget by law, or outside it; clear
     both Statutory PAYGO scorecards (5-year and 10-year) with at most two more laws or face a
     sequester; the 4% cap on a PAYGO sequester's cut to Medicare; and the debt limit today, from
     the Daily Treasury Statement.
   - Games that practice a rule with a made-up example (the agency, the bills, the reconciliation
-    bill, the PAYGO laws) say so on screen; the rules and every real number come from the report.
+    bill, the PAYGO laws, the baseline program) say so on screen; the rules and every real number
+    come from the report.
+- **3.4 Compared to what?** (`src/game/yardstick.tsx`, stable code `level-yardstick`, `n` 21): the
+  same budget gap read against two yardsticks, history (spending and revenue near their
+  1946–2000 averages, 19.0% and 17.4% of GDP) and today's needs (a budget that rises with an
+  older country, with taxes set to pay for it). The game: size the FY2019 deficit, a year with
+  no war or recession (4.6% of GDP, next to 2009 and 2020); sort seven true statements by the
+  yardstick each uses (or "both sides agree"); split the growth in spending from FY2000 to
+  FY2025 (Social Security, Medicare and Medicaid about two-thirds, interest, everything else);
+  and a bonus on how often revenue has reached 20% of GDP since 1930 (twice: 1944 and 2000). Then
+  a chart of spending and revenue since FY1930 with the 1946–2000 averages dashed, and a vote on
+  which yardstick fits best, with what each costs. Every number comes from OMB's Historical
+  Tables (Table 1.2 for FY1930 on, added to `cbo.json` as `long`; Table 8.1 for the programs).
+  The two-yardstick framing comes from Michael Linden's October 2026 paper for the Washington
+  Center for Equitable Growth, linked from the mission; the paper argues for the second
+  yardstick, and the mission teaches both and takes neither. A round on checking CBO's 2000
+  forecasts was left out: cbo.gov refuses automated downloads, so those figures couldn't be
+  checked against CBO's own reports.
 - **Guesses by slider** (`EstimateGuess` in `guesses.tsx`, the `estimate` field on a quiz): the
   number rounds (the last surplus year, the "gentle" limit, the interest bill next to defense,
   the last year every spending bill was on time, non-defense spending's share of the economy, the
@@ -390,7 +410,7 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   ends on "Try again". Newcomers are pointed to level 1 at the end, and Uncle Sam's voice starts
   downloading only after the first tap. The share stats count each step: took the challenge, met
   the goal, sent a plan back.
-- **The budget duel** (`/p/duel/?duel=…`, `#duel`, `#duels`): the final mission (3.3) shares a duel instead of a
+- **The budget duel** (`/p/duel/?duel=…`, `#duel`, `#duels`): the final mission (3.5) shares a duel instead of a
   challenge. The host's plan travels sealed in the invite (`hp`, `hlv`, `hph`, `hby`); the friend
   sees only that it exists and whether it balances the budget, plays level 10 on their own from
   a fresh plan (level 10 opens straight away, with no celebration pop-up), and taps "Reveal the

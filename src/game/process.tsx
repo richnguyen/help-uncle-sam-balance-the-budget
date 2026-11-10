@@ -3,7 +3,7 @@ import { debt } from '../data';
 import { dateLabel, moneyWords } from '../lib/format';
 import type { Level, Quiz } from './levels';
 import { OrderRound } from './rounds';
-import { ApportionRound, BalanceRound, MemoryRound, RefereeRound, StrikeRound } from './rounds2';
+import { ApportionRound, BalanceRound, BaselineRound, MemoryRound, RefereeRound, StrikeRound } from './rounds2';
 
 // Four missions on how Congress actually budgets, from the Congressional Research Service's
 // "Introduction to the Federal Budget Process" (R46240, updated January 10, 2023): how a dollar
@@ -237,17 +237,19 @@ export const PROCESS_LEVELS: Level[] = [
     links: [CRS],
   },
   {
-    id: 'level-rules', n: 19, title: 'Rules of the road', topic: 'The budget resolution, points of order, and reconciliation', difficulty: 'Medium', minutes: 6, icon: 'whistle', badge: 'Budget rules',
+    id: 'level-rules', n: 19, title: 'Rules of the road', topic: 'The budget resolution, points of order, reconciliation, and the baseline', difficulty: 'Medium', minutes: 7, icon: 'whistle', badge: 'Budget rules',
     steps: [
       { id: 'intro', label: 'Its own referee', kind: 'story', mood: 'thinking', sam: <>Congress writes its own budget rules, then referees itself. The budget resolution sets limits. Any member can blow the whistle on a bill that breaks them. And one special process lets some bills pass the Senate with a simple majority.</> },
       { id: 'game', label: 'Blow the whistle', kind: 'game', game: {
-        id: 'g-rules', title: 'Blow the whistle', goal: 'Referee bills against their spending limit, strike what doesn’t belong in a reconciliation bill, and count the hours of debate.',
+        id: 'g-rules', title: 'Blow the whistle', goal: 'Referee bills against their spending limit, strike what doesn’t belong in a reconciliation bill, count the hours of debate, and call a cut a cut.',
         rounds: [
           { kind: 'custom', id: 'ref', label: 'Point of order!', sam: <>Round one: you’re the referee. Each bill comes with its cost. If it would push the subcommittee past its limit, call a point of order. If it fits, let it through.</>,
             play: ({ done, intro }) => <RefereeRound limit={50} bills={BILLS} intro={intro} done={done} prompt="Call each bill against the $50 billion limit." /> },
           { kind: 'custom', id: 'byrd', label: 'Strike it out', sam: <>Round two. Here’s a reconciliation bill. Under the Byrd rule, anything that doesn’t change spending or revenue gets struck. Tap what goes.</>,
             play: ({ done, intro }) => <StrikeRound provisions={PROVISIONS} intro={intro} done={done} prompt="Tap each provision the Byrd rule would strike." /> },
           { kind: 'estimate', id: 'hours', label: 'The clock', sam: <>Round three. Reconciliation is fast because Senate debate on it is capped.</>, quiz: HOURS },
+          { kind: 'custom', id: 'baseline', label: 'Cut or increase?', sam: <>Round four. When CBO scores a bill, it compares it with a baseline: current law, projected forward. So is this bill a cut or an increase? That depends on what you compare it to.</>,
+            play: ({ done, intro }) => <BaselineRound last={100} baseline={110} bill={105} intro={intro} done={done} /> },
           { kind: 'choice', id: 'veto', label: 'Bonus round', sam: <>Bonus round.</>, quiz: VETO },
         ] } },
       { id: 'senate', label: 'Senate math', kind: 'facts', mood: 'thinking', sam: <>Here’s why these rules matter so much in the Senate, where most bills need 60 votes just to end debate.</>, body: () => (
@@ -269,7 +271,7 @@ export const PROCESS_LEVELS: Level[] = [
           <>Supporters say a two-year budget would leave more time for oversight and fewer last-minute stopgaps. Critics say forecasts two years out are less reliable, so Congress would likely end up passing more mid-course changes.</>
         ) } },
     ],
-    takeaways: ['The budget resolution is Congress’s own plan: it sets limits but isn’t a law.', 'A member must raise a point of order to stop a bill that breaks the limits; in the Senate, 60 votes can waive it.', 'Reconciliation bills get 20 hours of Senate debate, so a simple majority can pass them; the Byrd rule strikes provisions with no budget effect.'],
+    takeaways: ['The budget resolution is Congress’s own plan: it sets limits but isn’t a law.', 'A member must raise a point of order to stop a bill that breaks the limits; in the Senate, 60 votes can waive it.', 'Reconciliation bills get 20 hours of Senate debate, so a simple majority can pass them; the Byrd rule strikes provisions with no budget effect.', 'CBO scores every bill against its baseline, current law projected forward, so the same bill can be a cut against the baseline and an increase over last year.'],
     shareFact: 'When debate time on a budget bill runs out in the Senate, amendments can keep coming with no debate at all: the “vote-a-rama.”',
     deepDive: [{ route: 'process', label: 'How Congress budgets' }],
     sources: ['crs-r46240'],

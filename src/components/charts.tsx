@@ -154,6 +154,7 @@ export interface TSeries {
   dash?: boolean;
   width?: number;
   fillOpacity?: number;
+  /** A reference line (an average, a target): no end dot, no hover dot, not in the tooltip. */
   hideInTip?: boolean;
 }
 
@@ -339,7 +340,7 @@ export function TimeChart(p: TimeChartProps) {
             return (
               <g key={s.id}>
                 <path d={l(idx) ?? ''} fill="none" stroke={s.color} strokeWidth={s.width ?? 2} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={s.dash ? '5 4' : undefined} />
-                {last >= 0 && <circle cx={xc(last)} cy={y(s.values[last] as number)} r={4} fill={s.color} stroke="var(--surface)" strokeWidth={2} />}
+                {last >= 0 && !s.hideInTip && <circle cx={xc(last)} cy={y(s.values[last] as number)} r={4} fill={s.color} stroke="var(--surface)" strokeWidth={2} />}
                 {p.endLabels && last >= 0 && (
                   <text className="data-label" x={xc(last) + 8} y={y(s.values[last] as number)} dy="0.32em">{s.label}</text>
                 )}
@@ -347,7 +348,7 @@ export function TimeChart(p: TimeChartProps) {
             );
           })}
           {hover != null && <line className="crosshair" x1={xc(hover)} x2={xc(hover)} y1={0} y2={ih} />}
-          {hover != null && p.series.filter((s) => s.kind === 'line' && s.values[hover] != null).map((s) => (
+          {hover != null && p.series.filter((s) => s.kind === 'line' && !s.hideInTip && s.values[hover] != null).map((s) => (
             <circle key={s.id} cx={xc(hover)} cy={y(s.values[hover] as number)} r={4} fill={s.color} stroke="var(--surface)" strokeWidth={2} />
           ))}
           <rect

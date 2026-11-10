@@ -134,6 +134,7 @@ const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   'level-roles': () => <LevelPage id="level-roles" />,
   'level-rules': () => <LevelPage id="level-rules" />,
   'level-brakes': () => <LevelPage id="level-brakes" />,
+  'level-yardstick': () => <LevelPage id="level-yardstick" />,
   overview: () => <Overview />,
   spending: () => <Spending />,
   revenue: () => <Revenue />,
