@@ -1,7 +1,7 @@
 // Mission 1.4, "Your county": who paid the federal income tax where the player lives, by income,
 // next to the whole country. The county comes from the ZIP typed a step earlier (or picked here);
 // the figures are the IRS's county data, one small file per state, loaded only when needed.
-import { useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { SegBar } from '../components/charts';
 import { ChartFrame, Legend, Stat } from '../components/ui';
 import { geo } from '../data';
@@ -166,10 +166,32 @@ export function CountyTry() {
 }
 
 /**
+ * The Revenue page's version: no state of its own, so a state picker comes first. It starts with
+ * the state of the player's ZIP, or the state they last picked; browsing here doesn't change that.
+ */
+export function CountyTaxExplorer() {
+  const saved = useSavedZip();
+  const zip = visitZip || saved;
+  const zipArea = isZip(zip) ? areaForZip(zip) : null;
+  const [st, setSt] = useState(() => (zipArea?.kind === 'state' ? zipArea.abbr : load<string>('state', 'CA')));
+  const states = [...geo.states].sort((a, b) => a.name.localeCompare(b.name));
+  const stName = states.find((x) => x.abbr === st)?.name ?? st;
+  const picker = (
+    <div className="field cty-state">
+      <label htmlFor="rev-state">State</label>
+      <select id="rev-state" className="select" value={st} onChange={(e) => setSt(e.target.value)}>
+        {states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}
+      </select>
+    </div>
+  );
+  return <StateCountyTax st={st} stName={stName} lead={picker} />;
+}
+
+/**
  * The state page's version: the page picks the state; this picks a county in it, starting with
  * the player's own when their ZIP (typed this visit, or saved) is in that state.
  */
-export function StateCountyTax({ st, stName }: { st: string; stName: string }) {
+export function StateCountyTax({ st, stName, lead }: { st: string; stName: string; lead?: ReactNode }) {
   const saved = useSavedZip();
   const zip = visitZip || saved;
   const territory = TERRITORIES.has(st);
@@ -182,16 +204,19 @@ export function StateCountyTax({ st, stName }: { st: string; stName: string }) {
   const options = file ? file.counties.filter((c) => c[2] === st).sort((a, b) => a[1].localeCompare(b[1])) : [];
   return (
     <div className="county cty-page">
-      {file && options.length > 0 && (
+      {(lead || (file && options.length > 0)) && (
         <div className="cty-bar">
-          <div className="field cty-pick">
-            <label htmlFor="st-county">County</label>
-            <select id="st-county" className="select" value={chosen >= 0 ? file.counties[chosen][0] : 'state'} onChange={(e) => setPick(e.target.value)}>
-              <option value="state">All of {stName}</option>
-              {options.map((c) => <option key={c[0]} value={c[0]}>{c[1]}</option>)}
-            </select>
-          </div>
-          {mine !== undefined && chosen === mine && <span className="small muted cty-yours">Your county, from your ZIP code</span>}
+          {lead}
+          {file && options.length > 0 && (
+            <div className="field cty-pick">
+              <label htmlFor="st-county">County</label>
+              <select id="st-county" className="select" value={chosen >= 0 ? file.counties[chosen][0] : 'state'} onChange={(e) => setPick(e.target.value)}>
+                <option value="state">All of {stName}</option>
+                {options.map((c) => <option key={c[0]} value={c[0]}>{c[1]}</option>)}
+              </select>
+            </div>
+          )}
+          {file && mine !== undefined && chosen === mine && <span className="small muted cty-yours">Your county, from your ZIP code</span>}
         </div>
       )}
       <CountyResult file={file} territory={territory} chosen={chosen} st={st} stName={stName} retry={retry} />

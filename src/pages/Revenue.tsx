@@ -6,6 +6,7 @@ import { REVENUE, REVENUE_BY_ID } from '../lib/categories';
 import { money, monthShort, pct, signedPct } from '../lib/format';
 import { useUnits } from '../lib/units';
 import { UnitsToggle } from './Overview';
+import { CountyTaxExplorer } from '../game/county';
 
 export default function Revenue() {
   const years = Object.keys(budget.receiptsByFY).map(Number).sort((a, b) => a - b);
@@ -90,6 +91,12 @@ export default function Revenue() {
               series={REVENUE.map((r) => ({ id: r.id, label: r.label, color: r.color, kind: 'bar' as const, stack: 'rev', values: years.map((y) => amt(y, r.id)) }))}
             />
           </ChartFrame>
+        </div>
+      </Section>
+
+      <Section id="county-tax" title="Who pays the income tax where you live" sub="Individual income tax is the biggest source of federal revenue. Here’s who paid it in each state and county, by income, from the IRS’s figures for tax year 2023, next to the whole country. Pick a state and a county; if you’ve given the game your ZIP code, it starts with yours.">
+        <div className="card">
+          <CountyTaxExplorer />
         </div>
       </Section>
 

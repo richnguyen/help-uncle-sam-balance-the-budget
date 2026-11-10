@@ -2625,4 +2625,7 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 .cty-page { display: flex; flex-direction: column; gap: 14px; }
 .cty-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: flex-end; }
 .cty-bar .field { margin: 0; }
+.cty-state { min-width: 0; flex: 0 1 220px; }
+.cty-state .select { width: 100%; }
+@media (max-width: 520px) { .cty-state, .cty-pick { flex: 1 1 100%; max-width: none; } }
 .cty-yours { padding-bottom: 10px; }
