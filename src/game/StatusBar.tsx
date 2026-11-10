@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BrandMark } from '../components/Guilloche';
 import { BADGES, loadProgress } from '../lib/game';
 import { AwardIcon, BookIcon, CaretIcon, DocIcon, GearIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
-import { campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
+import { CAMPAIGNS, campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { FIELD_GUIDE } from './nav';
 import { ReadingSettings } from './Settings';
@@ -12,8 +12,8 @@ import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
 
 // The one bar at the top of every page, a little taller so each side holds two rows, with Uncle
-// Sam in the middle. Left: the current mission (and your title), then the track of every mission,
-// grouped by campaign; hovering it (or tapping) lists every mission to jump to, plus the field
+// Sam in the middle. Left: the current mission (and your title), then one progress bar for each of
+// the three campaigns; hovering it (or tapping) lists every mission to jump to, plus the field
 // guide. Right: stars, accomplishments and the main menu; then his voice, the glossary, sources &
 // methods, and settings. Under it all, the strip his words run across.
 
@@ -91,12 +91,16 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
                 <span className="hud-sub ab-hide-sm">{rank.name}</span>
               </div>
               <div className="hud-row">
-              <span className="stb-track" aria-label={`${done} of ${STOPS.length} missions finished`}>
-                {STOPS.map((s) => {
-                  const ok = isUnlocked(s.id, j.done, j.settings.freeRoam);
-                  return ok
-                    ? <a key={s.id} href={'#' + s.id} data-done={j.done.includes(s.id)} data-here={s.id === focus.id} data-camp-start={(s.mission === 1 && s.campaign > 1) || undefined} title={`${missionShort(s)}: ${s.title}`} aria-label={`${missionShort(s)}: ${s.title}${j.done.includes(s.id) ? ', finished' : ''}`} />
-                    : <i key={s.id} data-here={s.id === focus.id} data-camp-start={(s.mission === 1 && s.campaign > 1) || undefined} title={`${missionShort(s)}: ${s.title} (locked)`} />;
+              <span className="stb-camps" role="list" aria-label={`${done} of ${STOPS.length} missions finished`}>
+                {CAMPAIGNS.map((c) => {
+                  const n = c.missions.length;
+                  const d = c.missions.filter((id) => j.done.includes(id)).length;
+                  const label = `Campaign ${c.n}, ${c.title}: ${d} of ${n} missions finished`;
+                  return (
+                    <span key={c.n} className="stb-camp" role="listitem" data-here={focus.campaign === c.n || undefined} data-done={d === n || undefined} title={label} aria-label={label}>
+                      <span className="stb-camp-fill" style={{ width: `${(d / n) * 100}%` }} />
+                    </span>
+                  );
                 })}
               </span>
               </div>
