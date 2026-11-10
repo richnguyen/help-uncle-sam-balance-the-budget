@@ -209,9 +209,9 @@ export default function Results() {
         <Columns items={levelCols} label={`Share of players who finished each of the ${STOPS.length} missions`} />
       </ChartFrame>
 
-      <ChartFrame title="Right on the first try" sub={<>Each quick check, by mission (1.1a is mission 1.1’s first) {youDot}</>}
+      <ChartFrame title="Right on the first try" sub={<>Each question in the mission games, by mission (1.1a is mission 1.1’s first) {youDot}</>}
         table={{ columns: [{ key: 'q', label: 'Question', wrap: true }, { key: 'r', label: 'First try', align: 'r' }], rows: quizCols.map((c2) => ({ q: <><span className="muted">{c2.x}</span> {c2.question}</>, r: c2.n ? `${pct(c2.value, 0)} of ${c2.n}` : '—' })) }}>
-        <Columns items={quizCols} label="Share of players right on the first try, for each quick check" />
+        <Columns items={quizCols} label="Share of players right on the first try, for each question" />
       </ChartFrame>
 
       <Section id="level-votes" title="How everyone voted" sub={v.available ? `${v.voters} ${v.voters === 1 ? 'ballot' : 'ballots'}` : 'Your votes'}>

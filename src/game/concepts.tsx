@@ -244,7 +244,7 @@ export const CONCEPT_LEVELS: Level[] = [
 
     ],
     takeaways: ['The budget desk rates a plan by its steepest year: gentle up to 0.5% of GDP, moderate up to 1%, steep above.', 'Phasing a plan in over three years keeps its savings but softens its biggest jolt.', 'Bigger plans squeeze harder, so the size of the goal decides how gentle a plan can be.'],
-    shareFact: `Half a percent of the U.S. economy is about ${halfPct}: the most a plan can tighten in one year and still count as gentle.`,
+    shareFact: `Squeezing the economy by more than 1% of GDP in a single year counts as steep at the budget desk: about ${moneyWords(FIRST.gdp * 0.01, 0)} this year.`,
     deepDive: [{ route: 'sources', label: 'How the game scores a plan' }],
     sources: ['principle-gradual', 'cbo-multiplier-wp'],
     links: links('gradual'),
@@ -338,7 +338,7 @@ export const CONCEPT_LEVELS: Level[] = [
 
     ],
     takeaways: [`Non-defense spending Congress votes on fell from ${pct(ND_1980, 1)} of GDP in FY1980 to ${pct(ND_NOW, 1)} in FY${ND_FY}.`, 'Cutting public investment slows the economy now and leaves less to grow on later.', `The transportation-and-education card saves ${moneyWords(opt('cut-transport-education-grants').savings10 * 1e9, 0)} over ten years, at the highest short-run cost of any cut.`],
-    shareFact: `Federal non-defense spending that Congress votes on each year fell from ${pct(ND_1980, 1)} of the economy in 1980 to ${pct(ND_NOW, 1)} today.`,
+    shareFact: 'CBO estimates that federal investment in roads, research, and schools earns about 5% a year on average, half the return on private investment.',
     deepDive: [{ route: 'spending', label: 'Where it goes' }],
     sources: ['omb-hist', 'cbo-multiplier-wp', 'cbo-fed-investment'],
   },
