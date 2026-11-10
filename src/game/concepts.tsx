@@ -7,6 +7,7 @@ import { dollars, money, moneyWords, pct } from '../lib/format';
 import { MULT, type MultClass, mid, optionPath } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import type { Level } from './levels';
+import { Dial, WaitSim } from './sims';
 
 // The six concept missions that come before each campaign's budget desk: how a policy hits the
 // economy, how fast is too fast, who a change reaches, what grows the economy, why public
@@ -97,6 +98,8 @@ function PhaseDemo() {
         <Seg label="How big a plan" value={size} onChange={setSize} options={[{ value: '1', label: 'Small' }, { value: '2', label: 'Bigger' }, { value: '3', label: 'Biggest' }]} />
         <label className="switch"><input type="checkbox" checked={gradual} onChange={(e) => setGradual(e.target.checked)} /> Phase in over 3 years</label>
       </div>
+      <Dial value={peak * 100} max={2.5} label="The steepest year’s squeeze on the economy" readout={`${(peak * 100).toFixed(1)}% of GDP`}
+        zones={[{ to: 0.5, label: 'gentle', tone: 'good' }, { to: 1, label: 'moderate', tone: 'warning' }, { to: 2.5, label: 'steep', tone: 'critical' }]} note="the steepest year" />
       <figure className="phase" aria-label={`Each year's new tightening, as a share of GDP. Steepest year: ${pct(peak, 1)}, ${r}.`}>
         <div className="phase-bands" aria-hidden="true">
           <span className="phase-band" data-b="steep" style={{ bottom: `${(0.01 / max) * 100}%`, top: 0 }}><em>Steep</em></span>
@@ -160,16 +163,6 @@ function InvestmentChart() {
   );
 }
 
-// ---------- 7. The interest bill ahead ----------
-function InterestAhead() {
-  return (
-    <ChartFrame title="Interest against defense, in the years ahead" sub={`The ${cbo.projShort.toLowerCase()} for FY${FIRST.fy}–FY${LAST.fy}`} legend={<Legend items={[{ label: 'Net interest', color: 'var(--c-interest)', kind: 'line' }, { label: 'Defense', color: 'var(--c-defense)', kind: 'line' }]} />}>
-      <TimeChart label="Net interest and defense spending, projected" x={base.map((r) => r.fy)} height={200} yMin={0} yFormat={(v) => `$${(v / 1e12).toFixed(1)}T`} tipFormat={(v) => money(v)} tipTitle={(y) => `FY${y}`} endLabels
-        series={[{ id: 'i', label: 'Net interest', color: 'var(--c-interest)', kind: 'line', values: base.map((r) => r.netInterest) }, { id: 'd', label: 'Defense', color: 'var(--c-defense)', kind: 'line', values: base.map((r) => r.defense) }]} />
-    </ChartFrame>
-  );
-}
-
 const link = (id: string) => { const p = principle(id); return p ? <> <a href={p.source.url} target="_blank" rel="noreferrer">{p.source.title.split(',')[0]}</a></> : null; };
 const links = (...ids: string[]) => ids.map((id) => principle(id)).filter(Boolean).map((p) => ({ title: p!.source.title, url: p!.source.url }));
 const steady = <span className="small muted">CBO’s ranges come from its review of the research; the game uses the middle of each.</span>;
@@ -211,9 +204,10 @@ export const CONCEPT_LEVELS: Level[] = [
       { id: 'intro', label: 'Speed', kind: 'story', mood: 'happy', sam: <>The other half of the story is speed. Squeeze the same amount all at once, and the economy feels a jolt. Spread it over a few years, and it hardly notices.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
         id: 'cdq1', guess: true, question: 'At the budget desk, a plan counts as gentle when no single year tightens by more than…',
-        choices: ['Half a percent of GDP', '2% of GDP', '5% of GDP'], correct: 0,
+        choices: ['half a percent of GDP'], correct: 0,
+        estimate: { min: 0, max: 5, step: 0.1, start: 2.5, answer: 0.5, spot: 0.1, close: 0.4, format: (v) => `${v.toFixed(1)}% of GDP`, diff: (d) => `${d.toFixed(1)} points`, prompt: 'Drag to the limit' },
         explain: <>Half a percent of GDP, about {halfPct} this year, is gentle. Up to 1% is moderate; more than that is steep. The steepest year counts, because that’s the jolt the economy has to absorb.</> } },
-      { id: 'demo', label: 'Try the pace', kind: 'try', mood: 'thinking', sam: <>This plan limits deductions for high earners and trims defense. Make it bigger, then switch on the phase-in, and watch the steepest bar.</>, body: () => <PhaseDemo /> },
+      { id: 'demo', label: 'Try the pace', kind: 'try', mood: 'thinking', sam: <>This plan limits deductions for high earners and trims defense. Make it bigger, then switch on the phase-in, and watch the needle.</>, body: () => <PhaseDemo /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'cdq2', question: 'Two plans save the same total over ten years. Which is easier on the economy?',
         choices: ['The one that starts in full right away', 'The one phased in over three years', 'There’s no difference'], correct: 1,
@@ -314,9 +308,10 @@ export const CONCEPT_LEVELS: Level[] = [
       { id: 'intro', label: 'Later', kind: 'story', mood: 'worried', sam: <>Every dollar I borrow today, somebody pays back later, with interest. Often it’s folks too young to vote, or not even born yet.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
         id: 'cfuq1', guess: true, question: `By FY${LAST.fy}, the projection puts the government’s net interest bill at about…`,
-        choices: [moneyWords(LAST.netInterest * 0.55, 1), moneyWords(LAST.netInterest, 1), moneyWords(LAST.netInterest * 1.8, 1)], correct: 1,
+        choices: [moneyWords(LAST.netInterest, 1)], correct: 0,
+        estimate: { min: 400e9, max: 2500e9, step: 10e9, start: Math.round(FIRST.netInterest / 1e10) * 1e10, answer: LAST.netInterest, spot: 0.05, close: 0.15, relative: true, format: (v) => money(v), diff: (d) => money(d), prompt: 'Drag to the interest bill', marks: [{ at: FIRST.netInterest, label: `FY${FIRST.fy}` }] },
         explain: <>About {money(LAST.netInterest)} in FY{LAST.fy}, up from {money(FIRST.netInterest)} in FY{FIRST.fy}: {LAST.netInterest > LAST.defense ? 'more than the whole defense budget' : 'close to the whole defense budget'}.</> } },
-      { id: 'chart', label: 'The bill ahead', kind: 'facts', mood: 'worried', sam: <>Here’s interest against defense in the years ahead. Interest buys nothing new. It’s the price of what was already spent.</>, body: () => <InterestAhead /> },
+      { id: 'chart', label: 'Wait and see', kind: 'try', mood: 'worried', sam: <>Now let’s wait and see. Slide the year the fix starts, and watch how much bigger it gets each year I wait. Interest piles up, and fewer years are left to do the job.</>, body: () => <WaitSim /> },
       { id: 'share', label: 'Your share', kind: 'facts', mood: 'thinking', sam: <>Split that interest bill across everyone in the country, and it comes to about {dollars(interestPerPerson)} a person, every year. Kids included.</>, body: () => (
         <div className="concept-result"><span className="stat-label">Net interest in FY{LAST.fy}, per person</span><strong className="concept-big">{dollars(interestPerPerson)} a year</strong><span className="small muted">{money(LAST.netInterest)} ÷ {(POP / 1e6).toFixed(0)} million people (today’s population). The debt held by the public is projected at {pct(LAST.debtPublic / LAST.gdp, 0)} of GDP that year.</span></div>
       ) },

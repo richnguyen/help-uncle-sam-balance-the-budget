@@ -119,6 +119,28 @@ budget adviser.
   tries; stars count only those (three for right the first time, two for right on the second try).
   Each chapter ends with one vote on a real policy choice. Level 7 lists the major laws, and
   tapping one explains what it did and why its official estimate came out so large.
+- **Guesses by slider** (`EstimateCard` in `LevelPage.tsx`, the `estimate` field on a quiz): in
+  missions 1.4, 1.6, 2.1, 3.1 and 3.2, the guess is a number to drag to (the last surplus year,
+  the "gentle" limit, the interest bill next to defense, the share of benefits still payable,
+  interest in FY2031). Lock it in, and the real number appears on the track with how far off you
+  were: spot on, close, or not this time. Guesses still never count toward stars, and the guess
+  is remembered in this browser.
+- **Simulations: move a cause, watch the effect** (`src/game/sims.tsx`), each from the game's own
+  official numbers and saying where it simplifies:
+  - 1.4, the revenue tank: tap or drag each bill into a tank the size of a year's revenue, the
+    ones on autopilot first; mandatory programs and interest nearly fill it, and the rest spills
+    over as the deficit (OMB Historical Tables).
+  - 1.6, a speedometer on the pace demo: the steepest year's squeeze swings the needle across
+    gentle, moderate and steep.
+  - 2.1, the interest rate: slide the average rate from 1% to 7% and watch the interest bill
+    (debt held by the public times the rate) pass defense and Medicare; it marks the rate where
+    interest overtakes defense, and the actual rate's history sits underneath.
+  - 3.1, close Social Security's 75-year gap: a payroll-tax slider and a benefit-cut slider fill
+    a gauge, with each fix alone from the 2026 Trustees Report (16.65% or a 25.2% cut) and a switch
+    for waiting until 2034 (17.30% or 28.5%); mixing the two is a straight line between them.
+  - 3.2, wait and see: pick the year the fix starts, and the game's budget engine works out the
+    same yearly savings needed from then on to keep the debt from outgrowing the economy by FY2031,
+    growing with every year of waiting, plus the extra interest.
 - **Uncle Sam talks and reacts.** His lines are pre-recorded with Kokoro, an open-weight
   neural voice model, so he sounds natural and the same on every device; his pace follows his
   mood. Visitors can switch to one of their device's voices in settings. His face,

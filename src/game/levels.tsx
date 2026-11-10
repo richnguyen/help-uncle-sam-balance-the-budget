@@ -12,14 +12,25 @@ import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
 import { QUOTES, type Quote } from './quotes';
 import { CONCEPT_LEVELS } from './concepts';
+import { InterestRateSim, RevenueTank, SsMixer } from './sims';
 
 // ---------------------------------------------------------------------------------------------
 // The seven chapter levels. Every number Uncle Sam says, and every quiz answer, is computed from
 // the same official data the rest of the site uses.
 // ---------------------------------------------------------------------------------------------
 
-/** `guess`: asked before the step that shows the answer. One pick, then the answer; it never counts toward stars. */
-export interface Quiz { id: string; question: string; choices: string[]; correct: number; explain: ReactNode; guess?: boolean }
+/**
+ * A guess made by dragging a slider instead of picking: the player sets a number, locks it in, and
+ * sees the real one and how close they came. `spot` and `close` are how near counts as spot on and
+ * as close (in the slider's units, or as a share of the answer when `relative`).
+ */
+export interface Estimate { min: number; max: number; step: number; start: number; answer: number; spot: number; close: number; relative?: boolean; format: (v: number) => string; diff: (d: number) => string; prompt: string; marks?: { at: number; label: string }[] }
+/**
+ * `guess`: asked before the step that shows the answer. One pick (or, with `estimate`, one slider
+ * setting), then the answer; it never counts toward stars. For an estimate, `choices` holds just the
+ * answer, written out, so Uncle Sam can say it.
+ */
+export interface Quiz { id: string; question: string; choices: string[]; correct: number; explain: ReactNode; guess?: boolean; estimate?: Estimate }
 export type VoteSpec =
   | { kind: 'option'; optionId: string }
   | { kind: 'issue'; id: string; question: string; context: ReactNode; choices: { value: string; label: string }[] };
@@ -148,26 +159,7 @@ function StateTry() {
   );
 }
 
-function GapChart() {
-  const rows = SERIES;
-  const projIdx = rows.findIndex((r) => !r.actual);
-  const mi = rows.map((r) => (r.mandatory + r.netInterest) / r.gdp);
-  const disc = rows.map((r) => r.discretionary / r.gdp);
-  const rev = rows.map((r) => r.revenues / r.gdp);
-  return (
-    <ChartFrame title="Autopilot spending vs. all revenue, share of the economy" legend={<Legend items={[{ label: 'Mandatory programs + interest', color: 'var(--c-emph)' }, { label: 'What Congress votes on yearly', color: 'var(--c-deemph)' }, { label: 'Revenue', color: 'var(--c-revenue)', kind: 'line' }]} />} sourceIds={['omb-hist']}>
-      <TimeChart label="Mandatory spending plus interest, discretionary spending, and revenue as a share of GDP" x={rows.map((r) => r.fy)} height={260} yFormat={(v) => `${Math.round(v * 100)}%`} tipFormat={(v) => pct(v)} tipTitle={(y, i) => `FY${y}${rows[i].actual ? '' : ' (estimate)'}`} projectFrom={projIdx > 0 ? projIdx : undefined} projectLabel="Estimate"
-        series={[
-          { id: 'mi', label: 'Mandatory + interest', color: 'var(--c-emph)', kind: 'area', stack: 's', values: mi, fillOpacity: 0.9 },
-          { id: 'd', label: 'Discretionary', color: 'var(--c-deemph)', kind: 'area', stack: 's', values: disc, fillOpacity: 1 },
-          { id: 'r', label: 'Revenue', color: 'var(--c-revenue)', kind: 'line', values: rev, width: 2.5 },
-        ]} />
-    </ChartFrame>
-  );
-}
-
 // ---------- levels ----------
-const dSurplusChoices = [LAST_SURPLUS, 2019, 1985].sort((a, b) => (a === 2019 ? -1 : b === 2019 ? 1 : 0));
 const lawReduce = laws.find((l) => l.id === 'fra-2023') ?? laws.find((l) => l.deficitEffect < 0)!;
 const lawUp = laws.filter((l) => l.deficitEffect > 0).sort((a, b) => b.deficitEffect - a.deficitEffect);
 const lawChoices = [lawUp.find((l) => l.id === 'cares-act-2020') ?? lawUp[0], lawReduce, lawUp.find((l) => l.id === 'tcja-2017') ?? lawUp[1]];
@@ -260,9 +252,10 @@ const CHAPTERS: Level[] = [
       { id: 'intro', label: 'The problem', kind: 'story', mood: 'worried', sam: <>Here’s my real problem. It isn’t one bad month. Last year the gap was {moneyWords(T.deficit)}, and it’s been a long time since I took in more than I spent.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
         id: 'l4q1', guess: true, question: 'When did Uncle Sam last take in more than he spent?',
-        choices: dSurplusChoices.map((y) => `FY${y}`), correct: dSurplusChoices.indexOf(LAST_SURPLUS),
+        choices: [`FY${LAST_SURPLUS}`], correct: 0,
+        estimate: { min: 1962, max: FY, step: 1, start: 1985, answer: LAST_SURPLUS, spot: 0, close: 3, format: (v) => `FY${v}`, diff: (d) => `${d} year${d === 1 ? '' : 's'}`, prompt: 'Drag to the year' },
         explain: <>FY{LAST_SURPLUS} was the last surplus. Deficits jumped in the 2008–09 financial crisis and the pandemic, and have stayed large since.</> } },
-      { id: 'gap', label: 'The gap', kind: 'facts', mood: 'worried', sam: <>The dark band is spending that runs on autopilot, plus interest. The light band on top is what Congress votes on each year. The line is everything I take in. Lately the line barely clears the dark band.</>, body: () => <GapChart /> },
+      { id: 'gap', label: 'The gap', kind: 'try', mood: 'worried', sam: <>Think of everything I take in as a tank. Pour in my bills, the ones on autopilot first, then interest, then what Congress votes on each year. Watch what happens when it fills up.</>, body: () => <RevenueTank /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'l4q2', question: `In FY${BUCKET.y.fy}, how much of all revenue did mandatory programs plus interest use up?`,
         choices: ['About a quarter', 'About half', `About ${Math.round(MI_SHARE * 100)}%`], correct: 2,
@@ -283,8 +276,9 @@ const CHAPTERS: Level[] = [
     steps: [
       { id: 'intro', label: 'The balance', kind: 'story', mood: 'worried', sam: <>All that borrowing goes on the card. My total debt was {money(D.total)} on {dateLabel(D.date)}. That’s about {dollars(D.total / HH)} per household.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l5q1', guess: true, question: `Which cost more in FY${FY}: interest on the debt or national defense?`,
-        choices: ['National defense', 'Interest on the debt', 'About the same'], correct: interestBeatsDefense ? 1 : 0,
+        id: 'l5q1', guess: true, question: `National defense cost ${money(cat('defense'))} in FY${FY}. What did interest on the debt cost?`,
+        choices: [money(cat('interest'))], correct: 0,
+        estimate: { min: 200e9, max: 2000e9, step: 10e9, start: Math.round(cat('defense') / 1e10) * 1e10, answer: cat('interest'), spot: 0.05, close: 0.15, relative: true, format: (v) => money(v), diff: (d) => money(d), prompt: 'Drag to the interest bill', marks: [{ at: cat('defense'), label: 'defense' }] },
         explain: <>Net interest was {money(cat('interest'))} and national defense was {money(cat('defense'))} in FY{FY}.</> } },
       { id: 'who', label: 'Who I owe', kind: 'facts', mood: 'thinking', sam: <>Most of it I owe to investors, banks, other countries, and the Federal Reserve. The rest I owe to my own trust funds, like Social Security.</>,
         body: () => (
@@ -297,16 +291,8 @@ const CHAPTERS: Level[] = [
             </ChartFrame>
           </div>
         ) },
-      { id: 'rates', label: 'The interest rate', kind: 'facts', mood: 'worried', sam: <>Interest rates matter too. A few years ago I was paying very little. Now my old cheap loans are being replaced by new ones at higher rates.</>,
-        body: () => {
-          const rates = debt.rates.filter((r) => r.date >= '2005-01-01');
-          return (
-            <ChartFrame title="Average interest rate on Uncle Sam’s marketable debt" sourceIds={['rates']}>
-              <TimeChart label="Average interest rate on marketable Treasury debt" x={rates.map((r) => r.date)} xLabel={(d) => String(d).slice(0, 4)} xTicks={rates.map((r, i) => (r.date.slice(5, 7) === '01' && Number(r.date.slice(0, 4)) % 5 === 0 ? i : -1)).filter((i) => i >= 0)} height={200} yFormat={(v) => `${v.toFixed(0)}%`} tipFormat={(v) => `${v.toFixed(2)}%`} tipTitle={(d) => String(d).slice(0, 7)}
-                series={[{ id: 'r', label: 'Average rate', color: 'var(--c-interest)', kind: 'line', values: rates.map((r) => r.marketable) }]} />
-            </ChartFrame>
-          );
-        } },
+      { id: 'rates', label: 'The interest rate', kind: 'try', mood: 'worried', sam: <>Interest rates matter too. Slide the rate and watch my interest bill. A few years ago I paid very little; now my old cheap loans are being replaced by new ones at higher rates.</>,
+        body: () => <InterestRateSim defense={cat('defense')} medicare={cat('medicare')} fy={FY} /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'l5q2', question: 'Why is Uncle Sam’s interest bill climbing?',
         choices: ['The Treasury raised the rate on bonds it already sold', 'Old low-rate debt is being replaced with new debt at higher rates, and the debt keeps growing', 'Interest depends only on this year’s deficit'], correct: 1,
@@ -362,26 +348,21 @@ const CHAPTERS: Level[] = [
     steps: [
       { id: 'intro', label: 'A promise', kind: 'story', mood: 'proud', sam: <>I made a promise to the folks who worked their whole lives. Social Security pays about {ssa.beneficiaries ? people(ssa.beneficiaries.total) : '71 million'} people. But its savings are running down.</> },
       { id: 'q1', label: 'Take a guess', kind: 'quiz', quiz: {
-        id: 'l7q1', guess: true, question: `What happens when the retirement fund runs out in late ${ssa.depletion.oasi.year}?`,
-        choices: ['Benefits stop completely', `Benefits are cut automatically to what incoming taxes can pay, about ${ssa.depletion.oasi.payablePct}%`, 'Nothing changes; the Treasury covers the difference'], correct: 1,
+        id: 'l7q1', guess: true, question: `When the retirement fund runs out in late ${ssa.depletion.oasi.year}, what share of scheduled benefits can still be paid?`,
+        choices: [`about ${ssa.depletion.oasi.payablePct}%`], correct: 0,
+        estimate: { min: 0, max: 100, step: 1, start: 50, answer: ssa.depletion.oasi.payablePct, spot: 2, close: 8, format: (v) => `${v}%`, diff: (d) => `${d} points`, prompt: 'Drag to the share still paid' },
         explain: <>Benefits don’t stop. By law they can be paid only from incoming taxes, which would cover about {ssa.depletion.oasi.payablePct}% of scheduled retirement and survivor benefits, unless Congress acts first.</> } },
-      { id: 'fund', label: 'The savings', kind: 'facts', mood: 'worried', sam: <>Since FY{ssa.oasdi.find((r) => r.year >= 2015 && r.cost > r.income)?.year ?? 2021} the program has paid out more than it takes in each year, so the trust fund is shrinking.</>,
-        body: () => {
-          const h = ssa.oasdi;
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <ChartFrame title="Social Security trust fund reserves, end of each fiscal year" legend={<Legend items={[{ label: 'Retirement and survivors (OASI)', color: 'var(--c-ss)' }, { label: 'Disability (DI)', color: 'var(--c-veterans)' }]} />} sourceIds={['mts8']}>
-                <TimeChart label="Trust fund reserves" x={h.map((r) => r.year)} height={200} tipTitle={(y) => `FY${y}`}
-                  series={[{ id: 'o', label: 'Retirement (OASI)', color: 'var(--c-ss)', kind: 'bar', stack: 'r', values: ssa.oasi.map((r) => r.reserves) }, { id: 'd', label: 'Disability (DI)', color: 'var(--c-veterans)', kind: 'bar', stack: 'r', values: ssa.di.map((r) => r.reserves) }]} />
-              </ChartFrame>
-              <div className="grid-3" style={{ gap: 12 }}>
-                <Stat label="Retirement fund runs out" value={`Late ${ssa.depletion.oasi.year}`} note={`then ${ssa.depletion.oasi.payablePct}% of benefits payable`} />
-                <Stat label="Combined funds run out" value={`${ssa.depletion.oasdi.year}`} note={`then ${ssa.depletion.oasdi.payablePct}% payable`} />
-                {ssa.depletion.hi && <Stat label="Medicare hospital fund" value={`${ssa.depletion.hi.year}`} note={`then ${ssa.depletion.hi.payablePct}% payable`} />}
-              </div>
+      { id: 'fund', label: 'The savings', kind: 'try', mood: 'worried', sam: <>Since FY{ssa.oasdi.find((r) => r.year >= 2015 && r.cost > r.income)?.year ?? 2021} I’ve paid out more than I take in, so the fund is shrinking. The trustees name two fixes: a higher payroll tax, or smaller checks. Mix them yourself.</>,
+        body: () => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="grid-3" style={{ gap: 12 }}>
+              <Stat label="Retirement fund runs out" value={`Late ${ssa.depletion.oasi.year}`} note={`then ${ssa.depletion.oasi.payablePct}% of benefits payable`} />
+              <Stat label="Combined funds run out" value={`${ssa.depletion.oasdi.year}`} note={`then ${ssa.depletion.oasdi.payablePct}% payable`} />
+              {ssa.depletion.hi && <Stat label="Medicare hospital fund" value={`${ssa.depletion.hi.year}`} note={`then ${ssa.depletion.hi.payablePct}% payable`} />}
             </div>
-          );
-        } },
+            <SsMixer />
+          </div>
+        ) },
       { id: 'you', label: 'What it means for you', kind: 'try', mood: 'thinking', sam: <>Let’s make it personal. What year were you born?</>, body: () => <AgeTry /> },
       { id: 'q2', label: 'Quick check', kind: 'quiz', quiz: {
         id: 'l7q2', question: 'According to the trustees, which single change made now would close Social Security’s 75-year gap?',

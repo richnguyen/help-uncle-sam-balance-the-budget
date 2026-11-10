@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { load, save } from '../lib/storage';
 import { money, pct } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
 import { type Choice, useVotes } from '../lib/votes';
@@ -185,7 +186,68 @@ function StepBody({ step }: { step: Step }) {
   );
 }
 
+/**
+ * A guess by slider: set a number, lock it in, then see the real one slide into place and how
+ * close you came. It never counts toward stars; the guess is kept in this browser to show again.
+ */
+function EstimateCard({ quiz }: { quiz: Quiz }) {
+  const e = quiz.estimate!;
+  const j = useJourney();
+  const rec = j.quiz[quiz.id];
+  const key = 'guess:' + quiz.id;
+  const [value, setValue] = useState<number>(() => load<number | null>(key, null) ?? e.start);
+  const [locked, setLocked] = useState<boolean>(() => !!rec && load<number | null>(key, null) != null);
+  const buzz = useHaptics();
+  const off = Math.abs(value - e.answer);
+  const rel = e.relative ? off / Math.abs(e.answer) : off;
+  const grade = rel <= e.spot ? 'spot' : rel <= e.close ? 'close' : 'far';
+  const lock = () => {
+    if (locked) return;
+    setLocked(true);
+    save(key, value);
+    buzz(grade === 'far' ? 'wrong' : 'right');
+    j.answer(quiz.id, grade !== 'far');
+  };
+  // Where a value sits along the slider: the thumb travels between half its width from each end.
+  const at = (v: number) => `calc(9px + (100% - 18px) * ${((v - e.min) / (e.max - e.min)).toFixed(4)})`;
+  const Q = QUIZ_LINES;
+  const ex = plain(quiz.explain);
+  const good = grade !== 'far';
+  const line = locked ? (good ? Q.guessRight : Q.guessReveal) : Q.guessPrompt;
+  const say = locked ? (good ? `${Q.guessRight} ${ex}` : `${Q.guessRevealSay(quiz.choices[0])} ${ex}`) : Q.guessAsk(quiz.question);
+  const howFar = `${e.diff(off)} off`;
+  return (
+    <div className="quiz">
+      <SamSays mood={locked ? (good ? 'proud' : 'surprised') : 'happy'} compact auto say={say}>{line}</SamSays>
+      <div className="card quiz-card estimate" role="group" aria-labelledby={'q-' + quiz.id} data-locked={locked || undefined} data-grade={locked ? grade : undefined}>
+        <h2 className="quiz-q" id={'q-' + quiz.id}>{quiz.question}</h2>
+        <div className="estimate-value num" aria-hidden="true">{e.format(value)}</div>
+        <div className="estimate-track">
+          <input type="range" min={e.min} max={e.max} step={e.step} value={value} disabled={locked} aria-label={e.prompt} aria-valuetext={e.format(value)}
+            onChange={(ev) => setValue(Number(ev.target.value))} onKeyDown={(ev) => { if (ev.key === 'Enter') { ev.preventDefault(); lock(); } }} />
+          {e.marks?.map((m) => <span key={m.label} className="estimate-mark" style={{ left: at(m.at) }}><i>{m.label}</i></span>)}
+          {locked && <span className="estimate-answer" style={{ left: at(e.answer) }} aria-hidden="true"><i>{e.format(e.answer)}</i></span>}
+        </div>
+        <div className="estimate-scale" aria-hidden="true"><span>{e.format(e.min)}</span><span>{e.format(e.max)}</span></div>
+        {!locked
+          ? <button type="button" className="btn btn-primary estimate-lock" onClick={lock}>Lock in {e.format(value)}</button>
+          : (
+            <div className="quiz-feedback" data-ok={good} role="status">
+              <strong>{grade === 'spot' ? 'Spot on!' : grade === 'close' ? 'Close!' : 'Not this time.'}</strong>{' '}
+              You said {e.format(value)}; it’s {e.format(e.answer)}{grade === 'spot' ? '' : ` (${howFar})`}. {quiz.explain}
+            </div>
+          )}
+      </div>
+    </div>
+  );
+}
+
 function QuizCard({ quiz }: { quiz: Quiz }) {
+  if (quiz.estimate) return <EstimateCard quiz={quiz} />;
+  return <ChoiceCard quiz={quiz} />;
+}
+
+function ChoiceCard({ quiz }: { quiz: Quiz }) {
   const j = useJourney();
   const rec = j.quiz[quiz.id];
   const [picked, setPicked] = useState<number | null>(rec?.correct ? quiz.correct : null);
