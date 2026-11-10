@@ -12,6 +12,7 @@ import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
 import { QUOTES, type Quote } from './quotes';
 import { CONCEPT_LEVELS } from './concepts';
+import { PROCESS_LEVELS } from './process';
 import { BUDGET_CALENDAR, Dial, InterestRateSim, OctoberChoice, RevenueTank, SsMixer } from './sims';
 import type { GameSpec } from './minigame';
 import { HigherLowerRound, OrderRound, PairsRound } from './rounds';
@@ -52,7 +53,7 @@ export interface Step {
 }
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Super hard';
-export type IconId = 'paycheck' | 'bills' | 'home' | 'gap' | 'gauge' | 'card' | 'capitol' | 'target' | 'shield' | 'scale' | 'wave' | 'meter' | 'hands' | 'sprout' | 'bridge' | 'hourglass';
+export type IconId = 'paycheck' | 'bills' | 'home' | 'gap' | 'gauge' | 'card' | 'capitol' | 'target' | 'shield' | 'scale' | 'wave' | 'meter' | 'hands' | 'sprout' | 'bridge' | 'hourglass' | 'flow' | 'people' | 'whistle' | 'brake';
 
 export interface Level {
   id: string;
@@ -440,8 +441,8 @@ const CHAPTERS: Level[] = [
     links: [{ title: 'The 2026 Social Security Trustees Report (full report, PDF)', url: 'https://www.ssa.gov/oact/TR/2026/tr2026.pdf' }],
   },
 ];
-/** Every chapter mission: the original seven, then the concept missions before each budget desk. */
-export const LEVELS: Level[] = [...CHAPTERS, ...CONCEPT_LEVELS];
+/** Every chapter mission: the original seven, the concept missions before each budget desk, and the budget-process missions. */
+export const LEVELS: Level[] = [...CHAPTERS, ...CONCEPT_LEVELS, ...PROCESS_LEVELS];
 
 /** The budget desk levels: the hard "wall" levels where the player fixes the budget with real options. */
 /** `hint`: the first desk level offers a hint (Uncle Sam points to one card, or to the next star). */
@@ -459,9 +460,9 @@ export const DESK: DeskLevel[] = [
  */
 export interface Campaign { n: 1 | 2 | 3; goal: 'stabilize' | 'deficit3' | 'balance'; title: string; blurb: string; missions: string[] }
 export const CAMPAIGNS: Campaign[] = [
-  { n: 1, goal: 'stabilize', title: 'Stop the debt from outgrowing the economy', blurb: 'Learn where the money comes from and goes, how a change hits the economy, and who it reaches. Then steady the debt.', missions: ['level-1', 'level-2', 'level-3', 'level-4', 'level-economy', 'level-drag', 'level-fairness', 'level-5'] },
-  { n: 2, goal: 'deficit3', title: 'Cut the deficit to 3% of GDP', blurb: 'Learn about the debt, how Congress budgets, what grows the economy, and why public investment is different. Then cut the deficit to a level the country can keep up.', missions: ['level-6', 'level-7', 'level-growth', 'level-investment', 'level-8'] },
-  { n: 3, goal: 'balance', title: 'Balance the budget', blurb: 'Learn what Social Security’s future and the interest bill ask of the next generation. Then try to balance the books.', missions: ['level-9', 'level-future', 'level-10'] },
+  { n: 1, goal: 'stabilize', title: 'Stop the debt from outgrowing the economy', blurb: 'Learn where the money comes from and goes, how it gets spent, how a change hits the economy, and who it reaches. Then steady the debt.', missions: ['level-1', 'level-2', 'level-spend', 'level-3', 'level-4', 'level-economy', 'level-drag', 'level-fairness', 'level-5'] },
+  { n: 2, goal: 'deficit3', title: 'Cut the deficit to 3% of GDP', blurb: 'Learn about the debt, who does what, how Congress budgets and the rules it plays by, what grows the economy, and why public investment is different. Then cut the deficit to a level the country can keep up.', missions: ['level-6', 'level-roles', 'level-7', 'level-rules', 'level-growth', 'level-investment', 'level-8'] },
+  { n: 3, goal: 'balance', title: 'Balance the budget', blurb: 'Learn what Social Security’s future and the interest bill ask of the next generation, and the brakes built into the budget. Then try to balance the books.', missions: ['level-9', 'level-future', 'level-brakes', 'level-10'] },
 ];
 
 /** Every mission in play order, chapters and budget desk alike. */

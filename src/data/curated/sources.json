@@ -127,5 +127,12 @@
     "publisher": "Congressional Budget Office",
     "url": "https://www.cbo.gov/publication/51628",
     "note": "CBO's central estimate that federal nondefense investment (infrastructure, education, and research) earns an average return of about 5 percent, half the typical return on private investment. Mission 2.4's bridge uses it as a rule of thumb."
+  },
+  {
+    "id": "crs-r46240",
+    "title": "Introduction to the Federal Budget Process (R46240), updated January 10, 2023",
+    "publisher": "Congressional Research Service",
+    "url": "https://www.congress.gov/crs-product/R46240",
+    "note": "The basis for missions 1.3 (Paying the bills), 2.2 (Who's who), 2.4 (Rules of the road) and 3.3 (Brakes and the debt limit): budget authority, obligations and outlays; the Antideficiency Act; the President's budget and the congressional timetable; the budget resolution, points of order and reconciliation; Statutory PAYGO, sequestration, the debt limit and what is on or off budget. Games that practice a rule with a made-up example say so."
   }
 ]

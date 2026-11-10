@@ -2535,3 +2535,57 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   .game-goal { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .game-banner { animation: none; } .game-meter > span { transition: none; } }
+
+/* ---------- budget-process rounds: memory, referee, strike, manage the money, PAYGO ---------- */
+.practice { margin: 0; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--line); background: var(--surface-2); color: var(--ink-2); align-self: stretch; }
+.mem-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-self: stretch; }
+.mem-grid[data-side="what"] { margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.mem-card { min-height: 76px; padding: 8px; border-radius: 10px; border: 2px solid var(--line); font: inherit; font-size: 0.8125rem; line-height: 1.25; cursor: pointer; color: var(--ink); transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease; }
+.mem-card[data-side="who"] { background: color-mix(in srgb, var(--c-ss) 14%, var(--surface)); }
+.mem-card[data-side="what"] { background: color-mix(in srgb, var(--gold) 16%, var(--surface)); }
+.mem-card:not([data-up]) .mem-face { font-family: var(--font-display); font-size: 1.1rem; color: var(--ink-2); }
+.mem-card[data-up] { background: var(--surface); border-color: var(--ink-2); transform: rotateY(0); animation: mem-flip 0.25s ease; }
+.mem-card[data-matched] { border-color: color-mix(in srgb, var(--good) 65%, var(--line)); background: color-mix(in srgb, var(--good) 8%, var(--surface)); cursor: default; }
+.mem-card:disabled { opacity: 1; }
+@keyframes mem-flip { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
+.ref-meter { position: relative; height: 30px; border-radius: 8px; background: var(--surface-2); overflow: hidden; align-self: stretch; }
+.ref-fill { position: absolute; left: 0; top: 0; bottom: 0; background: color-mix(in srgb, var(--c-emph) 60%, var(--surface)); transition: width 0.35s ease; }
+.ref-fill[data-over] { background: color-mix(in srgb, var(--critical) 55%, var(--surface)); }
+.ref-limit-label { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 10px; color: var(--ink); font-weight: 600; }
+.ref-bill { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); align-self: stretch; }
+.ref-bill strong { font-size: 1.05rem; }
+.ref-bill .num { font-family: var(--font-display); font-size: 1.3rem; white-space: nowrap; }
+.ref-call[data-call="poo"] strong { color: var(--critical); }
+.strike-bill { list-style: none; margin: 0; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 4px; align-self: stretch; font-family: Georgia, 'Times New Roman', serif; }
+.strike-line { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 8px; border: 0; border-radius: 6px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.strike-line:hover:not(:disabled) { background: var(--surface-2); }
+.strike-line[aria-pressed="true"] .strike-text { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--critical); color: var(--ink-2); }
+.strike-line:disabled { cursor: default; }
+.strike-line[data-ok="true"] { background: color-mix(in srgb, var(--good) 8%, transparent); }
+.strike-line[data-ok="false"] { background: color-mix(in srgb, var(--critical) 9%, transparent); }
+.strike-sec { color: var(--muted); font-family: var(--font-mono); font-size: 0.75rem; padding-top: 2px; }
+.strike-why { grid-column: 2; font-family: var(--font-body, inherit); color: var(--ink-2); }
+.ap-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-self: stretch; }
+.ap-stat { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.ap-stat strong { font-family: var(--font-display); font-size: 1.25rem; }
+.ap-months { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; align-self: stretch; }
+.ap-months li { text-align: center; padding: 4px 0; border-radius: 4px; font-family: var(--font-mono); font-size: 0.625rem; color: var(--muted); background: var(--surface-2); }
+.ap-months li[data-done] { background: color-mix(in srgb, var(--c-emph) 30%, var(--surface)); color: var(--ink); }
+.ap-months li[data-on] { box-shadow: 0 0 0 2px var(--accent); color: var(--ink); font-weight: 700; }
+.ap-months li[data-miss] { background: color-mix(in srgb, var(--critical) 35%, var(--surface)); }
+.ap-log { list-style: none; margin: 0; padding: 0; color: var(--ink-2); align-self: stretch; }
+.paygo-laws ul { margin: 4px 0 0; padding-left: 18px; }
+.paygo-card { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: var(--radius-sm); border: 2px solid color-mix(in srgb, var(--good) 55%, var(--line)); background: color-mix(in srgb, var(--good) 6%, var(--surface)); }
+.paygo-card[data-debit] { border-color: color-mix(in srgb, var(--critical) 55%, var(--line)); background: color-mix(in srgb, var(--critical) 6%, var(--surface)); }
+.paygo-card strong { font-family: var(--font-display); font-size: 1.4rem; }
+.paygo-offsets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; align-self: stretch; }
+.paygo-offset { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: var(--radius-sm); border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.paygo-offset[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.paygo-offset:disabled:not([aria-pressed="true"]) { opacity: 0.5; cursor: default; }
+.timetable .data { width: 100%; }
+@media (max-width: 640px) {
+  .mem-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ap-months { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .ap-board { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .mem-card { animation: none !important; transition: none; } .ref-fill { transition: none; } }

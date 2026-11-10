@@ -20,5 +20,9 @@ export const QUOTES: Record<string, Quote> = {
   'level-growth': { text: 'Productivity isn’t everything, but in the long run it is almost everything.', who: 'Paul Krugman', where: 'The Age of Diminished Expectations, 1990' },
   'level-investment': { text: 'Together, the uniting forces of our communication and transportation systems are dynamic elements in the very name we bear—United States.', who: 'Dwight D. Eisenhower', where: 'Special message to Congress on a national highway program, February 22, 1955' },
   'level-future': { text: 'The principle of spending money to be paid by posterity, under the name of funding, is but swindling futurity on a large scale.', who: 'Thomas Jefferson', where: 'Letter to John Taylor, May 28, 1816' },
+  'level-spend': { text: 'No Money shall be drawn from the Treasury, but in Consequence of Appropriations made by Law.', who: 'The U.S. Constitution', where: 'Article I, Section 9' },
+  'level-roles': { text: 'The Buck Stops Here!', who: 'Harry S. Truman', where: 'The sign on his desk in the Oval Office' },
+  'level-rules': { text: 'If men were angels, no government would be necessary.', who: 'James Madison', where: 'The Federalist No. 51, 1788' },
+  'level-brakes': { text: 'Beware of little Expences; a small Leak will sink a great Ship.', who: 'Benjamin Franklin', where: 'The Way to Wealth, 1758' },
   'level-10': { text: 'We cannot always build the future for our youth, but we can build our youth for the future.', who: 'Franklin D. Roosevelt', where: 'Address at the University of Pennsylvania, September 20, 1940' },
 };

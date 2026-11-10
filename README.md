@@ -140,6 +140,30 @@ budget adviser.
     pace). Every round works from the same official numbers as the rest of the game.
   - Answers to every question still count toward the community's first-try rates on "How
     everyone played".
+- **How Congress really budgets: four missions from the Congressional Research Service**
+  (`src/game/process.tsx`, new round types in `src/game/rounds2.tsx`), built on CRS's
+  "Introduction to the Federal Budget Process" (R46240, updated January 10, 2023). They're
+  spread through the campaigns, and the mission codes after each one shift by one (stable `n`
+  codes 17–20, so links, rooms and saved progress keep working):
+  - 1.3 Paying the bills: sort each step as budget authority, an obligation or an outlay; run a
+    made-up agency's year month by month so payroll is always covered (run out and it's an
+    Antideficiency Act violation; leave money unused and it lapses on September 30); sort what
+    keeps going in a shutdown; and a bonus on transfers vs. reprogramming. Then the four things
+    the Antideficiency Act forbids.
+  - 2.2 Who's who in the budget: a memory match of eight players and their jobs (the President,
+    OMB, CBO, the Budget, Appropriations and tax committees, the Joint Committee on Taxation, GAO),
+    the President's budget in order, and the official calendar from Section 300 of the
+    Congressional Budget Act.
+  - 2.4 Rules of the road: referee six bills against a subcommittee's $50 billion limit (call a
+    point of order, or let it through; 60 votes waive one in the Senate), strike what the Byrd
+    rule would strike from a reconciliation bill, the 20-hour debate cap, and a table of Senate
+    math.
+  - 3.3 Brakes and the debt limit: sort what's on budget, off budget by law, or outside it; clear
+    both Statutory PAYGO scorecards (5-year and 10-year) with at most two more laws or face a
+    sequester; the 4% cap on a PAYGO sequester's cut to Medicare; and the debt limit today, from
+    the Daily Treasury Statement.
+  - Games that practice a rule with a made-up example (the agency, the bills, the reconciliation
+    bill, the PAYGO laws) say so on screen; the rules and every real number come from the report.
 - **Guesses by slider** (`EstimateGuess` in `guesses.tsx`, the `estimate` field on a quiz): the
   number rounds (the last surplus year, the "gentle" limit, the interest bill next to defense,
   the last year every spending bill was on time, non-defense spending's share of the economy, the

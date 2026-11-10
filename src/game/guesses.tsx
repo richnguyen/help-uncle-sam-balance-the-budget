@@ -19,7 +19,7 @@ export const ROUND = {
   spot: 'Spot on! Full points.',
   close: 'Close! Good points.',
   far: 'Not this time, but you’ll know it next time.',
-  farSay: (answer: string) => `Not this time. It’s ${answer}.`,
+  farSay: (answer: string) => `Not this time. Here’s the answer: ${answer}.`,
 };
 export const POINTS: Record<Grade, number> = { spot: 100, close: 60, far: 20 };
 

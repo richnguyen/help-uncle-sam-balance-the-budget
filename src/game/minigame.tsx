@@ -25,7 +25,7 @@ export const ROUND_LINES = {
   bonusRight: 'That’s right! Full points.',
   bonusLater: 'You got it on the second try. Half points.',
   bonusWrong: 'Not quite. One more try, for half points.',
-  bonusRevealSay: (answer: string) => `That one’s tricky. It’s ${answer}.`,
+  bonusRevealSay: (answer: string) => `That one’s tricky. Here’s the answer: ${answer}.`,
   over: { 3: 'Three stars! You really know your stuff.', 2: 'Two stars. Nicely done. Play again for three.', 1: 'One star. Every round teaches something. Want another go?' } as Record<number, string>,
 };
 
