@@ -7,6 +7,7 @@ import type { AwardType, DistrictRow, StateRow } from '../data/types';
 import { dollars, money, pct, signedPct } from '../lib/format';
 import { go } from '../lib/router';
 import { load, save } from '../lib/storage';
+import { StateCountyTax } from '../game/county';
 
 const TYPES: { id: AwardType; label: string; color: string; ink: string; blurb: string }[] = [
   { id: 'grants', label: 'Grants', color: 'var(--c-ss)', ink: '#fff', blurb: 'Money to state and local governments, schools, hospitals, and nonprofits, such as Medicaid and highway funds.' },
@@ -119,6 +120,12 @@ export default function StatePage({ param }: { param: string | null }) {
           </div>
         </div>
       )}
+
+      <Section id="income-tax" title={`Who pays the federal income tax in ${s.name}`} sub={`The other side of the ledger: income tax on returns filed from ${s.name}, by county and by income, from the IRS’s figures for tax year 2023. Pick a county, or see the whole state.`}>
+        <div className="card">
+          <StateCountyTax st={s.abbr} stName={s.name} />
+        </div>
+      </Section>
 
       {districts.length > 0 && (
         <Section id="districts" title={`Congressional districts in ${s.name}`} sub="Awards are assigned to the district where the work happens or the recipient is located. Select a district for its top programs.">

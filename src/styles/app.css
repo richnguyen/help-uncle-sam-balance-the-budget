@@ -2622,3 +2622,7 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 @media (max-width: 520px) {
   .cty-chart { grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr); gap: 6px 8px; }
 }
+.cty-page { display: flex; flex-direction: column; gap: 14px; }
+.cty-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: flex-end; }
+.cty-bar .field { margin: 0; }
+.cty-yours { padding-bottom: 10px; }

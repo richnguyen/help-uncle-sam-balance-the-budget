@@ -69,20 +69,10 @@ export function bandsFor(here: Tally, us: Tally): Band[] {
   });
 }
 
-export function CountyTry() {
-  const votes = useVotes();
-  const saved = (votes.zipHome === 'database' ? votes.mine.zip : load<string>('zip', '')) || '';
-  const [zip, setZip] = useState(visitZip || saved);
-  const [typed, setTyped] = useState(zip);
-  const [pick, setPick] = useState<string | null>(null); // a county FIPS, or 'state'
+/** A state's county file: undefined while loading, null if it failed (or for a territory, which has none). */
+function useCountyFile(st: string, territory: boolean): [CountyFile | null | undefined, () => void] {
   const [file, setFile] = useState<CountyFile | null | undefined>(undefined);
   const [tries, setTries] = useState(0);
-  useEffect(() => { if (!zip && saved) { setZip(saved); setTyped(saved); } }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const area = isZip(zip) ? areaForZip(zip) : null;
-  const st = area?.kind === 'state' ? area.abbr : load<string>('state', 'TX');
-  const stName = geo.states.find((x) => x.abbr === st)?.name ?? st;
-  const territory = TERRITORIES.has(st);
   useEffect(() => {
     if (territory) { setFile(null); return; }
     let alive = true;
@@ -90,18 +80,50 @@ export function CountyTry() {
     loadCountyFile(st).then((f) => { if (alive) setFile(f); }).catch(() => { if (alive) setFile(null); });
     return () => { alive = false; };
   }, [st, territory, tries]);
+  return [file, () => setTries((n) => n + 1)];
+}
 
+/** The chosen county's (or the whole state's) figures, or a plain note saying why there are none. */
+function CountyResult({ file, territory, chosen, st, stName, retry }: { file: CountyFile | null | undefined; territory: boolean; chosen: number; st: string; stName: string; retry: () => void }) {
+  if (territory) return <p className="small">The IRS’s county figures cover the 50 states and DC; returns filed from Puerto Rico and the territories aren’t in them.</p>;
+  if (file === undefined) return <p className="small muted" role="status">Loading county figures…</p>;
+  if (file === null) return <p className="small" role="alert">Couldn’t load the county figures. <button type="button" className="link-btn" onClick={retry}>Try again</button></p>;
+  const row = chosen >= 0 ? file.counties[chosen] : null;
+  const name = row ? row[1] + (row[2] !== st ? `, ${row[2]}` : '') : stName;
+  const here: Tally | null = row ? (row[3] && row[4] ? { r: row[3], t: row[4] } : null) : file.state;
+  if (!here) return <p className="small">The IRS doesn’t publish figures for {name}: it leaves out counties with fewer than 20 tax returns.</p>;
+  return <CountyView name={name} here={here} us={file.us} ty={file.ty} />;
+}
+
+const useSavedZip = () => {
+  const votes = useVotes();
+  return (votes.zipHome === 'database' ? votes.mine.zip : load<string>('zip', '')) || '';
+};
+const zipParts = (file: CountyFile | null | undefined, zip: string) => {
   const zc = file && isZip(zip) ? file.zips[zip] : undefined;
-  const zipCounties = zc === undefined ? [] : typeof zc === 'number' ? [{ i: zc, share: 100 }] : zc.map(([i, share]) => ({ i, share }));
+  return zc === undefined ? [] : typeof zc === 'number' ? [{ i: zc, share: 100 }] : zc.map(([i, share]) => ({ i, share }));
+};
+
+export function CountyTry() {
+  const saved = useSavedZip();
+  const [zip, setZip] = useState(visitZip || saved);
+  const [typed, setTyped] = useState(zip);
+  const [pick, setPick] = useState<string | null>(null); // a county FIPS, or 'state'
+  useEffect(() => { if (!zip && saved) { setZip(saved); setTyped(saved); } }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const area = isZip(zip) ? areaForZip(zip) : null;
+  const st = area?.kind === 'state' ? area.abbr : load<string>('state', 'TX');
+  const stName = geo.states.find((x) => x.abbr === st)?.name ?? st;
+  const territory = TERRITORIES.has(st);
+  const [file, retry] = useCountyFile(st, territory);
+  const zc = file && isZip(zip) ? file.zips[zip] : undefined;
+  const zipCounties = zipParts(file, zip);
   const options = useMemo(() => {
     if (!file) return [];
     const list = file.counties.map((c, i) => ({ c, i })).filter(({ c, i }) => c[2] === st || zipCounties.some((z) => z.i === i));
     return list.sort((a, b) => a.c[1].localeCompare(b.c[1]));
   }, [file, st, zc]); // eslint-disable-line react-hooks/exhaustive-deps
   const chosen = !file ? -1 : pick === 'state' ? -1 : pick ? file.counties.findIndex((c) => c[0] === pick) : zipCounties[0]?.i ?? -1;
-  const row = file && chosen >= 0 ? file.counties[chosen] : null;
-  const name = row ? row[1] + (row[2] !== st ? `, ${row[2]}` : '') : stName;
-  const here: Tally | null = !file ? null : row ? (row[3] && row[4] ? { r: row[3], t: row[4] } : null) : file.state;
 
   const find = (e: React.FormEvent) => { e.preventDefault(); if (isZip(typed)) { setZip(typed); rememberZip(typed); setPick(null); } };
   const zipMsg = !isZip(zip) ? null
@@ -138,17 +160,41 @@ export function CountyTry() {
           ))}
         </div>
       )}
-      {territory ? (
-        <p className="small">The IRS’s county figures cover the 50 states and DC; returns filed from Puerto Rico and the territories aren’t in them.</p>
-      ) : file === undefined ? (
-        <p className="small muted" role="status">Loading county figures…</p>
-      ) : file === null ? (
-        <p className="small" role="alert">Couldn’t load the county figures. <button type="button" className="link-btn" onClick={() => setTries((n) => n + 1)}>Try again</button></p>
-      ) : !here ? (
-        <p className="small">The IRS doesn’t publish figures for {name}: it leaves out counties with fewer than 20 tax returns.</p>
-      ) : (
-        <CountyView name={name} here={here} us={file.us} ty={file.ty} />
+      <CountyResult file={file} territory={territory} chosen={chosen} st={st} stName={stName} retry={retry} />
+    </div>
+  );
+}
+
+/**
+ * The state page's version: the page picks the state; this picks a county in it, starting with
+ * the player's own when their ZIP (typed this visit, or saved) is in that state.
+ */
+export function StateCountyTax({ st, stName }: { st: string; stName: string }) {
+  const saved = useSavedZip();
+  const zip = visitZip || saved;
+  const territory = TERRITORIES.has(st);
+  const [file, retry] = useCountyFile(st, territory);
+  const [pick, setPick] = useState<string | null>(null);
+  useEffect(() => setPick(null), [st]);
+  const zipArea = isZip(zip) ? areaForZip(zip) : null;
+  const mine = zipArea?.kind === 'state' && zipArea.abbr === st ? zipParts(file, zip)[0]?.i : undefined;
+  const chosen = !file ? -1 : pick === 'state' ? -1 : pick ? file.counties.findIndex((c) => c[0] === pick) : mine ?? -1;
+  const options = file ? file.counties.filter((c) => c[2] === st).sort((a, b) => a[1].localeCompare(b[1])) : [];
+  return (
+    <div className="county cty-page">
+      {file && options.length > 0 && (
+        <div className="cty-bar">
+          <div className="field cty-pick">
+            <label htmlFor="st-county">County</label>
+            <select id="st-county" className="select" value={chosen >= 0 ? file.counties[chosen][0] : 'state'} onChange={(e) => setPick(e.target.value)}>
+              <option value="state">All of {stName}</option>
+              {options.map((c) => <option key={c[0]} value={c[0]}>{c[1]}</option>)}
+            </select>
+          </div>
+          {mine !== undefined && chosen === mine && <span className="small muted cty-yours">Your county, from your ZIP code</span>}
+        </div>
       )}
+      <CountyResult file={file} territory={territory} chosen={chosen} st={st} stName={stName} retry={retry} />
     </div>
   );
 }

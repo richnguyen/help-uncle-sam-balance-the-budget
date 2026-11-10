@@ -220,7 +220,10 @@ budget adviser.
   returns (Kalawao County, HI), its county data leaves out Puerto Rico and the territories, and
   single-address ZIPs (no area of their own) fall back to the whole state. The figures are the
   IRS Statistics of Income county data for tax year 2023, one small file per state in
-  `public/county/` (about 760 KB in all, loaded only for the player's state).
+  `public/county/` (about 760 KB in all, loaded only for the player's state). The state page
+  (`#state-va` and so on) has the same view in a "Who pays the federal income tax" section: the
+  page's state picker sets the state, a county picker sets the county, and it opens on the
+  player's own county when their ZIP (typed this visit, or saved) is in that state.
   - 1.5, the ripple: save $100 billion four ways and watch the ripple it sends through the
     economy, its area sized by CBO's estimate; a slider walks from CBO's low estimate to its high
     one, and a dashed ring marks dollar for dollar.
