@@ -1,5 +1,5 @@
 import { load, save } from '../lib/storage';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { BarList, SegBar, TimeChart, Waffle } from '../components/charts';
 import { ChartFrame, Legend, Stat, Term } from '../components/ui';
 import { budget, debt, fyTotals, geo, HH, laws, POP, process, SOURCE_BY_ID, ssa, tax } from '../data';
@@ -7,6 +7,9 @@ import { BUCKETS, REVENUE_BY_ID } from '../lib/categories';
 import { bucketYear, categoryTotals, cboSeries } from '../lib/derive';
 import { dateLabel, dollars, money, moneyWords, pct, people } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
+import { backendOn, rpc } from '../lib/backend';
+import { useVotes } from '../lib/votes';
+import { areaForZip, isZip } from '../lib/zip';
 import { ReceiptTeaser, useWages, WageControls } from '../components/TaxReceipt';
 import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
@@ -190,18 +193,89 @@ function AgeTry() {
   );
 }
 
+/** How a state's (or 3-digit ZIP area's) players voted, once enough of them have saved a ZIP. */
+interface AreaTally { voters: number; options: Record<string, { support: number; oppose: number }>; issues: Record<string, Record<string, number>> }
+const AREA_MIN = 10;
+
 function StateTry() {
   const states = [...geo.states].sort((a, b) => a.name.localeCompare(b.name));
-  // The pick is remembered (and, on the public site, counts toward the state rankings).
+  const votes = useVotes();
+  // The state is remembered (and, on the public site, counts toward the state rankings).
   const [abbr, setAbbrState] = useState(() => load<string>('state', 'TX'));
   const setAbbr = (a: string) => { setAbbrState(a); save('state', a); save('state-picked', true); };
+  // A saved ZIP lives with the ballot on the public site; elsewhere it stays in this browser.
+  const inDb = votes.zipHome === 'database';
+  const savedZip = (inDb ? votes.mine.zip : load<string>('zip', '')) || '';
+  const [zip, setZip] = useState(savedZip);
+  const [keep, setKeep] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [picker, setPicker] = useState(false);
+  const [area, setArea] = useState<AreaTally | null | undefined>(undefined);
+  useEffect(() => { if (savedZip && !zip) setZip(savedZip); }, [savedZip]); // eslint-disable-line react-hooks/exhaustive-deps
+  const saved = !!savedZip && savedZip === zip;
   const s = states.find((x) => x.abbr === abbr) ?? states[0];
   const nat = geo.national;
+  useEffect(() => {
+    if (!saved || !inDb || !backendOn()) return;
+    let alive = true;
+    rpc<{ states?: Record<string, AreaTally> }>('ballot_area_totals').then((t) => { if (alive) setArea(t?.states?.[abbr] ?? null); }).catch(() => { if (alive) setArea(null); });
+    return () => { alive = false; };
+  }, [saved, inDb, abbr]);
+  const find = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const z = zip.trim();
+    const a = areaForZip(z);
+    if (!a) { setMsg('A ZIP code is five digits.'); return; }
+    if (a.kind === 'military') { setMsg('That’s a military ZIP, which has no state. Pick a state instead.'); setPicker(true); return; }
+    if (a.kind === 'unknown' || !states.some((x) => x.abbr === a.abbr)) { setMsg('That ZIP doesn’t match a state. Check it, or pick a state instead.'); return; }
+    setMsg(null); setAbbr(a.abbr);
+    if (keep) { votes.setZip(z, a.abbr); save('zip', inDb ? '' : z); }
+  };
+  const saveNow = () => { const a = areaForZip(zip.trim()); if (a?.kind === 'state') { votes.setZip(zip.trim(), a.abbr); save('zip', inDb ? '' : zip.trim()); } };
+  const remove = () => { votes.setZip(null, null); save('zip', ''); setZip(''); setKeep(false); setArea(undefined); };
+  const top = area ? Object.entries(area.options).filter(([, t]) => t.support + t.oppose >= AREA_MIN).sort((x, y) => y[1].support / (y[1].support + y[1].oppose) - x[1].support / (x[1].support + x[1].oppose))[0] : undefined;
+  const topName = top ? OPTIONS_DATA.options.find((o) => o.id === top[0])?.name : undefined;
   return (
     <div className="try">
-      <div className="field" style={{ maxWidth: 320 }}><label htmlFor="try-st">Your state</label>
-        <select id="try-st" className="select" value={s.abbr} onChange={(e) => setAbbr(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}</select>
-      </div>
+      <form className="zip-form" onSubmit={find} aria-label="Find your state from your ZIP code">
+        <div className="field"><label htmlFor="try-zip">Your ZIP code</label>
+          <input id="try-zip" className="input zip-input num" inputMode="numeric" autoComplete="postal-code" maxLength={5} placeholder="e.g. 22301" value={zip}
+            onChange={(e) => { setZip(e.target.value.replace(/\D/g, '').slice(0, 5)); setMsg(null); }} aria-describedby="zip-note" />
+        </div>
+        <button type="submit" className="btn btn-primary zip-find" disabled={!isZip(zip)}>Find my state</button>
+        {!saved && (
+          <label className="switch zip-keep"><input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} /> Also save my ZIP with my budget votes</label>
+        )}
+      </form>
+      {msg && <p className="small zip-msg" role="alert">{msg}</p>}
+      <p className="small muted" id="zip-note">
+        Optional. {inDb
+          ? 'If you save it, your ZIP is stored with your budget votes in the game’s database, where only you can see it.'
+          : 'In this copy of the game, a saved ZIP stays in this browser; it isn’t shared with anyone.'}{' '}
+        Public results group players only by state, or by the first three digits of a ZIP once {AREA_MIN} or more players share them. You can remove it any time.
+      </p>
+      {saved ? (
+        <div className="zip-stamp" role="status">
+          <span className="zip-postmark" aria-hidden="true"><strong className="num">{savedZip}</strong><em>{abbr}</em></span>
+          <span><strong>Saved with your votes.</strong> <span className="small muted">{inDb ? 'Only you can see your ZIP.' : 'Kept in this browser only.'}</span></span>
+          <button type="button" className="btn btn-sm zip-remove" onClick={remove}>Remove my ZIP</button>
+        </div>
+      ) : isZip(zip) && areaForZip(zip)?.kind === 'state' && abbr === (areaForZip(zip) as { abbr: string }).abbr && !keep ? (
+        <button type="button" className="btn btn-sm zip-save" onClick={saveNow}>Save my ZIP with my votes</button>
+      ) : null}
+      {saved && inDb && area !== undefined && (
+        <p className="small zip-area">{area && area.voters >= AREA_MIN
+          ? <>{area.voters.toLocaleString('en-US')} players in {s.name} have saved a ZIP with their votes.{top && topName ? <> Their most-supported card: {topName} ({Math.round((top[1].support / (top[1].support + top[1].oppose)) * 100)}% support).</> : null}</>
+          : <>Once {AREA_MIN} or more players in {s.name} save a ZIP, how they voted shows up here.</>}</p>
+      )}
+      {(picker || !isZip(zip)) && (
+        <details className="zip-picker" open={picker || undefined}>
+          <summary className="small">Rather not use a ZIP? Pick a state instead</summary>
+          <div className="field" style={{ maxWidth: 320 }}><label htmlFor="try-st">Your state</label>
+            <select id="try-st" className="select" value={s.abbr} onChange={(e) => setAbbr(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}</select>
+          </div>
+        </details>
+      )}
       <div className="sim-gauge-row">
         <Dial value={(s.perCapita / nat.perCapita) * 100} max={250} label={`Federal awards per person in ${s.name}, compared with the national average`} readout={`${dollars(s.perCapita)} a person`}
           zones={[{ to: 85, label: 'below average', short: 'below', tone: 's1' }, { to: 115, label: 'near average', short: 'near', tone: 's2' }, { to: 250, label: 'above average', short: 'above', tone: 's3' }]} note={`${Math.round((s.perCapita / nat.perCapita) * 100)}% of the national ${dollars(nat.perCapita)}`} />
@@ -297,7 +371,7 @@ const CHAPTERS: Level[] = [
         choices: [topProgram === 'Grants to States for Medicaid' ? 'Highway Planning and Construction' : 'Grants to States for Medicaid', topProgram, 'Federal Pell Grant Program'], correct: 1,
         explain: <>{topProgram} is the biggest federal program in {topProgramCounts[0]?.[1] ?? 'most'} of {geo.states.length} states and territories in FY{geo.fy} (not counting Medicare).</> } },
         ] } },
-      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Pick your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}. The needle shows how your state compares, per person, with the country as a whole.</>, body: () => <StateTry /> },
+      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Type your ZIP code and I’ll find your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}; the needle shows how your state compares, per person, with the whole country. Saving your ZIP with your votes is up to you.</>, body: () => <StateTry /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>States count on federal grants for roads, transit, and schools. Here’s a cut CBO has priced.</>, vote: { kind: 'option', optionId: 'cut-transport-education-grants' } },
 
     ],

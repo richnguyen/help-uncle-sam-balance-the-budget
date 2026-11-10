@@ -19,7 +19,7 @@ received the "reminders are on" message on November 6, 2026.
 
 | Table | One row per | Holds | Who can read it |
 | --- | --- | --- | --- |
-| `ballots` | player | support/oppose on cards, answers to the big questions (and a favorite ready-made plan from earlier versions, no longer asked) | only that player |
+| `ballots` | player | support/oppose on cards, answers to the big questions (and a favorite ready-made plan from earlier versions, no longer asked), and, only if the player chooses to save it in mission 1.4, their ZIP code and its state | only that player |
 | `players` | player | levels done, stars, first-try quiz results, medals, state (if picked), first-visit channel | only that player |
 | `plans` | finished budget-desk plan | the plan part of the link, cards, stars | only its creator; others open one by its short-link id |
 | `rooms` | room | 6-character code, name, the budget-desk level it plays | only its starter; others open it by its code |
@@ -31,7 +31,9 @@ received the "reminders are on" message on November 6, 2026.
 | `peoples_moves` | player per day | today's People's Budget move: one card, pushed in (+1) or out (-1) | only that player; only today's move can be changed or taken back |
 
 Everyone can read totals through functions that return counts only: `ballot_totals()`,
-`player_totals()`, `card_rankings(level)`, `state_rankings()` (states with 5+ players), and
+`player_totals()`, `card_rankings(level)`, `state_rankings()` (states with 5+ players),
+`ballot_area_totals()` (votes on ballots that carry a ZIP, grouped by state and by 3-digit ZIP
+area, only for groups of 10 or more; never a ZIP), and
 `get_plan(id)`, `peoples_budget(window_days)` (each card's net pushes over the last 30 days) and
 `peoples_recent(n)` (the latest moves, with no identity), `get_room(code)` and `room_totals(code)`
 (cards in members' plans, levels finished, and, once 3 have joined, how members voted), and
@@ -55,8 +57,10 @@ no name, no password.
    [`20261108000000_rooms.sql`](migrations/20261108000000_rooms.sql), then
    [`20261109000000_share_stats.sql`](migrations/20261109000000_share_stats.sql), then
    [`20261110000000_challenge_funnel.sql`](migrations/20261110000000_challenge_funnel.sql), then
-   [`20261111000000_daily_reminders.sql`](migrations/20261111000000_daily_reminders.sql). Each
-   is safe to run again.
+   [`20261111000000_daily_reminders.sql`](migrations/20261111000000_daily_reminders.sql), then
+   [`20261112000000_ballot_zip.sql`](migrations/20261112000000_ballot_zip.sql). Each is safe to
+   run again. (The game already saves an opted-in ZIP inside the ballot, so the last one only adds
+   format checks and the area totals; until it runs, the game says area results come later.)
 4. **Copy two public values** from **Connect** (top of the dashboard) or **Settings → API Keys**:
    - the **Project URL**, like `https://abcdefghijklmnop.supabase.co`
    - the **publishable key**, starting `sb_publishable_`

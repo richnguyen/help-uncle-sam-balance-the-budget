@@ -198,6 +198,15 @@ budget adviser.
     growing with every year of waiting, plus the extra interest.
   - 1.3, a per-person gauge: the needle shows your state's federal awards per person against the
     national average (below, near, or above), shaded in one color since more isn't better or worse.
+- **Your ZIP code** (mission 1.4, Back home; `src/lib/zip.ts`): the player types a ZIP and the game
+  finds their state from its first three digits (with the few exceptions: American Samoa, the
+  Northern Mariana Islands; military ZIPs have no state, so the state picker opens instead). A
+  state picker stays available for anyone who'd rather not. Saving the ZIP is a separate opt-in,
+  off by default, and removable from the same screen. On balancethebudget.us it's saved in the
+  player's ballot with their budget votes (`zip` and `state` fields), readable only by that
+  player; public results group ballots only by state or by 3-digit ZIP area, for groups of 10 or
+  more (`ballot_area_totals()`, in `supabase/migrations/20261112000000_ballot_zip.sql`). In the
+  claude.ai copy, where every viewer can read every ballot, a saved ZIP stays in the browser.
   - 1.5, the ripple: save $100 billion four ways and watch the ripple it sends through the
     economy, its area sized by CBO's estimate; a slider walks from CBO's low estimate to its high
     one, and a dashed ring marks dollar for dollar.

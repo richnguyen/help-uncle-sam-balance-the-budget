@@ -1,12 +1,18 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useJourney } from '../game/state';
 import { backendOn, BackendError, readOwn, rpc, upsertOwn } from './backend';
+import { isZip } from './zip';
 
 // Citizen voting. On the claude.ai artifact it uses the artifact's shared database (`db`
 // capability): each voter keeps one ballot document at votes/<their id>, and the page reads all
 // ballots to count them. On balancethebudget.us it uses the site's Supabase database: one ballot
 // row per anonymous player, and totals from a function that returns counts only. Anywhere else
 // choices are kept locally so the game can continue.
+//
+// A player may add their ZIP code (and the state it's in) to their ballot, in mission 1.4. On the
+// site it's saved with the ballot, which only that player can read; public results group by state
+// or 3-digit ZIP area only. The artifact's ballots are readable by every viewer, so there the ZIP
+// never leaves the browser.
 
 export type Choice = 1 | -1;
 export interface Ballot {
@@ -14,6 +20,8 @@ export interface Ballot {
   plan: string | null; // favorite ready-made plan
   issues: Record<string, string>; // single-choice questions, e.g. { goal: 'stabilize' }
   updated: string;
+  zip?: string; // five digits, only if the player chose to save it
+  state?: string; // the ZIP's state or territory, two letters
 }
 export interface Tally { support: number; oppose: number }
 
@@ -43,7 +51,13 @@ function fromChoices(choices: Record<string, string>): Ballot {
   return b;
 }
 const isEmpty = (b: Ballot) => !Object.keys(b.options).length && !Object.keys(b.issues).length && !b.plan;
-const clean = (b: Partial<Ballot> | null | undefined): Ballot => ({ options: { ...(b?.options ?? {}) }, plan: typeof b?.plan === 'string' ? b.plan : null, issues: { ...(b?.issues ?? {}) }, updated: b?.updated ?? '' });
+const clean = (b: Partial<Ballot> | null | undefined): Ballot => ({
+  options: { ...(b?.options ?? {}) }, plan: typeof b?.plan === 'string' ? b.plan : null, issues: { ...(b?.issues ?? {}) }, updated: b?.updated ?? '',
+  ...(typeof b?.zip === 'string' && isZip(b.zip) ? { zip: b.zip } : {}),
+  ...(typeof b?.state === 'string' && /^[A-Z]{2}$/.test(b.state) ? { state: b.state } : {}),
+});
+/** The ballot as the artifact stores it: never the ZIP, which every viewer there could read. */
+const forArtifact = (b: Ballot): Ballot => { const { zip: _z, state: _s, ...rest } = b; return rest; };
 interface Totals { voters: number; options: Record<string, Tally>; plans: Record<string, number>; issues: Record<string, Record<string, number>> }
 
 type Votes = VoteState & {
@@ -52,6 +66,10 @@ type Votes = VoteState & {
   voteIssue: (id: string, value: string) => void;
   /** Fetch the latest totals now (the results page does this when it opens). */
   refresh: () => void;
+  /** Add the player's ZIP (and its state) to their ballot, or take it off with null. */
+  setZip: (zip: string | null, state: string | null) => void;
+  /** Where a saved ZIP lives: in the site's database with the ballot, or only in this browser. */
+  zipHome: 'database' | 'browser';
 };
 
 const Ctx = createContext<Votes | null>(null);
@@ -186,7 +204,7 @@ export function VotesProvider({ children }: { children: ReactNode }) {
       const b = pending.current;
       pending.current = null;
       try {
-        await db.doc('votes/' + uid).set(b);
+        await db.doc('votes/' + uid).set(forArtifact(b));
       } catch (e: any) {
         if (e?.code === 'invalid_argument' || e?.code === 'not_granted') setS((p) => ({ ...p, canVote: false }));
         else if (e?.code === 'quota_exceeded') setS((p) => ({ ...p, error: 'The vote store is full, so new votes can’t be saved.' }));
@@ -225,8 +243,17 @@ export function VotesProvider({ children }: { children: ReactNode }) {
     write({ ...cur, issues, updated: new Date().toISOString() });
   }, [write]);
 
+  const setZip = useCallback((zip: string | null, state: string | null) => {
+    const cur = mineRef.current;
+    const next: Ballot = { ...cur, updated: new Date().toISOString() };
+    if (zip && isZip(zip)) { next.zip = zip; if (state) next.state = state; else delete next.state; } else { delete next.zip; delete next.state; }
+    if (mode.current === 'site') write(next);
+    else { mineRef.current = next; setS((p) => ({ ...p, mine: next })); }
+  }, [write]);
+
   const refreshNow = useCallback(() => { void refresh.current(); }, []);
-  return <Ctx.Provider value={{ ...s, voteOption, votePlan, voteIssue, refresh: refreshNow }}>{children}</Ctx.Provider>;
+  const zipHome = mode.current === 'site' ? 'database' : 'browser';
+  return <Ctx.Provider value={{ ...s, voteOption, votePlan, voteIssue, refresh: refreshNow, setZip, zipHome }}>{children}</Ctx.Provider>;
 }
 
 export function useVotes(): Votes {

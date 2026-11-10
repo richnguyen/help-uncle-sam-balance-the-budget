@@ -2589,3 +2589,19 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   .ap-board { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .mem-card { animation: none !important; transition: none; } .ref-fill { transition: none; } }
+
+/* ---------- mission 1.4: your ZIP code ---------- */
+.zip-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; }
+.zip-form .field { margin: 0; }
+.zip-input { width: 8.5em; font-size: 1.25rem; letter-spacing: 0.12em; font-family: var(--font-mono); }
+.zip-keep { flex-basis: 100%; }
+.zip-msg { margin: 0; color: var(--critical); }
+.zip-stamp { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--good) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--good) 40%, var(--line)); }
+.zip-postmark { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 74px; height: 74px; border-radius: 50%; border: 3px double var(--c-emph); color: var(--c-emph); transform: rotate(-8deg); flex: none; }
+.zip-postmark strong { font-size: 0.95rem; letter-spacing: 0.06em; }
+.zip-postmark em { font-style: normal; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; }
+.zip-remove { margin-left: auto; }
+.zip-save { align-self: flex-start; }
+.zip-area { margin: 0; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.zip-picker summary { cursor: pointer; color: var(--ink-2); }
+.zip-picker[open] summary { margin-bottom: 8px; }

@@ -225,3 +225,27 @@ await db.query('delete from auth.users where id = $1', [U[0]]);
 ok((await as(null, 'select public.ballot_totals() as t')).rows[0].t.voters === 2, 'deleting a user removes their ballot');
 await db.query('delete from auth.users where id = $1', [U[1]]);
 ok(!(await db.query('select 1 from public.push_subscriptions where endpoint = $1', [sub(1).endpoint])).rows.length, 'deleting a user removes their devices');
+
+// ZIP codes on ballots: optional, private to the player, and counted only in groups of 10 or more.
+const Z = Array.from({ length: 12 }, (_, i) => `00000000-0000-0000-0001-${String(i + 1).padStart(12, '0')}`);
+for (const u of Z) await db.query('insert into auth.users (id) values ($1)', [u]);
+const zb = (zip, state, o = {}) => JSON.stringify({ options: o.options ?? { 'cut-defense-budget': 1 }, plan: null, issues: o.issues ?? { goal: 'stabilize' }, updated: '2026-11-12T00:00:00Z', ...(zip ? { zip } : {}), ...(state ? { state } : {}) });
+ok(await fails(() => as(Z[0], 'insert into public.ballots (ballot) values ($1)', [zb('2230', 'VA')])), 'a ZIP must be five digits');
+ok(await fails(() => as(Z[0], 'insert into public.ballots (ballot) values ($1)', [zb('22301', 'Virginia')])), 'the state with a ZIP must be a two-letter code');
+for (let i = 0; i < 9; i++) await as(Z[i], 'insert into public.ballots (ballot) values ($1)', [zb(`2230${i}`, 'VA', { options: { 'cut-defense-budget': i < 6 ? 1 : -1 } })]);
+ok((await as(Z[1], 'select ballot from public.ballots')).rows.length === 1 && (await as(Z[1], 'select ballot from public.ballots')).rows[0].ballot.zip === '22301', 'a player sees their own ZIP, and no one else’s ballot');
+let at = (await as(null, 'select public.ballot_area_totals() as t')).rows[0].t;
+ok(at.min === 10 && !at.states.VA && !at.zip3['223'], 'nine Virginia ballots: too few to show');
+await as(Z[9], 'insert into public.ballots (ballot) values ($1)', [zb('22314', 'VA', { issues: { goal: 'balance' } })]);
+await as(Z[10], 'insert into public.ballots (ballot) values ($1)', [zb('10001', 'NY')]);
+await as(Z[11], 'insert into public.ballots (ballot) values ($1)', [zb(null, null)]);
+at = (await as(null, 'select public.ballot_area_totals() as t')).rows[0].t;
+console.log('  ballot_area_totals:', JSON.stringify(at));
+ok(at.states.VA.voters === 10 && at.states.VA.options['cut-defense-budget'].support === 7 && at.states.VA.options['cut-defense-budget'].oppose === 3 && at.states.VA.issues.goal.stabilize === 9 && at.states.VA.issues.goal.balance === 1, 'ten Virginia ballots: counted by state');
+ok(at.zip3['223']?.voters === 10 && !at.states.NY && !at.zip3['100'], 'and by 3-digit area (223); New York’s one ballot stays hidden');
+ok(!/\b\d{5}\b/.test(JSON.stringify(at)), 'the totals never contain a five-digit ZIP');
+ok((await as(null, 'select public.ballot_totals() as t')).rows[0].t.voters >= 12, 'ballots with a ZIP still count in the overall totals');
+await as(Z[9], `update public.ballots set ballot = ballot - 'zip' - 'state'`);
+at = (await as(null, 'select public.ballot_area_totals() as t')).rows[0].t;
+ok(!at.states.VA && !at.zip3['223'], 'removing one ZIP drops Virginia back under 10, so it disappears');
+for (const u of Z) await db.query('delete from auth.users where id = $1', [u]);
