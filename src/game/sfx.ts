@@ -4,7 +4,7 @@
 // (iPhones), and follow the phone's silent switch where the browser does. Off with one switch in
 // settings.
 
-export type Sound = 'tap' | 'card' | 'step' | 'right' | 'wrong' | 'vote' | 'win' | 'medal';
+export type Sound = 'tap' | 'card' | 'step' | 'right' | 'wrong' | 'vote' | 'win' | 'medal' | 'spend' | 'build' | 'landmark';
 
 type Note = [freq: number, start: number, length: number, gain?: number];
 const C6 = 1046.5, E6 = 1318.5, G5 = 784, C5 = 523.25, E5 = 659.25, G4 = 392, A5 = 880;
@@ -17,6 +17,11 @@ const SOUNDS: Record<Sound, { wave: OscillatorType; notes: Note[] }> = {
   wrong: { wave: 'sine', notes: [[G4, 0, 0.12, 0.8], [G4 * 0.84, 0.1, 0.16, 0.7]] },
   win: { wave: 'triangle', notes: [[C5, 0, 0.1], [E5, 0.09, 0.1], [G5, 0.18, 0.1], [C6, 0.27, 0.26]] },
   medal: { wave: 'triangle', notes: [[G5, 0, 0.08], [E6, 0.08, 0.2]] },
+  // Build the Mall: a star flies off (a quick rise), a piece lands (a soft low knock and a ring),
+  // and a landmark is finished (a longer rising chord).
+  spend: { wave: 'sine', notes: [[E5, 0, 0.05, 0.6], [A5, 0.04, 0.06, 0.6], [E6, 0.08, 0.1, 0.5]] },
+  build: { wave: 'triangle', notes: [[G4 / 2, 0, 0.14, 1.4], [G4, 0.01, 0.1, 0.8], [C6, 0.09, 0.22, 0.5]] },
+  landmark: { wave: 'triangle', notes: [[C5, 0, 0.12], [E5, 0.1, 0.12], [G5, 0.2, 0.12], [C6, 0.3, 0.16], [E6, 0.42, 0.4]] },
 };
 const VOLUME = 0.07;
 

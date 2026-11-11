@@ -18,12 +18,15 @@ const PATTERN = {
   vote: [12],
   win: [22, 70, 22, 70, 60],
   medal: [14, 50, 14],
+  spend: [6],
+  build: [18, 40, 10],
+  landmark: [22, 60, 22, 60, 80],
 } as const satisfies Record<Sound, number | readonly number[]>;
 export type Haptic = keyof typeof PATTERN;
 
 // Uncle Sam reacts to each action too, from the top bar: a nod for a card or a step, a thumbs-up
 // for a right answer, a scratch of the head for a miss, a hat tip for a vote, a cheer for a win.
-const ACT: Record<Haptic, SamAct> = { tap: 'glance', card: 'nod', step: 'nod', right: 'thumbs', wrong: 'oops', vote: 'hattip', win: 'cheer', medal: 'salute' };
+const ACT: Record<Haptic, SamAct> = { tap: 'glance', card: 'nod', step: 'nod', right: 'thumbs', wrong: 'oops', vote: 'hattip', win: 'cheer', medal: 'salute', spend: 'nod', build: 'thumbs', landmark: 'cheer' };
 
 export const hapticsSupported = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
 

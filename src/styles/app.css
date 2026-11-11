@@ -2732,3 +2732,194 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   .hud .sam-strip-still, .hud .sam-strip-caption { left: 12px; right: 30px; }
   .hud .sam-strip-again { right: 10px; }
 }
+
+/* ---------- Build the Mall: the landmarks' colors, the blueprints, and the building ---------- */
+.bm {
+  --bm-sky-0: #7dbbea; --bm-sky-1: #a9d3f1; --bm-sky-2: #c6e2f4;
+  --bm-marble: #f3efe7; --bm-marble-side: #ddd6c9; --bm-marble2: #ece6da; --bm-marble2-side: #d4ccbd; --bm-course: rgba(150, 138, 118, 0.18); --bm-seam: #c9bea9;
+  --bm-stone: #d8cfbf; --bm-stone-hi: #e6dfd2; --bm-stone-side: #c6bcaa; --bm-step: #efe9de; --bm-cap: #e9e3d6;
+  --bm-col: #f6f3ec; --bm-col-side: #e0d9cc; --bm-recess: #9c9586; --bm-recess-deep: #7f786b; --bm-recess-light: #c9c2b3;
+  --bm-granite: #d9d6cf; --bm-granite-side: #c4c0b8; --bm-sandstone: #d9b68a; --bm-sandstone-side: #c29d72;
+  --bm-whitewash: #fbfaf6; --bm-whitewash-side: #e7e4dc; --bm-roof: #7d8a96; --bm-roof-side: #6a7682; --bm-chimney: #d8d3c8;
+  --bm-dome: #f6f3ec; --bm-dome-side: #dfd8ca; --bm-ribs: rgba(160, 148, 128, 0.45); --bm-rim: rgba(255, 255, 255, 0.9); --bm-lantern: #8f877a;
+  --bm-copper: #6f9e8b; --bm-copper-side: #5b8a77; --bm-bronze: #86673f; --bm-statue: #f1ede5; --bm-statue-shade: #cfc8ba; --bm-alu: #c5d0da;
+  --bm-pane: #4b5663; --bm-sill: #f4f0e8; --bm-carve: rgba(120, 108, 90, 0.35); --bm-pediment: #e6dfd1;
+  --bm-lawn: #8dbb67; --bm-lawn-hi: #9cc873; --bm-lawn-far: #a9cc85; --bm-plaza: #e7dfcf; --bm-plaza-in: #d9cfbc; --bm-path: #eae2d2;
+  --bm-water-0: #8fcaea; --bm-water-1: #5aa3d0; --bm-pool-rim: #e6dfd0; --bm-reflect: rgba(255, 255, 255, 0.35); --bm-shimmer: rgba(255, 255, 255, 0.8); --bm-basin: #78b6dc;
+  --bm-tree: #5e9150; --bm-tree-side: #4b7c41; --bm-blossom: #f6c3d4; --bm-blossom-side: #eca5bf; --bm-trunk: #7a5c3e;
+  --bm-flag-red: #c0392b; --bm-flag-white: #ffffff; --bm-flag-blue: #2c4a8a; --bm-pole: #8d8a80;
+  --bm-flood: rgba(255, 236, 190, 0.0); --bm-beam: rgba(255, 240, 200, 0.0);
+  --bm-bp: #2f74c0; --bm-bp-fill: rgba(47, 116, 192, 0.07); --bm-bp-next: #1f63b5; --bm-bp-next-fill: rgba(47, 116, 192, 0.16);
+  --bm-scaffold: #b07d43; --bm-crane: #e3a73a; --bm-crane-dark: #7b5b22; --bm-dust: rgba(196, 178, 148, 0.85); --bm-spark: #ffd75e;
+  --bm-far: #c9d6df; --bm-far-2: #b7c7d2; --bm-city: #d3dbe1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bm {
+    --bm-sky-0: #060c1c; --bm-sky-1: #11203d; --bm-sky-2: #1d2b45;
+    --bm-marble: #e8e1d0; --bm-marble-side: #b9b19f; --bm-marble2: #ddd5c3; --bm-marble2-side: #aea693; --bm-course: rgba(80, 70, 50, 0.25); --bm-seam: #a69c87;
+    --bm-stone: #a59c8a; --bm-stone-hi: #b9b09e; --bm-stone-side: #8e8573; --bm-step: #c8bfac; --bm-cap: #d8d0be;
+    --bm-col: #f0e9d8; --bm-col-side: #c4bba8; --bm-recess: #3a3a3c; --bm-recess-deep: #4a4436; --bm-recess-light: #7d776b;
+    --bm-granite: #c2bdb2; --bm-granite-side: #9c978c; --bm-sandstone: #b9976d; --bm-sandstone-side: #9a7b55;
+    --bm-whitewash: #f1ecdf; --bm-whitewash-side: #c9c3b5; --bm-roof: #4a5560; --bm-roof-side: #3c4650; --bm-chimney: #a9a397;
+    --bm-dome: #f0ead9; --bm-dome-side: #c7bfad; --bm-ribs: rgba(120, 108, 88, 0.45); --bm-rim: rgba(255, 245, 220, 0.7); --bm-lantern: #ffd37a;
+    --bm-copper: #4f7b6b; --bm-copper-side: #406858; --bm-bronze: #9a7a4c; --bm-statue: #fff6e0; --bm-statue-shade: #c9bfa8; --bm-alu: #dfe6ee;
+    --bm-pane: #ffcf73; --bm-sill: #d8d0be; --bm-carve: rgba(60, 52, 40, 0.4); --bm-pediment: #cfc6b2;
+    --bm-lawn: #183022; --bm-lawn-hi: #1f3a2a; --bm-lawn-far: #1a2f25; --bm-plaza: #3b3a36; --bm-plaza-in: #2f2e2b; --bm-path: #2c2c2a;
+    --bm-water-0: #1d3a5c; --bm-water-1: #0f2340; --bm-pool-rim: #4a4a46; --bm-reflect: rgba(255, 236, 190, 0.22); --bm-shimmer: rgba(255, 220, 150, 0.55); --bm-basin: #13294a;
+    --bm-tree: #12261b; --bm-tree-side: #0d1d15; --bm-blossom: #d896ad; --bm-blossom-side: #b97a92; --bm-trunk: #2a1f16;
+    --bm-flag-red: #b03a2e; --bm-flag-white: #ece6da; --bm-flag-blue: #2a3f72; --bm-pole: #9a968c;
+    --bm-flood: rgba(255, 220, 150, 0.22); --bm-beam: rgba(255, 230, 170, 0.12);
+    --bm-bp: #7fb3f0; --bm-bp-fill: rgba(127, 179, 240, 0.06); --bm-bp-next: #a8ccf7; --bm-bp-next-fill: rgba(127, 179, 240, 0.16);
+    --bm-scaffold: #c79a5f; --bm-crane: #e8b048; --bm-crane-dark: #a27a2e; --bm-dust: rgba(160, 150, 130, 0.7); --bm-spark: #ffe08a;
+    --bm-far: #18243a; --bm-far-2: #141e31; --bm-city: #1b2638;
+  }
+}
+:root[data-theme="dark"] .bm {
+  --bm-sky-0: #060c1c; --bm-sky-1: #11203d; --bm-sky-2: #1d2b45;
+  --bm-marble: #e8e1d0; --bm-marble-side: #b9b19f; --bm-marble2: #ddd5c3; --bm-marble2-side: #aea693; --bm-course: rgba(80, 70, 50, 0.25); --bm-seam: #a69c87;
+  --bm-stone: #a59c8a; --bm-stone-hi: #b9b09e; --bm-stone-side: #8e8573; --bm-step: #c8bfac; --bm-cap: #d8d0be;
+  --bm-col: #f0e9d8; --bm-col-side: #c4bba8; --bm-recess: #3a3a3c; --bm-recess-deep: #4a4436; --bm-recess-light: #7d776b;
+  --bm-granite: #c2bdb2; --bm-granite-side: #9c978c; --bm-sandstone: #b9976d; --bm-sandstone-side: #9a7b55;
+  --bm-whitewash: #f1ecdf; --bm-whitewash-side: #c9c3b5; --bm-roof: #4a5560; --bm-roof-side: #3c4650; --bm-chimney: #a9a397;
+  --bm-dome: #f0ead9; --bm-dome-side: #c7bfad; --bm-ribs: rgba(120, 108, 88, 0.45); --bm-rim: rgba(255, 245, 220, 0.7); --bm-lantern: #ffd37a;
+  --bm-copper: #4f7b6b; --bm-copper-side: #406858; --bm-bronze: #9a7a4c; --bm-statue: #fff6e0; --bm-statue-shade: #c9bfa8; --bm-alu: #dfe6ee;
+  --bm-pane: #ffcf73; --bm-sill: #d8d0be; --bm-carve: rgba(60, 52, 40, 0.4); --bm-pediment: #cfc6b2;
+  --bm-lawn: #183022; --bm-lawn-hi: #1f3a2a; --bm-lawn-far: #1a2f25; --bm-plaza: #3b3a36; --bm-plaza-in: #2f2e2b; --bm-path: #2c2c2a;
+  --bm-water-0: #1d3a5c; --bm-water-1: #0f2340; --bm-pool-rim: #4a4a46; --bm-reflect: rgba(255, 236, 190, 0.22); --bm-shimmer: rgba(255, 220, 150, 0.55); --bm-basin: #13294a;
+  --bm-tree: #12261b; --bm-tree-side: #0d1d15; --bm-blossom: #d896ad; --bm-blossom-side: #b97a92; --bm-trunk: #2a1f16;
+  --bm-flag-red: #b03a2e; --bm-flag-white: #ece6da; --bm-flag-blue: #2a3f72; --bm-pole: #9a968c;
+  --bm-flood: rgba(255, 220, 150, 0.22); --bm-beam: rgba(255, 230, 170, 0.12);
+  --bm-bp: #7fb3f0; --bm-bp-fill: rgba(127, 179, 240, 0.06); --bm-bp-next: #a8ccf7; --bm-bp-next-fill: rgba(127, 179, 240, 0.16);
+  --bm-scaffold: #c79a5f; --bm-crane: #e8b048; --bm-crane-dark: #a27a2e; --bm-dust: rgba(160, 150, 130, 0.7); --bm-spark: #ffe08a;
+  --bm-far: #18243a; --bm-far-2: #141e31; --bm-city: #1b2638;
+}
+.bm-marble { fill: var(--bm-marble); } .bm-marble-side { fill: var(--bm-marble-side); } .bm-marble2 { fill: var(--bm-marble2); } .bm-marble2-side { fill: var(--bm-marble2-side); }
+.bm-course line { stroke: var(--bm-course); stroke-width: 1; } .bm-seam { stroke: var(--bm-seam); stroke-width: 1.6; }
+.bm-stone { fill: var(--bm-stone); } .bm-stone-hi { fill: var(--bm-stone-hi); } .bm-stone-side { fill: var(--bm-stone-side); } .bm-step { fill: var(--bm-step); } .bm-cap { fill: var(--bm-cap); }
+.bm-col { fill: var(--bm-col); } .bm-col-side { fill: var(--bm-col-side); } .bm-recess { fill: var(--bm-recess); } .bm-recess-deep { fill: var(--bm-recess-deep); } .bm-recess-light { fill: var(--bm-recess-light); }
+.bm-granite { fill: var(--bm-granite); } .bm-granite-side { fill: var(--bm-granite-side); } .bm-sandstone { fill: var(--bm-sandstone); } .bm-sandstone-side { fill: var(--bm-sandstone-side); }
+.bm-whitewash { fill: var(--bm-whitewash); } .bm-whitewash-side { fill: var(--bm-whitewash-side); } .bm-roof { fill: var(--bm-roof); } .bm-roof-side { fill: var(--bm-roof-side); } .bm-chimney { fill: var(--bm-chimney); }
+.bm-dome { fill: var(--bm-dome); } .bm-dome-side { fill: var(--bm-dome-side); } .bm-ribs path { fill: none; stroke: var(--bm-ribs); stroke-width: 1.4; } .bm-rim { fill: none; stroke: var(--bm-rim); stroke-width: 2; }
+.bm-lantern { stroke: var(--bm-lantern); stroke-width: 1.6; }
+.bm-copper { fill: var(--bm-copper); } .bm-copper-side { fill: var(--bm-copper-side); } .bm-bronze { fill: var(--bm-bronze); } .bm-statue { fill: var(--bm-statue); } .bm-statue-shade { fill: var(--bm-statue-shade); } .bm-alu { fill: var(--bm-alu); }
+.bm-pane { fill: var(--bm-pane); } .bm-sill { fill: var(--bm-sill); } .bm-carve > * { fill: var(--bm-carve); stroke: none; } .bm-carve path { fill: none; stroke: var(--bm-carve); stroke-width: 1.4; } .bm-pediment { fill: var(--bm-pediment); }
+.bm-balusters rect { fill: var(--bm-cap); }
+.bm-lawn { fill: var(--bm-lawn); } .bm-lawn-hi { fill: var(--bm-lawn-hi); } .bm-plaza { fill: var(--bm-plaza); } .bm-plaza-in { fill: var(--bm-plaza-in); }
+.bm-water { fill: url(#bm-water); } .bm-basin { fill: var(--bm-basin); } .bm-pool-rim { fill: var(--bm-pool-rim); } .bm-reflect { fill: var(--bm-reflect); }
+.bm-shimmer line { stroke: var(--bm-shimmer); stroke-width: 2.2; stroke-linecap: round; opacity: 0.45; }
+.bm-tree { fill: var(--bm-tree); } .bm-tree-side { fill: var(--bm-tree-side); } .bm-blossom { fill: var(--bm-blossom); } .bm-blossom-side { fill: var(--bm-blossom-side); } .bm-trunk { fill: var(--bm-trunk); }
+.bm-flag-red { fill: var(--bm-flag-red); } .bm-flag-white { fill: var(--bm-flag-white); } .bm-flag-blue { fill: var(--bm-flag-blue); } .bm-pole { stroke: var(--bm-pole); stroke-width: 1.4; }
+.bm-floodlight { fill: var(--bm-flood); } .bm-beam { fill: var(--bm-beam); }
+.bm-glint path { fill: #fff; opacity: 0.9; }
+.bm-spray path { fill: none; stroke: var(--bm-shimmer); stroke-width: 2; stroke-linecap: round; }
+.bm-spray path:first-child { fill: var(--bm-shimmer); stroke: none; }
+.bm-firework line { stroke-width: 2.2; stroke-linecap: round; } .bm-fw-a line, .bm-fw-a circle { stroke: #ff6b6b; fill: #ff6b6b; } .bm-fw-b line, .bm-fw-b circle { stroke: #ffd166; fill: #ffd166; } .bm-fw-c line, .bm-fw-c circle { stroke: #8ecbff; fill: #8ecbff; }
+.bm-flame-in { fill: #ffd23f; }
+.bm-flame { fill: #ff7a1f; opacity: 0.92; transform-box: fill-box; transform-origin: bottom center; animation: bm-flicker 0.32s ease-in-out infinite alternate; }
+.bm-smoke { fill: rgba(80, 80, 80, 0.35); animation: bm-smoke 1.4s ease-out infinite; }
+@keyframes bm-flicker { from { transform: scaleY(0.82) skewX(-4deg); } to { transform: scaleY(1.08) skewX(4deg); } }
+@keyframes bm-smoke { from { transform: translateY(0) scale(0.6); opacity: 0.6; } to { transform: translateY(-40px) scale(1.4); opacity: 0; } }
+
+/* On the plans: a dashed blueprint, so the player sees what is coming. The next job glows. */
+.bm-part[data-state="plan"] :is(rect, path, circle, ellipse, line), .bm-part[data-state="next"] :is(rect, path, circle, ellipse, line) {
+  fill: var(--bm-bp-fill); stroke: var(--bm-bp); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke;
+}
+.bm-part[data-state="plan"] { opacity: 0.5; }
+.bm-part[data-state="plan"] :is(.bm-windows, .bm-carve, .bm-course, .bm-glint, .bm-balusters, .bm-shimmer, .bm-ribs), .bm-part[data-state="next"] :is(.bm-windows, .bm-carve, .bm-course, .bm-glint, .bm-balusters, .bm-shimmer, .bm-ribs) { display: none; }
+.bm-part[data-state="next"] :is(rect, path, circle, ellipse, line) { fill: var(--bm-bp-next-fill); stroke: var(--bm-bp-next); stroke-width: 1.4; animation: bm-march 1.2s linear infinite; }
+.bm-part[data-state="next"] { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--bm-bp) 55%, transparent)); }
+.bm-part[data-state="plan"] .bm-flag, .bm-part[data-state="next"] .bm-flag { animation: none; }
+@keyframes bm-march { to { stroke-dashoffset: -14; } }
+.bm-flag { animation: ms-wave 1.5s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .bm-part[data-state="next"] :is(rect, path, circle, ellipse, line) { animation: none; }
+  .bm-flag, .bm-flame, .bm-smoke { animation: none; }
+}
+/* the effects of building */
+.bm-flystar { position: fixed; left: 0; top: 0; z-index: 90; width: 28px; height: 28px; display: grid; place-items: center; font-size: 26px; line-height: 1; color: var(--gold, #d4a017); text-shadow: 0 0 10px rgba(255, 200, 60, 0.8), 0 1px 0 rgba(0, 0, 0, 0.25); pointer-events: none; will-change: transform; }
+.bm-scaffold line { stroke: var(--bm-scaffold); stroke-width: 2.4; vector-effect: non-scaling-stroke; }
+.bm-scaffold .bm-plank { stroke-width: 3; }
+.bm-scaffold .bm-brace { stroke-width: 1.4; opacity: 0.7; }
+.bm-crane-mast { fill: var(--bm-crane); } .bm-crane-dark { fill: var(--bm-crane-dark); }
+.bm-crane-lace { stroke: var(--bm-crane-dark); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.bm-cable { stroke: var(--bm-crane-dark); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.bm-dust { fill: var(--bm-dust); }
+.bm-spark { fill: var(--bm-spark); filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.9)); }
+/* the pages */
+.bm-page { display: flex; flex-direction: column; gap: 14px; }
+.bm-balance { display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--gold, #d4a017) 16%, var(--surface)); color: var(--ink); white-space: nowrap; }
+.bm-balance > span:first-child { color: var(--gold, #d4a017); }
+.bm-balance strong { font-family: var(--font-display); font-size: 1.15rem; line-height: 1; }
+.bm-balance-k { font-size: 0.8125rem; color: var(--ink-2); }
+.bm-mall { padding: 0; overflow: hidden; }
+.bm-mall-inner { position: relative; }
+.bm-mall-svg { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.bm-cloud ellipse { fill: rgba(255, 255, 255, 0.78); }
+.bm-city { fill: var(--bm-city); } .bm-hill { fill: var(--bm-lawn-hi); } .bm-river { fill: var(--bm-water-1); opacity: 0.85; }
+.bm-museums { fill: var(--bm-far-2); } .bm-malllawn { fill: var(--bm-lawn-hi); } .bm-mallpath { fill: var(--bm-path); } .bm-ellipse { fill: var(--bm-lawn-hi); stroke: var(--bm-path); stroke-width: 3; }
+.bm-street { fill: var(--bm-path); }
+.bm-sign rect { fill: color-mix(in srgb, var(--surface) 92%, transparent); stroke: var(--line); stroke-width: 1.5; }
+.bm-sign text { font-family: var(--font-body); font-size: 15px; font-weight: 650; fill: var(--ink); }
+.bm-sign[data-state="locked"] text { fill: var(--muted); font-weight: 500; }
+.bm-sign[data-state="done"] rect { fill: var(--accent); stroke: none; } .bm-sign[data-state="done"] text { fill: var(--accent-ink); }
+.bm-sign[data-focus] rect { stroke: var(--accent); stroke-width: 3; }
+.bm-sign-lock { fill: none; stroke: var(--muted); stroke-width: 1.6; }
+.bm-hit rect { fill: transparent; }
+.bm-hit:focus-visible rect { stroke: var(--accent); stroke-width: 4; }
+.bm-hit:hover rect { fill: rgba(255, 255, 255, 0.08); }
+.bm-mallcrane-load { animation: bm-sway 3s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% -300%; }
+@keyframes bm-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.bm-spot[data-done] { filter: drop-shadow(0 0 10px rgba(255, 230, 160, 0.35)); }
+.bm-howto { margin: 0; max-width: 60rem; }
+.bm-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.bm-card { display: flex; flex-direction: column; gap: 8px; height: 100%; padding: 10px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--line); color: inherit; text-decoration: none; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.bm-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--line), 0 8px 20px rgb(0 0 0 / 0.08); }
+.bm-card[data-state="open"] { box-shadow: 0 0 0 2px var(--accent); }
+.bm-card[data-state="locked"] { opacity: 0.75; }
+.bm-card-art { width: 100%; height: 120px; border-radius: calc(var(--radius) - 4px); background: linear-gradient(var(--bm-sky-0), var(--bm-sky-1) 80%); }
+.bm-card-text { display: flex; flex-direction: column; gap: 4px; }
+.bm-card-bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.bm-card-bar > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.bm-site-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+.bm-stage { position: relative; padding: 0; overflow: hidden; }
+.bm-stage-svg { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; max-height: 62vh; }
+.bm-stage-lock { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: color-mix(in srgb, var(--surface) 55%, transparent); backdrop-filter: blur(2px); text-align: center; padding: 16px; }
+.bm-jobs { display: flex; flex-direction: column; gap: 8px; }
+.bm-jobs > ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.bm-jobs > ol > li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); font-size: 0.9375rem; color: var(--muted); }
+.bm-jobs > ol > li[data-state="done"] { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--ink-2); }
+.bm-jobs > ol > li[data-state="next"] { background: var(--surface); color: var(--ink); font-weight: 650; box-shadow: inset 0 0 0 2px var(--accent); }
+.bm-job-mark { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.bm-jobs > ol > li[data-state="done"] .bm-job-mark { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.bm-job-cost { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--gold, #b8860b); font-weight: 700; white-space: nowrap; }
+.bm-job-need { font-weight: 400; }
+.bm-sources { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.bm-cost { font-family: var(--font-mono); }
+.bm-postcard { max-width: 560px; }
+.bm-postcard-art { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(var(--bm-sky-0), var(--bm-sky-1)); border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+.bm-postcard-art svg { display: block; width: 100%; height: 100%; }
+.bm-pc-sky { fill: transparent; }
+.bm-postcard-art .celebrate-x { position: absolute; top: 8px; right: 8px; background: color-mix(in srgb, var(--surface) 80%, transparent); }
+.bm-postcard-stamp { position: absolute; top: 10px; left: 12px; width: 44px; height: 52px; display: grid; place-items: center; font-size: 26px; color: var(--gold, #d4a017); background: var(--surface); border: 2px dashed color-mix(in srgb, var(--gold, #d4a017) 60%, var(--line)); border-radius: 4px; transform: rotate(-6deg); }
+@media (max-width: 900px) {
+  .bm-site-grid { grid-template-columns: minmax(0, 1fr); }
+  .bm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .bm-mall { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .bm-mall-inner { width: 760px; }
+  .bm-cards { grid-template-columns: minmax(0, 1fr); }
+  .bm-card { flex-direction: row; align-items: center; }
+  .bm-card-art { width: 120px; height: 84px; flex: none; }
+  .bm-stage-svg { aspect-ratio: 4 / 3.4; max-height: 52vh; }
+}
+.bm-shadow { fill: rgba(30, 50, 30, 0.16); }
+/* the main menu's landmarks, as the player has built them: a pale blueprint until finished */
+.ms-landmark[data-state="plan"] :is(rect, path, line, circle) { fill: var(--ms-plan-fill, rgba(255, 255, 255, 0.1)); stroke: var(--ms-plan, rgba(255, 255, 255, 0.85)); stroke-width: 1.2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.ms-landmark[data-state="plan"] .ms-flag, .ms-landmark[data-state="plan"] .ms-windows { display: none; }
+.ms-crane rect { fill: var(--ms-crane, #d79b2c); } .ms-crane .ms-crane-dark { fill: var(--ms-crane-dark, #6d5222); }
+.ms-crane-cable { stroke: var(--ms-crane-dark, #6d5222); stroke-width: 1.4; }
+.ms-crane-load { transform-box: fill-box; transform-origin: 50% -500%; animation: bm-sway 3.2s ease-in-out infinite alternate; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .menu-scene { --ms-plan: rgba(160, 196, 255, 0.6); --ms-plan-fill: rgba(160, 196, 255, 0.06); --ms-crane: #b9862c; } }
+:root[data-theme="dark"] .menu-scene { --ms-plan: rgba(160, 196, 255, 0.6); --ms-plan-fill: rgba(160, 196, 255, 0.06); --ms-crane: #b9862c; }
+@media (prefers-reduced-motion: reduce) { .ms-crane-load, .bm-mallcrane-load { animation: none; } }

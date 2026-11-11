@@ -20,6 +20,8 @@ export interface JourneyState {
   medals: string[]; // medals already awarded (so each is announced once)
   plans?: Record<string, SavedPlan>; // the latest plan that met each budget-desk level's goal
   games?: Record<string, { best: number; stars: number; plays: number }>; // each mission game's best score
+  built?: string[]; // Build the Mall: the jobs paid for with stars, in order (task ids)
+  decor?: string[]; // Build the Mall: the decorations placed (unlocked by accomplishments)
   settings: { text: TextSize; theme: ThemeChoice; freeRoam: boolean; narration: boolean; voice: string; haptics: boolean; sounds: boolean; voiceV?: number };
 }
 
@@ -69,6 +71,9 @@ interface Journey extends JourneyState {
   mark: (id: string) => void;
   award: (ids: string[]) => void;
   savePlan: (level: string, plan: SavedPlan) => void;
+  /** Build the Mall: pay for a job (the page checks the cost and the order). */
+  build: (taskId: string) => void;
+  placeDecor: (id: string) => void;
   start: () => void;
   reset: () => void;
 }
@@ -122,8 +127,10 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     mark: (id) => update((p) => (p.marks.includes(id) ? p : { ...p, marks: [...p.marks, id] })),
     award: (ids) => update((p) => ({ ...p, medals: [...p.medals, ...ids.filter((x) => !p.medals.includes(x))] })),
     savePlan: (level, plan) => update((p) => ({ ...p, plans: { ...(p.plans ?? {}), [level]: plan } })),
+    build: (id) => update((p) => ((p.built ?? []).includes(id) ? p : { ...p, built: [...(p.built ?? []), id] })),
+    placeDecor: (id) => update((p) => ((p.decor ?? []).includes(id) ? p : { ...p, decor: [...(p.decor ?? []), id] })),
     start: () => update((p) => (p.started ? p : { ...p, started: new Date().toISOString() })),
-    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, settings: p.settings })),
+    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, built: [], decor: [], settings: p.settings })),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -1,4 +1,6 @@
 import { type CSSProperties, useEffect, useRef } from 'react';
+import { currentLandmark, isComplete, LANDMARK_BY_ID } from './build/landmarks';
+import { useJourney } from './state';
 
 // The main menu's backdrop: the National Mall, drawn for this game. The Washington Monument (with
 // its ring of flags), the Capitol, and the Capitol Reflecting Pool. In the light theme it's a
@@ -7,6 +9,8 @@ import { type CSSProperties, useEffect, useRef } from 'react';
 // shifts a few pixels with the pointer, so the menu feels like a place. All of it is CSS on
 // transforms and opacity; it stops when the tab is hidden, when the scene is off screen, and for
 // people who ask for less motion. Colors are tokens in app.css (.ms-*), redefined for dark mode.
+// The two landmarks are the player's own (Build the Mall): one not yet finished is drawn as a pale
+// blueprint, with a crane beside it while it's the one going up.
 
 const W = 1600, GROUND = 700;
 
@@ -156,8 +160,25 @@ function Walker({ x, y, s, d, flip }: { x: number; y: number; s: number; d: numb
   );
 }
 
+/** A small crane beside a landmark that is going up. */
+function Crane({ x, h }: { x: number; h: number }) {
+  const g = GROUND;
+  return (
+    <g className="ms-crane">
+      <rect x={x - 3} y={g - h} width="6" height={h} />
+      <rect x={x - 84} y={g - h - 5} width="112" height="5" />
+      <rect x={x + 12} y={g - h - 3} width="14" height="10" className="ms-crane-dark" />
+      <line x1={x - 66} x2={x - 66} y1={g - h} y2={g - h + 54} className="ms-crane-cable" />
+      <rect x={x - 72} y={g - h + 54} width="12" height="9" className="ms-crane-dark ms-crane-load" />
+    </g>
+  );
+}
+
 export function MenuScene() {
   const ref = useRef<HTMLDivElement>(null);
+  const built = useJourney().built ?? [];
+  const wm = isComplete(LANDMARK_BY_ID.monument, built), cap = isComplete(LANDMARK_BY_ID.capitol, built);
+  const cur = currentLandmark(built)?.id;
   // Stop moving when nobody can see it; follow the pointer a little.
   useEffect(() => {
     const el = ref.current;
@@ -214,8 +235,10 @@ export function MenuScene() {
         {/* the far tree line, hazy */}
         <path className="ms-far ms-par ms-par-far" d={`M-40 ${GROUND + 4} L-40 662 Q20 640 70 655 Q120 632 180 650 Q240 628 300 646 Q350 630 410 648 Q470 634 520 652 L520 ${GROUND + 4} Z M1290 ${GROUND + 4} L1290 650 Q1340 630 1400 646 Q1460 626 1520 644 Q1580 632 1640 648 L1640 ${GROUND + 4} Z`} />
         <g className="ms-par ms-par-mid">
-          <Monument x={640} />
-          <Capitol cx={1000} />
+          <g className="ms-landmark" data-state={wm ? 'built' : 'plan'}><Monument x={640} /></g>
+          <g className="ms-landmark" data-state={cap ? 'built' : 'plan'}><Capitol cx={1000} /></g>
+          {cur === 'monument' && <Crane x={700} h={300} />}
+          {cur === 'capitol' && <Crane x={1280} h={280} />}
         </g>
         {/* the near trees */}
         <g className="ms-par ms-par-near">

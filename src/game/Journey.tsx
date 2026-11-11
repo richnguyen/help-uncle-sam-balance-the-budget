@@ -25,6 +25,7 @@ import { InstallButton } from './install';
 import { useJourney } from './state';
 import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
+import { balanceOf, currentLandmark, doneCount } from './build/landmarks';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
 import { SamSays, UncleSam } from './UncleSam';
 import { SamMenuSpot } from './samhud';
@@ -99,11 +100,16 @@ export default function Journey() {
   const primary = next
     ? { href: '#' + next.id, title: fresh ? 'Start the game' : 'Continue', sub: `${missionShort(next)}: ${next.title} · about ${next.minutes} min`, icon: 'play' as const }
     : { href: '#story', title: 'Your Budget Story', sub: 'Your plans and your budget personality, as cards to share', icon: 'story' as const };
+  // Build the Mall: the stars to spend, and the landmark going up.
+  const built = j.built ?? [];
+  const mallCur = currentLandmark(built);
+  const mallBal = balanceOf(j.stars, built);
+  const mallSub = mallCur ? `★ ${mallBal} to spend · ${mallCur.short}, ${doneCount(mallCur, built)} of ${mallCur.tasks.length} built` : 'The whole Mall is built: see it';
   const items: { href: string; title: string; sub: string; icon: MenuIconId }[] = [
+    { href: '#mall', title: 'Build the Mall', sub: mallSub, icon: 'build' },
     { href: '#daily', title: 'The Daily Dollar', sub: played && played.length >= ROUNDS ? `#${dayNumber(key)} done: ${played.filter(Boolean).length} of ${ROUNDS} · next in ${untilNext()}` : `#${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''} · five calls, about a minute`, icon: 'daily' },
     { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
     { href: '#guide', title: 'Field guide', sub: 'Every chapter in full, with sources and methods', icon: 'book' },
-    { href: '#settings', title: 'Settings', sub: 'Text size, theme, Uncle Sam’s voice, music', icon: 'gear' },
   ];
   return (
     <div className="menu">
@@ -121,6 +127,8 @@ export default function Journey() {
           <button type="button" className="menu-toggle" aria-pressed={sound} onClick={() => setAmbienceWanted(!sound)} aria-label={sound ? 'Sounds of the Mall: on. Turn them off' : 'Sounds of the Mall: off. Turn them on'} title={sound ? 'Sounds of the Mall: on' : 'Sounds of the Mall: off'}>
             <MenuIcon id={sound ? 'wind' : 'mute'} size={20} />
           </button>
+          {/* Settings: text size, theme, Uncle Sam's voice, music. */}
+          <a className="menu-toggle" href="#settings" aria-label="Settings: text size, theme, Uncle Sam’s voice, music" title="Settings"><MenuIcon id="gear" size={20} /></a>
           <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} missions, ${j.medals.length} medals`}>
             <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
             <span className="mp-text">
@@ -150,8 +158,9 @@ export default function Journey() {
   );
 }
 
-type MenuIconId = 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock';
+type MenuIconId = 'build' | 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock';
 const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
+  build: <><path d="M3.5 9 12 4l8.5 5" /><path d="M4.5 9.5h15M6.5 10.5v7M10 10.5v7M14 10.5v7M17.5 10.5v7M3.5 20h17M4.5 17.8h15" /></>,
   play: <><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" /></>,
   story: <><rect x="6" y="3" width="12" height="18" rx="2" /><path d="M9 7h6M9 10.5h6M9 14h3.5" /></>,
   map: <><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5z" /><path d="M9 4v13.5M15 6.5V20" /></>,

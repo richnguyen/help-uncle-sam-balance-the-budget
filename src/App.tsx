@@ -28,6 +28,7 @@ const Daily = lazy(() => import('./game/Daily'));
 const OgCard = lazy(() => import('./game/OgCard'));
 const Peoples = lazy(() => import('./game/Peoples'));
 const Rooms = lazy(() => import('./game/Rooms'));
+const BuildPage = lazy(() => import('./game/build/BuildPage'));
 const RoomPage = lazy(() => import('./game/RoomPage'));
 const Chain = lazy(() => import('./game/Chain'));
 const StatsPage = lazy(() => import('./game/Stats'));
@@ -106,6 +107,7 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['record', 'Your record'],
   ['settings', 'Settings'],
   ['guide', 'The field guide'],
+  ['mall', 'Build the Mall'],
   ...STOPS.map((l) => [l.id, `${missionShort(l)}: ${l.title}`]),
 ]);
 
@@ -167,6 +169,7 @@ const PAGES: Record<Route, (p: { param: string | null }) => JSX.Element> = {
   record: () => <RecordPage />,
   settings: () => <SettingsPage />,
   guide: () => <FieldGuide />,
+  mall: ({ param }) => <BuildPage param={param} />,
 };
 
 function DeskPage({ id }: { id: string }) {

@@ -8,7 +8,7 @@ export const ROUTES = [
   'level-spend', 'level-roles', 'level-rules', 'level-brakes', 'level-yardstick',
   'overview', 'spending', 'revenue', 'gap', 'debt', 'laws', 'process', 'state', 'social-security',
   'receipt', 'glossary', 'sources', 'results', 'plan', 'story', 'daily', 'og-card', 'peoples', 'rooms', 'room', 'chain', 'stats',
-  'me', 'clock', 'together', 'teach', 'duel', 'duels', 'levels', 'record', 'settings', 'guide',
+  'me', 'clock', 'together', 'teach', 'duel', 'duels', 'levels', 'record', 'settings', 'guide', 'mall',
 ] as const;
 export type Route = (typeof ROUTES)[number];
 
@@ -28,6 +28,8 @@ export function parseHash(hash: string): { route: Route; param: string | null } 
   const h = raw.toLowerCase();
   if (h.startsWith('state-')) return { route: 'state', param: h.slice(6) };
   if (h.startsWith('sources-')) return { route: 'sources', param: h.slice(8) };
+  // Build the Mall: one landmark's building site (mall-monument …).
+  if (h.startsWith('mall-')) return { route: 'mall', param: h.slice(5) };
   // Links from earlier versions: the budget desk's separate missions and its free-play page.
   const legacy: Record<string, Route> = { 'desk-normal': 'level-5', 'desk-hard': 'level-8', 'desk-expert': 'level-10', sandbox: 'level-10' };
   if (legacy[h]) {
