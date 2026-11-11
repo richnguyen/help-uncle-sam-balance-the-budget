@@ -276,10 +276,9 @@ budget adviser.
   left, always there, across the bar's two lines: half his body showing, right on its bottom edge.
   Line one, in larger text: the current mission and its name ("Mission 2.4 · Rules of the road",
   truncated to fit on phones) and your title, which opens the list of every mission by campaign
-  plus the field-guide chapters; then stars, accomplishments (medals and budget-desk badges),
-  Sound on/off (his voice), and Main menu. On phones the star count moves into the
-  accomplishments pop-up to make room. Line two: his words, running right to left beside him, the
-  word he's saying at the left end next to him. The glossary and Sources & methods are in the
+  plus the field-guide chapters; then stars, accomplishments (medals and budget-desk badges), and
+  Main menu. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
+  his words, running right to left beside him, the word he's saying at the left end next to him. The glossary and Sources & methods are in the
   field guide and the footer; Settings is on the main menu.
 - **Settings** (main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
   free roam to unlock everything.
@@ -353,8 +352,8 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   1/15 of a second of each recording is, and the narrator opens his mouth to match (with a device
   voice, it opens on each word). With reduced motion he holds still.
 - **Thumb-friendly.** Every control is at least 44 × 44 px on a touch screen.
-- **Less on screen.** Four controls in the top bar on phones (the mission, accomplishments,
-  sound, and the main menu), and the top bar's Continue moves down to the action bar at every width; the footer is one line, with the field guide
+- **Less on screen.** On phones the top bar holds the mission, stars, accomplishments and the
+  main menu, with the sound switch at the start of Uncle Sam's strip, and the top bar's Continue moves down to the action bar at every width; the footer is one line, with the field guide
   and the note about the figures in Sources & methods; on the desk, the scoreboard and cards come straight after the title. Medal and badge
   messages share one stack under the top bar.
 - **Interruptions.** A call, a locked screen, or a closed tab loses nothing: level steps,

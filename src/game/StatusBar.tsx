@@ -10,9 +10,9 @@ import { SamPortrait, SpeechStrip } from './samhud';
 
 // The one bar at the top of every page. Uncle Sam stands at the left, across both lines. Line one:
 // the current mission, its name, and your title (hovering it, or tapping, lists every mission to
-// jump to, plus the field guide), then stars, accomplishments, his voice, and the main menu (where
-// Settings lives; the glossary and Sources & methods are in the field guide and the footer). Line
-// two: his words, running beside him.
+// jump to, plus the field guide), then stars, accomplishments, and the main menu (where Settings
+// lives; the glossary and Sources & methods are in the field guide and the footer). Line two: his
+// voice switch, then his words, running beside him.
 
 /** Budget-desk badges are saved by the desk itself; re-read them whenever it saves. */
 function useDeskBadges() {
@@ -139,17 +139,19 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
             </ul>
             <a className="small" href="#record">Certificates and fact cards are in Your record</a>
             </Pop>
-            {n.supported && (
-              <button type="button" className="ab-btn stb-voice" aria-pressed={voiceOn} aria-label="Sound" title={voiceOn ? 'Uncle Sam’s voice is on: tap to turn it off' : 'Uncle Sam’s voice is off: tap to turn it on'} onClick={toggleVoice}>
-                <SpeakerIcon on={voiceOn} /><span className="ab-label">{voiceOn ? 'Sound on' : 'Sound off'}</span>
-              </button>
-            )}
             <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
           </div>
         </div>
         </div>
-        {/* Line two: his words, running beside him. */}
-        <SpeechStrip caption={caption} />
+        {/* Line two: his voice switch, then his words, running beside him. */}
+        <div className="hud-talk">
+          {n.supported && (
+            <button type="button" className="hud-voice" aria-pressed={voiceOn} aria-label="Sound" title={voiceOn ? 'Uncle Sam’s voice is on: tap to turn it off' : 'Uncle Sam’s voice is off: tap to turn it on'} onClick={toggleVoice}>
+              <SpeakerIcon on={voiceOn} /><span className="hud-voice-label">{voiceOn ? 'Sound on' : 'Sound off'}</span>
+            </button>
+          )}
+          <SpeechStrip caption={caption} />
+        </div>
         </div>
       </div>
     </header>
