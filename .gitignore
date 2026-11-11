@@ -12,3 +12,6 @@ data/raw/cms/*.html
 # Large source files for the county tax view (npm run data:county downloads them again)
 data/raw/irs/23incyallagi.csv
 data/raw/census/tab20_*.txt
+
+# TypeScript build cache (tsc -b)
+*.tsbuildinfo
