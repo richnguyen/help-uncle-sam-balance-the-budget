@@ -117,13 +117,15 @@ function LevelRun({ level }: { level: Level }) {
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
   }, []);
+  // The top bar already names the mission, so the page opens on one line of steps and then the
+  // step itself; the title stays for screen readers and the step count lives in the line.
   return (
     <div className="level" ref={top}>
-      <LevelHead level={level} />
+      <h1 className="sr-only">{level.title}</h1>
       <StepTrack level={level} at={i} done={doneSteps} finished={j.done.includes(level.id)} onGo={go} />
       {step ? (
         <section className="level-stage" aria-live="polite" aria-labelledby="step-label">
-          <div className="step-count" id="step-label">Step {i + 1} of {level.steps.length} · {step.label}</div>
+          <div className="step-count sr-only" id="step-label">Step {i + 1} of {level.steps.length} · {step.label}</div>
           <StepBody key={level.id + step.id} level={level} step={step} />
           <ActionBar className="level-nav" label="Step">
             <button type="button" className="btn" onClick={back} disabled={i === 0}>Back</button>
@@ -146,35 +148,47 @@ function hasVoted(v: VoteSpec, choices: Record<string, string>) {
   return v.kind === 'option' ? !!choices['option:' + v.optionId] : !!choices[v.id];
 }
 
+/** One line: every step as a tab (done ones filled, the current one ringed), then the mission's
+ *  difficulty, its time, and your best stars. On phones only the current step keeps its name. */
 function StepTrack({ level, at, done, finished, onGo }: { level: Level; at: number; done: number[]; finished: boolean; onGo: (n: number) => void }) {
+  const j = useJourney();
   const n = level.steps.length;
   const count = finished ? n : done.length;
+  const best = j.stars[level.id] ?? 0;
   return (
-    <nav className="steptrack" aria-label="Steps in this mission">
-      <div className="steptrack-bar" role="progressbar" aria-valuemin={0} aria-valuemax={n} aria-valuenow={count} aria-label={`${count} of ${n} steps done`}>
+    <nav className="steptrack" data-diff={diffKey(level.difficulty)} aria-label={`Steps in this mission: ${count} of ${n} done`}>
+      <ol className="steptrack-bar">
         {level.steps.map((s, k) => {
           const isDone = finished || done.includes(k);
           const reachable = isDone || k <= Math.max(at, done.length ? Math.max(...done) + 1 : 0);
           return (
-            <button key={s.id} type="button" className="steptrack-seg" data-done={isDone} data-current={k === at} disabled={!reachable} onClick={() => onGo(k)} aria-current={k === at ? 'step' : undefined} title={s.label}>
-              <span className="sr-only">Step {k + 1}: {s.label}{isDone ? ' (done)' : ''}</span>
-            </button>
+            <li key={s.id} data-current={k === at || undefined}>
+              <button type="button" className="steptrack-seg" data-done={isDone} data-current={k === at} disabled={!reachable} onClick={() => onGo(k)} aria-current={k === at ? 'step' : undefined} title={`Step ${k + 1}: ${s.label}`}>
+                <span className="st-mark" aria-hidden="true">{isDone ? '✓' : k + 1}</span>
+                <span className="st-label" aria-hidden="true">{s.label}</span>
+                <span className="sr-only">Step {k + 1} of {n}: {s.label}{isDone ? ' (done)' : ''}</span>
+              </button>
+            </li>
           );
         })}
-      </div>
-      <ol className="steptrack-labels">
-        {level.steps.map((s, k) => (
-          <li key={s.id} data-done={finished || done.includes(k)} data-current={k === at}>
-            <span aria-hidden="true">{finished || done.includes(k) ? '✓' : k + 1}</span> {s.label}
-          </li>
-        ))}
       </ol>
+      <span className="steptrack-meta small">
+        {j.done.includes(level.id) && <Stars n={best} size="sm" label={`Best on this mission: ${best} of 3 stars`} />}
+        <span className="st-diff">{level.difficulty}</span>
+        <span className="muted">· about {level.minutes} min</span>
+      </span>
     </nav>
   );
 }
 
 function StepBody({ step, level }: { step: Step; level: Level }) {
-  if (step.kind === 'story') return <SamSays mood={step.mood} size={150} auto>{step.sam}</SamSays>;
+  // Uncle Sam tells the story from the top bar; the page gives the mission's one-line brief.
+  if (step.kind === 'story') return (
+    <>
+      <SamSays mood={step.mood} size={150} auto>{step.sam}</SamSays>
+      <p className="level-brief"><span className="stat-label">In this mission</span> {level.topic}</p>
+    </>
+  );
   if (step.kind === 'game') return <GameStep game={step.game!} takeaways={level.takeaways} />;
   if (step.kind === 'quiz') return <QuizCard quiz={step.quiz!} />;
   if (step.kind === 'vote') return (

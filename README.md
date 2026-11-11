@@ -115,8 +115,9 @@ budget adviser.
 - **Every lesson mission is a game** (`src/game/minigame.tsx`, a `game` step). The 13 lesson
   missions each run: Uncle Sam's setup line, one scored game, a step to explore (your tax
   receipt, your state, the laws, the ripple, the pie, the bridge and so on), and one vote on a
-  real policy choice. A game is 2–4 short rounds worth up to 100 points each, with a score bar
-  (round dots, points, a meter toward three stars) that stays in view. After each round a banner
+  real policy choice. A game is 2–5 short rounds worth up to 100 points each, with a one-line
+  score bar that stays in view: the round dots (the current one carries its name, finished ones
+  their points; a check on phones), the points, a meter toward three stars, and the stars. After each round a banner
   shows the points and why; at the end, the final score, stars (three at 85% of the points, two
   at 60%, one for finishing) and what the game showed (the mission's takeaways), with Play again.
   The best score is kept, sets the mission's stars, and greets the player on a return visit.
@@ -280,6 +281,12 @@ budget adviser.
   Main menu. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
   his words, running right to left beside him, the word he's saying at the left end next to him. The glossary and Sources & methods are in the
   field guide and the footer; Settings is on the main menu.
+- **A mission page wastes no room on repeats** (`src/game/LevelPage.tsx`): the top bar already
+  names the mission, so the page opens on one line of steps, as tabs (done ones filled and
+  checked, the current one ringed; tap one to go back), with the difficulty, the time, and your
+  best stars at its right end. On phones only the current step keeps its name. The mission's
+  title and "Step 2 of 4" are kept for screen readers; the intro step shows the mission's
+  one-line brief while Uncle Sam tells the story in the top bar. Then comes the step itself.
 - **Settings** (main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents

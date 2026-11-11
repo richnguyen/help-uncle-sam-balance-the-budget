@@ -86,18 +86,20 @@ export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: stri
   }
   return (
     <div className="mgame" ref={top} data-run={run}>
+      {/* One line: the rounds (the current one named, finished ones with their points), then the
+          score, the meter toward three stars, and the stars. The game's name is the step's. */}
       <div className="game-hud" role="group" aria-label={`${game.title}: round ${Math.min(r + 1, n)} of ${n}, ${total} points`}>
-        <span className="game-title">{game.title}</span>
-        <span className="game-goal small muted">{game.goal}</span>
+        <span className="sr-only">{game.goal}</span>
         <ol className="game-dots" aria-hidden="true">
-          {game.rounds.map((x, k) => <li key={x.id} data-on={k === r || undefined} data-done={pts[k] != null || undefined}>{pts[k] != null ? `+${pts[k]}` : k + 1}</li>)}
+          {game.rounds.map((x, k) => k === r
+            ? <li key={x.id} data-on data-done={pts[k] != null || undefined}><span className="game-round-label" id={`round-${x.id}`}><span className="sr-only">Round </span>{k + 1}<span className="sr-only"> of {n}</span> · {x.label}</span></li>
+            : <li key={x.id} data-done={pts[k] != null || undefined} title={x.label}>{pts[k] != null ? <><span className="gd-pts">+{pts[k]}</span><span className="gd-ok">✓</span></> : k + 1}</li>)}
         </ol>
         <span className="game-score"><strong className="num">{total}</strong><span className="small muted"> / {max}</span></span>
         <span className="game-meter" aria-hidden="true"><span style={{ width: `${meter * 100}%` }} /><i style={{ left: `${(0.6 / 0.85) * 100}%` }} /><i style={{ left: '100%' }} /></span>
         <Stars n={over ? live : Math.min(live, total >= 0.6 * max ? 2 : total > 0 ? 1 : 0)} size="sm" label={`${live} of 3 stars so far`} />
       </div>
       <section className="game-round" key={`${run}-${r}`} aria-labelledby={`round-${round.id}`}>
-        <div className="game-round-label eyebrow" id={`round-${round.id}`}>Round {r + 1} of {n} · {round.label}</div>
         <RoundView round={round} done={done} />
       </section>
       {pts[r] != null && (
