@@ -91,7 +91,8 @@ export function SamPortrait({ variant = 'hud' }: { variant?: 'hud' | 'menu' }) {
 }
 
 /** Where on the strip the word he is saying sits: right under him, in the middle. */
-const READ = 0.5;
+/** Where the word he's saying sits in the strip: at its left end, right beside him. */
+const READ = 0.04;
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /**
@@ -138,7 +139,7 @@ export function SpeechStrip({ caption }: { caption: string }) {
       else if (mode === 'voice') p = 1; // he finished, or was stopped
       else if (mode === 'wait' && now >= startAt + (expectVoice ? 1500 : 0)) { mode = 'time'; tStart = now; }
       if (mode === 'time') p = Math.min(1, (now - tStart) / D);
-      // The line slides in from the right edge, its first word stopping under him until he starts.
+      // The line slides in from the right edge, its first word stopping beside him until he starts.
       const x = mode === 'wait' ? C + (read - C) * ease(Math.min(1, (now - t0) / 500)) : read - p * W;
       el.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
       if (p >= 1) {

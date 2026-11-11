@@ -2671,3 +2671,29 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   .hud .stb-acc-btn { padding: 2px 5px; }
 }
 @media (min-width: 701px) { .hud .hud-right .ab-btn.stb-voice .ab-label { display: inline; } }
+
+/* ---------- Top bar: Uncle Sam at the left; his words are the bar's second line ---------- */
+.hud-inner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 0 14px; padding-block: 4px 0; }
+.hud-sam { display: flex; align-items: flex-end; align-self: end; }
+.hud-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; padding-bottom: 6px; }
+.hud-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.hud-line .hud-side { padding: 0; }
+.hud-line .hud-left { flex: 1 1 auto; }
+.hud-line .hud-right { flex: 0 0 auto; }
+.hud .sam-strip { height: 32px; border: 1px solid var(--line); border-top: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.hud .sam-strip-tag { display: none; }
+.hud .sam-strip-run { line-height: 30px; }
+.hud .sam-strip-still, .hud .sam-strip-caption { left: 16px; right: 36px; line-height: 30px; }
+.hud .sam-strip-again { right: 14px; line-height: 30px; }
+/* What he has said dims as it slides past him; what's coming is full strength. */
+.hud .sam-strip[data-state="running"] .sam-strip-view {
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, rgba(0, 0, 0, 0.6) 3.5%, #000 4.5%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, rgba(0, 0, 0, 0.6) 3.5%, #000 4.5%, #000 95%, transparent 100%); }
+@media (max-width: 760px) {
+  .hud-inner { gap: 0 8px; }
+  .hud-main { gap: 3px; padding-bottom: 5px; }
+  .hud .sam-strip { height: 30px; }
+  .hud .sam-strip-run, .hud .sam-strip-still, .hud .sam-strip-caption, .hud .sam-strip-again { line-height: 28px; }
+  .hud .sam-strip-still, .hud .sam-strip-caption { left: 12px; right: 30px; }
+  .hud .sam-strip-again { right: 10px; }
+}

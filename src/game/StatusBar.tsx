@@ -1,5 +1,4 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { BrandMark } from '../components/Guilloche';
 import { BADGES, loadProgress } from '../lib/game';
 import { AwardIcon, CaretIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
 import { campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
@@ -9,11 +8,11 @@ import { useJourney } from './state';
 import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
 
-// The one bar at the top of every page, one line a side with Uncle Sam in the middle. Left: the
-// current mission, its name, and your title; hovering it (or tapping) lists every mission to jump
-// to, plus the field guide. Right: stars, accomplishments, his voice, and the main menu (where
-// Settings lives; the glossary and Sources & methods are in the field guide and the footer).
-// Under it all, the strip his words run across.
+// The one bar at the top of every page. Uncle Sam stands at the left, across both lines. Line one:
+// the current mission, its name, and your title (hovering it, or tapping, lists every mission to
+// jump to, plus the field guide), then stars, accomplishments, his voice, and the main menu (where
+// Settings lives; the glossary and Sources & methods are in the field guide and the footer). Line
+// two: his words, running beside him.
 
 /** Budget-desk badges are saved by the desk itself; re-read them whenever it saves. */
 function useDeskBadges() {
@@ -75,9 +74,12 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
   return (
     <header className="appbar hud" ref={bar} aria-label="Game bar">
       <div className="ab-inner hud-inner">
+        {/* Uncle Sam stands at the left, across both lines. */}
+        <div className="hud-sam"><SamPortrait /></div>
+        <div className="hud-main">
+        <div className="hud-line">
         {/* Left: where you are: the mission, its name, and your title. */}
         <div className="hud-side hud-left">
-          <a className="ab-brand" href="#journey" aria-label="Help Uncle Sam Balance the Budget: main menu"><BrandMark /></a>
           <Pop id="levels" open={open} setOpen={setOpen} hover className="ab-levels" button={(p) => (
             <div className="ab-levelbar hud-row">
               <button type="button" className="ab-level" {...p} aria-label={`${missionLong(focus)}: ${focus.title}. Show all missions`}>
@@ -119,9 +121,6 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
           </Pop>
         </div>
 
-        {/* The middle: Uncle Sam, always here. */}
-        <div className="hud-center"><SamPortrait /></div>
-
         {/* Right, in one line: your score, his voice, and the way out. */}
         <div className="hud-side hud-right">
           <div className="hud-row">
@@ -148,9 +147,11 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
             <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
           </div>
         </div>
+        </div>
+        {/* Line two: his words, running beside him. */}
+        <SpeechStrip caption={caption} />
+        </div>
       </div>
-      {/* His words run across the strip under the bar. */}
-      <SpeechStrip caption={caption} />
     </header>
   );
 }

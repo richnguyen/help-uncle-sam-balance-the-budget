@@ -272,14 +272,15 @@ budget adviser.
     history on citizenship, responsibility, the future or the economy, and a preview of the next
     level.
   - Adviser titles and a copyable "budget ballot".
-- **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): one line a side, in
-  larger text, with Uncle Sam standing in the middle, always there: half his body showing, right
-  on the bar's bottom edge. Left: the current mission and its name ("Mission 2.4 · Rules of the
-  road", truncated to fit on phones) and your title; hovering or tapping it lists every mission by
-  campaign, plus the field-guide chapters. Right: stars, accomplishments (medals and budget-desk
-  badges), Sound on/off (Uncle Sam's voice), and Main menu. On phones the star count moves into
-  the accomplishments pop-up to make room. Under it all runs his speech strip. The glossary and
-  Sources & methods are in the field guide and the footer; Settings is on the main menu.
+- **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): Uncle Sam stands at the
+  left, always there, across the bar's two lines: half his body showing, right on its bottom edge.
+  Line one, in larger text: the current mission and its name ("Mission 2.4 · Rules of the road",
+  truncated to fit on phones) and your title, which opens the list of every mission by campaign
+  plus the field-guide chapters; then stars, accomplishments (medals and budget-desk badges),
+  Sound on/off (his voice), and Main menu. On phones the star count moves into the
+  accomplishments pop-up to make room. Line two: his words, running right to left beside him, the
+  word he's saying at the left end next to him. The glossary and Sources & methods are in the
+  field guide and the footer; Settings is on the main menu.
 - **Settings** (main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
@@ -327,8 +328,9 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   the right edge of the page's column. The celebration opens as a sheet from the bottom with its
   next step pinned in reach.
 - **Uncle Sam's speech strip** (`src/game/samhud.tsx`). When he speaks, his line runs right to
-  left across the strip under the top bar at the pace he speaks it, so the word he is saying
-  passes right under him; words he has said dim, words to come stay bright. With his voice on, the strip follows the recording word for word (the narrator reports
+  left across the top bar's second line, beside him, at the pace he speaks it, so the word he is
+  saying sits at the strip's left end next to him; words he has said dim, words to come stay
+  bright. With his voice on, the strip follows the recording word for word (the narrator reports
   how far into the line he is, from the clip's own clock); with it off, it runs at his usual pace,
   timed from the same recordings. Then the line settles in place, and a tap on the strip or on him
   runs it again (and says it, when his voice is on). On a page with no line of his own, the strip
