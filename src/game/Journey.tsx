@@ -43,7 +43,7 @@ const byName = (line: string, name: string) => (!name ? line : /^Welcome back/.t
 // you are in the top-right corner; live numbers on the right; small things in the bottom
 // corners. Every choice leads to its own page, and every page leads back here.
 const NEWS = [
-  { date: '2026-11-10', title: 'New mission 3.4: Compared to what?', body: 'The same budget gap, two yardsticks: history and today’s needs. Plus who pays the income tax in your county.', href: '#level-yardstick' },
+  { date: '2026-11-11', title: 'New mission 3.4: Compared to what?', body: 'The same budget gap, two yardsticks: history and today’s needs. Plus who pays the income tax in your county.', href: '#level-yardstick' },
   { date: '2026-11-10', title: 'Every mission is a game, and four new ones', body: 'Score points in every lesson mission, then learn how Congress really budgets: who does what, the rules, and the brakes.', href: '#levels' },
   { date: '2026-11-09', title: 'Three campaigns, sixteen missions', body: 'Six new missions on how a change hits the economy, who pays, and what grows it, plus plan ideas on every desk.', href: '#levels' },
   { date: '2026-11-08', title: 'Duel a friend on the final mission', body: 'Two plans built blind, three rounds, and fewer cards breaks a tie.', href: '#together' },
