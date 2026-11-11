@@ -117,11 +117,11 @@ function LevelRun({ level }: { level: Level }) {
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
   }, []);
-  // The top bar already names the mission, so the page opens on one line of steps and then the
-  // step itself; the title stays for screen readers and the step count lives in the line.
+  // A compact head: the mission's title with its difficulty, time and best stars on the same
+  // line, then one line of steps, then the step itself (the step count lives in the line).
   return (
     <div className="level" ref={top}>
-      <h1 className="sr-only">{level.title}</h1>
+      <MissionTitle level={level} />
       <StepTrack level={level} at={i} done={doneSteps} finished={j.done.includes(level.id)} onGo={go} />
       {step ? (
         <section className="level-stage" aria-live="polite" aria-labelledby="step-label">
@@ -148,15 +148,29 @@ function hasVoted(v: VoteSpec, choices: Record<string, string>) {
   return v.kind === 'option' ? !!choices['option:' + v.optionId] : !!choices[v.id];
 }
 
-/** One line: every step as a tab (done ones filled, the current one ringed), then the mission's
- *  difficulty, its time, and your best stars. On phones only the current step keeps its name. */
-function StepTrack({ level, at, done, finished, onGo }: { level: Level; at: number; done: number[]; finished: boolean; onGo: (n: number) => void }) {
+/** One line: the mission's title, then its difficulty, its time, and your best stars. */
+function MissionTitle({ level }: { level: Level }) {
   const j = useJourney();
-  const n = level.steps.length;
-  const count = finished ? n : done.length;
   const best = j.stars[level.id] ?? 0;
   return (
-    <nav className="steptrack" data-diff={diffKey(level.difficulty)} aria-label={`Steps in this mission: ${count} of ${n} done`}>
+    <header className="level-title" data-diff={diffKey(level.difficulty)}>
+      <h1 className="level-name">{level.title}</h1>
+      <span className="level-meta small">
+        {j.done.includes(level.id) && <Stars n={best} size="sm" label={`Best on this mission: ${best} of 3 stars`} />}
+        <span className="st-diff">{level.difficulty}</span>
+        <span className="muted">· <span className="lm-about">about </span>{level.minutes} min</span>
+      </span>
+    </header>
+  );
+}
+
+/** One line: every step as a tab (done ones filled, the current one ringed). On phones only the
+ *  current step keeps its name. */
+function StepTrack({ level, at, done, finished, onGo }: { level: Level; at: number; done: number[]; finished: boolean; onGo: (n: number) => void }) {
+  const n = level.steps.length;
+  const count = finished ? n : done.length;
+  return (
+    <nav className="steptrack" aria-label={`Steps in this mission: ${count} of ${n} done`}>
       <ol className="steptrack-bar">
         {level.steps.map((s, k) => {
           const isDone = finished || done.includes(k);
@@ -172,11 +186,6 @@ function StepTrack({ level, at, done, finished, onGo }: { level: Level; at: numb
           );
         })}
       </ol>
-      <span className="steptrack-meta small">
-        {j.done.includes(level.id) && <Stars n={best} size="sm" label={`Best on this mission: ${best} of 3 stars`} />}
-        <span className="st-diff">{level.difficulty}</span>
-        <span className="muted">· about {level.minutes} min</span>
-      </span>
     </nav>
   );
 }

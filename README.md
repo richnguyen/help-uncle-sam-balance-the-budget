@@ -281,12 +281,12 @@ budget adviser.
   Main menu. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
   his words, running right to left beside him, the word he's saying at the left end next to him. The glossary and Sources & methods are in the
   field guide and the footer; Settings is on the main menu.
-- **A mission page wastes no room on repeats** (`src/game/LevelPage.tsx`): the top bar already
-  names the mission, so the page opens on one line of steps, as tabs (done ones filled and
-  checked, the current one ringed; tap one to go back), with the difficulty, the time, and your
-  best stars at its right end. On phones only the current step keeps its name. The mission's
-  title and "Step 2 of 4" are kept for screen readers; the intro step shows the mission's
-  one-line brief while Uncle Sam tells the story in the top bar. Then comes the step itself.
+- **A mission page wastes no room on repeats** (`src/game/LevelPage.tsx`): one compact line
+  with the mission's title, its difficulty, its time and your best stars (no campaign eyebrow,
+  since the top bar has the mission's code); then one line of steps, as tabs (done ones filled
+  and checked, the current one ringed; tap one to go back). On phones only the current step keeps
+  its name. "Step 2 of 4" is kept for screen readers. The intro step shows the mission's one-line
+  brief while Uncle Sam tells the story in the top bar. Then comes the step itself.
 - **Settings** (main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
