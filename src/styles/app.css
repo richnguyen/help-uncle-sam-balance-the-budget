@@ -2768,7 +2768,7 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
     --bm-water-0: #1d3a5c; --bm-water-1: #0f2340; --bm-pool-rim: #4a4a46; --bm-reflect: rgba(255, 236, 190, 0.22); --bm-shimmer: rgba(255, 220, 150, 0.55); --bm-basin: #13294a;
     --bm-tree: #12261b; --bm-tree-side: #0d1d15; --bm-blossom: #d896ad; --bm-blossom-side: #b97a92; --bm-trunk: #2a1f16;
     --bm-flag-red: #b03a2e; --bm-flag-white: #ece6da; --bm-flag-blue: #2a3f72; --bm-pole: #9a968c;
-    --bm-flood: rgba(255, 220, 150, 0.22); --bm-beam: rgba(255, 230, 170, 0.12);
+    --bm-flood: rgba(255, 222, 160, 0.42); --bm-beam: rgba(255, 230, 170, 0.12);
     --bm-bp: #7fb3f0; --bm-bp-fill: rgba(127, 179, 240, 0.06); --bm-bp-next: #a8ccf7; --bm-bp-next-fill: rgba(127, 179, 240, 0.16);
     --bm-scaffold: #c79a5f; --bm-crane: #e8b048; --bm-crane-dark: #a27a2e; --bm-dust: rgba(160, 150, 130, 0.7); --bm-spark: #ffe08a;
     --bm-far: #18243a; --bm-far-2: #141e31; --bm-city: #1b2638;
@@ -2788,7 +2788,7 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   --bm-water-0: #1d3a5c; --bm-water-1: #0f2340; --bm-pool-rim: #4a4a46; --bm-reflect: rgba(255, 236, 190, 0.22); --bm-shimmer: rgba(255, 220, 150, 0.55); --bm-basin: #13294a;
   --bm-tree: #12261b; --bm-tree-side: #0d1d15; --bm-blossom: #d896ad; --bm-blossom-side: #b97a92; --bm-trunk: #2a1f16;
   --bm-flag-red: #b03a2e; --bm-flag-white: #ece6da; --bm-flag-blue: #2a3f72; --bm-pole: #9a968c;
-  --bm-flood: rgba(255, 220, 150, 0.22); --bm-beam: rgba(255, 230, 170, 0.12);
+  --bm-flood: rgba(255, 222, 160, 0.42); --bm-beam: rgba(255, 230, 170, 0.12);
   --bm-bp: #7fb3f0; --bm-bp-fill: rgba(127, 179, 240, 0.06); --bm-bp-next: #a8ccf7; --bm-bp-next-fill: rgba(127, 179, 240, 0.16);
   --bm-scaffold: #c79a5f; --bm-crane: #e8b048; --bm-crane-dark: #a27a2e; --bm-dust: rgba(160, 150, 130, 0.7); --bm-spark: #ffe08a;
   --bm-far: #18243a; --bm-far-2: #141e31; --bm-city: #1b2638;

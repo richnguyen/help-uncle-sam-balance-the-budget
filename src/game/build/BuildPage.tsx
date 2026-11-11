@@ -8,7 +8,7 @@ import { SamSays } from '../UncleSam';
 import type { Mood } from '../voice';
 import { bump, buildPart, flyStar, hidePart } from './anim';
 import { FRAME, LandmarkArt } from './art';
-import { balanceOf, doneCount, isComplete, isOpen, type Landmark, LANDMARK_BY_ID, LANDMARKS, type LandmarkId, mallComplete, nextTask, partStates, starsSpent, starsWon, type Task, TOTAL_COST } from './landmarks';
+import { balanceOf, BUILD_LINES, doneCount, isComplete, isOpen, type Landmark, LANDMARK_BY_ID, LANDMARKS, type LandmarkId, mallComplete, nextTask, partStates, starsSpent, starsWon, type Task, TOTAL_COST } from './landmarks';
 import { MallView } from './mall';
 
 // Build the Mall: the whole Mall (#mall) and each landmark's building site (#mall-monument …).
@@ -59,11 +59,7 @@ function MallPage() {
     const at: Record<LandmarkId, number> = { capitol: 0.79, treasury: 0.42, whitehouse: 0.32, monument: 0.5, jefferson: 0.68, lincoln: 0.16 };
     el.scrollLeft = el.scrollWidth * at[cur?.id ?? 'monument'] - el.clientWidth / 2;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const say = mallComplete(built)
-    ? 'You rebuilt the whole Mall, from the Lincoln Memorial to the Capitol. Every piece paid for with stars you earned.'
-    : !built.length
-      ? 'Every star you win in a mission pays for one piece of a landmark. Let’s rebuild the National Mall, starting with the Washington Monument.'
-      : `Here’s your Mall so far. Next up: the ${cur?.short ?? 'next landmark'}.`;
+  const say = mallComplete(built) ? BUILD_LINES.done : !built.length || !cur ? BUILD_LINES.fresh : BUILD_LINES.next(cur.short);
   return (
     <div className="bm-page">
       <header className="level-title">
@@ -162,7 +158,7 @@ function LandmarkSite({ l }: { l: Landmark }) {
         setBusy(false);
         setSay({ key: next.id, text: next.fact, mood: 'cheering' });
         // The last job: the postcard.
-        if (l.tasks.every((t) => t.id === next.id || (j.built ?? []).includes(t.id))) setTimeout(() => { buzz('landmark'); setCard(true); }, 700);
+        if (l.tasks.every((t) => t.id === next.id || (j.built ?? []).includes(t.id))) setTimeout(() => { buzz('landmark'); setCard(true); }, 1200);
       },
     };
     j.build(next.id);
@@ -282,7 +278,7 @@ function Postcard({ l, placed, after, acc, onClose }: { l: Landmark; placed: boo
   return (
     <div className="celebrate-scrim" onClick={onClose}>
       <div className="celebrate bm-postcard" role="dialog" aria-modal="true" aria-labelledby="bm-pc-t" onClick={(e) => e.stopPropagation()} ref={box}>
-        <div className="bm-postcard-art">
+        <div className="bm bm-postcard-art">
           <svg className="bm" viewBox={`${x} ${y} ${w} ${h}`} preserveAspectRatio="xMidYMax meet" aria-hidden="true">
             <rect x={x - 400} y={y - 400} width={w + 800} height={400 - y} className="bm-pc-sky" />
             <rect x={x - 400} y={0} width={w + 800} height={h + 400} className="bm-lawn" />

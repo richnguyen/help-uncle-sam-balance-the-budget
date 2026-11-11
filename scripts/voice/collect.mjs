@@ -86,6 +86,18 @@ const banks = await page.evaluate(async () => {
   Object.values(S.DUEL_LINES).forEach((t) => add('common', t));
   add('common', S.DAILY_LINES.done);
   S.DAILY_LINES.score.forEach((t) => add('common', t));
+  // Build the Mall: each landmark's opening line, every job's fact, the decorations, the
+  // postcards' first lines, and the Mall page's lines. Their own bank, loaded on those pages.
+  const B = await import('/src/game/build/landmarks.ts');
+  add('mall', B.BUILD_LINES.fresh);
+  add('mall', B.BUILD_LINES.done);
+  for (const l of B.LANDMARKS) {
+    add('mall', l.blurb);
+    add('mall', l.postcard[0]);
+    add('mall', B.BUILD_LINES.next(l.short));
+    for (const t of l.tasks) add('mall', t.fact);
+    add('mall', l.decor.fact);
+  }
   add('common', S.VOICE_TEST);
   add('common', S.JOURNEY_LINES.finished);
   for (const r of L.RANKS) {

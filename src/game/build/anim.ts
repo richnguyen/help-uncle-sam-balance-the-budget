@@ -67,7 +67,7 @@ function scaffold(layer: SVGGElement, b: { x: number; y: number; w: number; h: n
 /** A crane beside the box, its hook over the middle; returns the hook (cable and load) to lower. */
 function crane(layer: SVGGElement, b: { x: number; y: number; w: number; h: number }, lift: number) {
   const g = el('g', { class: 'bm-crane' }, layer);
-  const mx = b.x + b.w + Math.max(40, b.w * 0.5), top = b.y - lift - 40, hookX = b.x + b.w / 2;
+  const mx = b.x + b.w + Math.max(64, b.w * 0.6), top = b.y - lift - 40, hookX = b.x + b.w / 2;
   el('rect', { x: mx - 4, y: top, width: 8, height: -top, class: 'bm-crane-mast' }, g);
   for (let y = top + 10; y < -6; y += 14) el('line', { x1: mx - 4, x2: mx + 4, y1: y, y2: y + 10, class: 'bm-crane-lace' }, g);
   el('rect', { x: hookX - 16, y: top - 6, width: mx - hookX + 40, height: 6, class: 'bm-crane-mast' }, g);

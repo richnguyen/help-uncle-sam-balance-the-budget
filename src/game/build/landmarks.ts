@@ -56,7 +56,7 @@ export const LANDMARKS: Landmark[] = [
     ],
     decor: { id: 'monument:flags', label: 'Raise the ring of 50 flags', need: 1, kind: 'bloom', fact: 'Fifty U.S. flags fly in a circle around the base, for the fifty states.' },
     postcard: [
-      'Finished in 1884 at 555 feet 5⅛ inches, it was the tallest structure in the world until the Eiffel Tower, in 1889.',
+      'Finished in 1884 and just over 555 feet tall, it was the tallest structure in the world until the Eiffel Tower, in 1889.',
       'Its construction stopped for more than twenty years; the color change in the marble shows where.',
       'It opened to the public in 1888.',
     ],
@@ -184,6 +184,13 @@ export const LANDMARKS: Landmark[] = [
     ],
   },
 ];
+
+/** What Uncle Sam says on the Mall's page. */
+export const BUILD_LINES = {
+  fresh: 'Every star you win in a mission pays for one piece of a landmark. Let’s rebuild the National Mall, starting with the Washington Monument.',
+  done: 'You rebuilt the whole Mall, from the Lincoln Memorial to the Capitol. Every piece was paid for with stars you earned.',
+  next: (name: string) => `Here’s your Mall so far. Next up: the ${name}.`,
+};
 
 export const LANDMARK_BY_ID = Object.fromEntries(LANDMARKS.map((l) => [l.id, l])) as Record<LandmarkId, Landmark>;
 export const ALL_TASKS = LANDMARKS.flatMap((l) => l.tasks);

@@ -185,7 +185,8 @@ function Lincoln({ parts, decor, site = true }: ArtProps) {
       </P>
       <D on={decor}>
         <g className="bm-unit bm-floods">
-          <ellipse cx="0" cy="-70" rx="150" ry="70" className="bm-floodlight" />
+          <defs><radialGradient id="bm-flood-g"><stop offset="0" style={{ stopColor: 'var(--bm-flood)' }} /><stop offset="1" style={{ stopColor: 'var(--bm-flood)', stopOpacity: 0 }} /></radialGradient></defs>
+          <ellipse cx="0" cy="-66" rx="170" ry="84" fill="url(#bm-flood-g)" />
           <path d="M-160 0 L-120 -100 L-100 -100 Z M160 0 L120 -100 L100 -100 Z" className="bm-beam" />
         </g>
       </D>

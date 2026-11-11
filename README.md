@@ -280,18 +280,64 @@ budget adviser.
   plus the field-guide chapters; then stars, accomplishments (medals and budget-desk badges), and
   Main menu. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
   his words, running right to left beside him, the word he's saying at the left end next to him. The glossary and Sources & methods are in the
-  field guide and the footer; Settings is on the main menu.
+  field guide and the footer; Settings is the gear on the main menu.
 - **A mission page wastes no room on repeats** (`src/game/LevelPage.tsx`): one compact line
   with the mission's title, its difficulty, its time and your best stars (no campaign eyebrow,
   since the top bar has the mission's code); then one line of steps, as tabs (done ones filled
   and checked, the current one ringed; tap one to go back). On phones only the current step keeps
   its name. "Step 2 of 4" is kept for screen readers. The intro step shows the mission's one-line
   brief while Uncle Sam tells the story in the top bar. Then comes the step itself.
-- **Settings** (main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
+- **Settings** (the gear on the main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
   are gathered on Sources & methods ("By mission"), one link from every mission. The field guide
   (all earlier pages) is listed in the top bar's level menu and in every page's footer.
+
+### Build the Mall: stars that build something
+
+A home base in the manner of a match-3 game's building areas, without the pressure tactics
+(`src/game/build/`). The stars won in missions pay for rebuilding six landmarks of the National
+Mall, one piece at a time: the Washington Monument, the Lincoln Memorial and its Reflecting Pool,
+the Jefferson Memorial, the Treasury Building, the White House and the Capitol (`#mall`, and each
+landmark's site at `#mall-monument`, `#mall-lincoln` …).
+
+- **Each landmark is a chapter of its own,** with its jobs in a fixed order (the ground and the
+  foundation before the walls, the walls before the roof, the dome before its statue), costs that
+  grow from the first landmark (one star a job) to the last (up to three), and the big pieces paid
+  for in stages (Lincoln's 36 columns in two halves, the Capitol's dome as a drum, then the dome,
+  then the Statue of Freedom). A landmark opens when the one before it is finished. The whole Mall
+  takes 49 stars of the 63 there are, so finishing it takes some replays for three stars.
+- **Stars are never lost.** The balance is the stars won (the best on every mission) less the
+  stars spent; save them up or spend them as you go. There is nothing to buy, no timer, and no
+  way to lose what is built.
+- **Every job teaches one true thing,** said by Uncle Sam as it goes up: where work stopped on the
+  Washington Monument in 1854 and why the marble changes color, why the Lincoln Memorial has 36
+  columns, how Philip Reid, an enslaved worker at the foundry, worked out how to cast the Statue
+  of Freedom. Each fact was checked against the National Park Service, the Architect of the
+  Capitol, the Senate, the White House Historical Association or the Treasury, and each landmark
+  lists its sources. A finished landmark sends a postcard with three more facts.
+- **Accomplishments unlock the finishing touches:** medals and budget-desk badges unlock each
+  landmark's decoration (the ring of 50 flags, Lincoln lit at night, the cherry trees on the
+  Tidal Basin, Hamilton's statue, the South Lawn fountain, fireworks over the Capitol).
+- **Watching it go up is the reward.** Pieces not yet built are drawn as blueprints, the next job
+  glowing, so the player sees what is coming. Building plays on the drawing itself (Web
+  Animations, `anim.ts`): a star flies from the button to the site, scaffolding goes up, then the
+  piece rises course by course, pops up column by column, is lowered by a crane, fills like water,
+  or is painted on in a sweep, and dust puffs at its base while sparkles catch the light. Two jobs
+  have a scene of their own: Bulfinch's low copper dome comes down before the cast-iron dome goes
+  up, and the White House burns in 1814 before it is rebuilt. Sounds and vibration mark the star,
+  the landing and a finished landmark. People who ask for less motion get a short fade.
+- **The whole Mall, in one view** (`mall.tsx`): a three-quarter aerial from over the Potomac,
+  looking northeast, so nothing hides anything: the Lincoln Memorial up close, the Reflecting Pool
+  running to the Washington Monument, the White House and the Treasury to the north, the Jefferson
+  Memorial across the Tidal Basin to the south, and the Capitol on its hill at the far end. Each
+  landmark wears a sign with its progress and opens its site; a crane stands at the one going up.
+  On phones the view scrolls sideways, starting at the landmark being built.
+- **The main menu shows it too:** its skyline's Washington Monument and Capitol are pale
+  blueprints until the player has built them, with a crane beside the one going up. Build the
+  Mall is the menu's second choice, with the stars to spend; Settings is the gear beside the
+  music and sound switches.
+- A sunny day in the light theme, a floodlit night with lit windows in the dark.
 
 ### Design notes: five UX lessons from Royal Match, without the pressure tactics
 
@@ -604,7 +650,9 @@ estimates and labels them as the President's budget.
   (level-complete card), `StatusBar.tsx`, `LawExplorer.tsx`, `quotes.ts`, `state.tsx` (progress
   and settings), `voice.tsx` (speech: voice choice, mood prosody), `UncleSam.tsx` (character),
   `haptics.ts` and `sfx.ts` (vibration and sound feedback), `resume.ts` (reopening the installed
-  app where the player left off).
+  app where the player left off), `build/` (Build the Mall: `landmarks.ts` the jobs, facts and the
+  star ledger; `art.tsx` the six landmarks, in parts; `anim.ts` the building; `mall.tsx` the view of
+  the whole Mall; `BuildPage.tsx` the pages).
 - `src/pages/` one file per field-guide section; `src/components/charts.tsx` the D3-based charts;
   `src/components/USMap.tsx` the state map; `src/lib/` formatting, categories, tax and sandbox math.
 - `src/data/types.ts` is the contract between the pipeline and the app.
