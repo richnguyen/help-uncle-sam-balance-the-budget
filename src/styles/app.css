@@ -1425,7 +1425,9 @@ html.modal-open { overflow: hidden; }
    level step, the celebration, and the budget desk sits in a bar at the bottom of the screen;
    and the first screen leads with the game, not the intro text. */
 @media (pointer: coarse) {
-  a, button, summary, label, input, select, [role="button"] { touch-action: manipulation; }
+  /* Like an app: the page scrolls, but a pinch or a double tap doesn't zoom it (see lib/nozoom.ts). */
+  html, body { touch-action: pan-x pan-y; }
+  a, button, summary, label, input, select, [role="button"] { touch-action: pan-x pan-y; }
   .btn, .btn-sm { min-height: 44px; }
   .btn-sm { padding-inline: 14px; }
   .seg button { min-height: 44px; }

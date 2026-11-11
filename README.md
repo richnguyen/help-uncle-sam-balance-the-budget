@@ -369,6 +369,13 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
 Most players are on a phone, often for a few minutes at a time. The game was measured on an
 emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
 
+- **No zooming by gesture, like an app.** On a touch screen a pinch or a double tap doesn't zoom
+  the page (`src/lib/nozoom.ts`): the viewport tag says so (Android browsers follow it, and
+  `maximum-scale=1` also stops iPhones zooming into a text field), `touch-action: pan-x pan-y`
+  leaves scrolling as the only touch gesture, and Safari's pinch gestures, which ignore the
+  viewport tag, are cancelled. One-finger scrolling, the Mall view's sideways scroll and every
+  drag in the games still work. Computers keep their zoom. Anyone who needs larger text has
+  Settings → Text size.
 - **One action bar.** Every screen's forward actions sit in one bar
   (`src/components/ActionBar.tsx`), fixed to the bottom of the screen at every width so players
   always know where to look: Back and Continue on a level step,
