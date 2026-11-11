@@ -1,21 +1,19 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BrandMark } from '../components/Guilloche';
 import { BADGES, loadProgress } from '../lib/game';
-import { AwardIcon, BookIcon, CaretIcon, DocIcon, GearIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
-import { CAMPAIGNS, campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
+import { AwardIcon, CaretIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
+import { campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { FIELD_GUIDE } from './nav';
-import { ReadingSettings } from './Settings';
-import { InstallButton } from './install';
 import { useJourney } from './state';
 import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
 
-// The one bar at the top of every page, a little taller so each side holds two rows, with Uncle
-// Sam in the middle. Left: the current mission (and your title), then one progress bar for each of
-// the three campaigns; hovering it (or tapping) lists every mission to jump to, plus the field
-// guide. Right: stars, accomplishments and the main menu; then his voice, the glossary, sources &
-// methods, and settings. Under it all, the strip his words run across.
+// The one bar at the top of every page, one line a side with Uncle Sam in the middle. Left: the
+// current mission, its name, and your title; hovering it (or tapping) lists every mission to jump
+// to, plus the field guide. Right: stars, accomplishments, his voice, and the main menu (where
+// Settings lives; the glossary and Sources & methods are in the field guide and the footer).
+// Under it all, the strip his words run across.
 
 /** Budget-desk badges are saved by the desk itself; re-read them whenever it saves. */
 function useDeskBadges() {
@@ -77,33 +75,18 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
   return (
     <header className="appbar hud" ref={bar} aria-label="Game bar">
       <div className="ab-inner hud-inner">
-        {/* Left: where you are, in two rows: the mission (with its campaign), then every mission. */}
+        {/* Left: where you are: the mission, its name, and your title. */}
         <div className="hud-side hud-left">
           <a className="ab-brand" href="#journey" aria-label="Help Uncle Sam Balance the Budget: main menu"><BrandMark /></a>
           <Pop id="levels" open={open} setOpen={setOpen} hover className="ab-levels" button={(p) => (
-            <div className="ab-levelbar hud-rows">
-              <div className="hud-row">
-                <button type="button" className="ab-level" {...p} aria-label={`${missionLong(focus)}: ${focus.title}. Show all missions`}>
-                  <span className="stb-icon" data-done={focusDone}><LevelIcon id={focus.icon} size={17} /></span>
-                  <span className="ab-levelnum"><span className="stb-k">Mission</span> <strong className="num">{focus.campaign}.{focus.mission}</strong></span>
-                  <CaretIcon />
-                </button>
-                <span className="hud-sub ab-hide-sm">{rank.name}</span>
-              </div>
-              <div className="hud-row">
-              <span className="stb-camps" role="list" aria-label={`${done} of ${STOPS.length} missions finished`}>
-                {CAMPAIGNS.map((c) => {
-                  const n = c.missions.length;
-                  const d = c.missions.filter((id) => j.done.includes(id)).length;
-                  const label = `Campaign ${c.n}, ${c.title}: ${d} of ${n} missions finished`;
-                  return (
-                    <span key={c.n} className="stb-camp" role="listitem" data-here={focus.campaign === c.n || undefined} data-done={d === n || undefined} title={label} aria-label={label}>
-                      <span className="stb-camp-fill" style={{ width: `${(d / n) * 100}%` }} />
-                    </span>
-                  );
-                })}
-              </span>
-              </div>
+            <div className="ab-levelbar hud-row">
+              <button type="button" className="ab-level" {...p} aria-label={`${missionLong(focus)}: ${focus.title}. Show all missions`}>
+                <span className="stb-icon" data-done={focusDone}><LevelIcon id={focus.icon} size={17} /></span>
+                <span className="ab-levelnum"><span className="stb-k">Mission</span> <strong className="num">{focus.campaign}.{focus.mission}</strong></span>
+                <span className="ab-mtitle">{focus.title}</span>
+                <CaretIcon />
+              </button>
+              <span className="hud-sub ab-hide-sm">{rank.name}</span>
             </div>
           )}>
             <div className="ab-panel-head"><strong>All missions</strong><span className="small muted">{done} of {STOPS.length} finished</span></div>
@@ -139,14 +122,14 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
         {/* The middle: Uncle Sam, always here. */}
         <div className="hud-center"><SamPortrait /></div>
 
-        {/* Right, in two rows: your score and the way out; then his voice, the reference pages, settings. */}
+        {/* Right, in one line: your score, his voice, and the way out. */}
         <div className="hud-side hud-right">
           <div className="hud-row">
             <span className="stb-stars ab-stars" aria-label={`${stars} of ${MAX_STARS} stars`}><span aria-hidden="true">★</span> <strong className="num">{stars}</strong><span className="muted num ab-hide-sm">/{MAX_STARS}</span></span>
             <Pop id="acc" open={open} setOpen={setOpen} button={(p) => (
               <button type="button" className="stb-acc-btn" {...p} aria-label={`Accomplishments: ${earned} of ${total}`}><AwardIcon size={17} /> <strong className="num">{earned}</strong></button>
             )}>
-            <div className="ab-panel-head"><strong>Accomplishments</strong><span className="small muted">{earned} of {total} · {rank.name}</span></div>
+            <div className="ab-panel-head"><strong>Accomplishments</strong><span className="small muted">{earned} of {total} · ★ {stars} of {MAX_STARS} stars · {rank.name}</span></div>
             <div className="stat-label">Medals</div>
             <ul className="stb-pop-list">
               {MEDALS.map((m) => <li key={m.id} data-got={j.medals.includes(m.id)}><AwardIcon size={14} /><span><strong>{m.name}</strong><span className="small muted"> {m.desc}</span></span></li>)}
@@ -157,27 +140,12 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
             </ul>
             <a className="small" href="#record">Certificates and fact cards are in Your record</a>
             </Pop>
-            <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
-          </div>
-          <div className="hud-row">
             {n.supported && (
-              <button type="button" className="ab-icon stb-voice" aria-pressed={voiceOn} aria-label={voiceOn ? 'Turn off Uncle Sam’s voice' : 'Turn on Uncle Sam’s voice'} title={voiceOn ? 'Uncle Sam’s voice is on' : 'Uncle Sam’s voice is off'} onClick={toggleVoice}>
-                <SpeakerIcon on={voiceOn} />
+              <button type="button" className="ab-btn stb-voice" aria-pressed={voiceOn} aria-label="Sound" title={voiceOn ? 'Uncle Sam’s voice is on: tap to turn it off' : 'Uncle Sam’s voice is off: tap to turn it on'} onClick={toggleVoice}>
+                <SpeakerIcon on={voiceOn} /><span className="ab-label">{voiceOn ? 'Sound on' : 'Sound off'}</span>
               </button>
             )}
-            <a className="ab-btn ab-ref" href="#glossary" aria-current={route === 'glossary' ? 'page' : undefined} title="Glossary"><BookIcon /><span className="ab-label">Glossary</span></a>
-            <a className="ab-btn ab-ref" href="#sources" aria-current={route === 'sources' ? 'page' : undefined} title="Sources & methods"><DocIcon /><span className="ab-label">Methods</span></a>
-            <Pop id="settings" open={open} setOpen={setOpen} className="ab-settings" button={(p) => (
-              <button type="button" className="ab-btn" {...p} title="Settings"><GearIcon /><span className="ab-label">Settings</span></button>
-            )}>
-            <InstallButton />
-            <div className="ab-more-links">
-              <a className="btn" href="#glossary"><BookIcon /> Glossary</a>
-              <a className="btn" href="#sources"><DocIcon /> Methods</a>
-            </div>
-            <div className="ab-panel-head"><strong>Settings</strong><span className="small muted">Saved in this browser</span></div>
-            <ReadingSettings />
-            </Pop>
+            <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
           </div>
         </div>
       </div>

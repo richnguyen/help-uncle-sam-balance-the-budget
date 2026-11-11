@@ -82,8 +82,7 @@ budget adviser.
   cheers from his usual place.)
 - **Three campaigns, twenty-one missions.** Each campaign has one goal and ends at a budget desk:
   (1) stop the debt from outgrowing the economy (9 missions), (2) cut the deficit to 3% of GDP
-  (7 missions), (3) balance the budget (5 missions). The top bar shows one progress bar per
-  campaign, filled by the share of its missions finished, with a ring on the current one. Missions are numbered Campaign · Mission
+  (7 missions), (3) balance the budget (5 missions). Missions are numbered Campaign · Mission
   ("Mission 1.5"), go from easy to hard, and unlock in order (`CAMPAIGNS` and `STOPS` in
   `src/game/levels.tsx`). Learning missions explain one idea each: his paycheck, his bills, back
   home, the structural gap, the credit card (debt), who writes the budget, and keeping his
@@ -266,22 +265,23 @@ budget adviser.
   mood. Visitors can switch to one of their device's voices in settings. His face,
   hat and arms change with his mood, and he nods and talks while speaking. At the budget desk
   he coaches in real time as the plan changes. Speech is on by default and can be switched off
-  from the top bar or in settings.
+  with the top bar's Sound button or in Settings.
 - **Rewards.**
   - Up to three stars per level (the mission game's best score, or the budget-desk star rules).
   - A celebration card on finishing a level, with the certificate earned, a quote from American
     history on citizenship, responsibility, the future or the economy, and a preview of the next
     level.
   - Adviser titles and a copyable "budget ballot".
-- **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): a little taller, so each
-  side holds two rows (with no box around them), and Uncle Sam stands in the middle, always there:
-  half his body showing, right on the bar's bottom edge. Left: the current mission ("Mission 1.5") and your title, then the sixteen-mission track,
-  with a gap where each campaign starts; hovering it lists every mission by campaign, plus the
-  field-guide chapters. Right: stars, accomplishments (medals and budget-desk badges) and Main
-  menu; then Uncle Sam's voice switch, Glossary, Methods (sources & methods) and Settings (on
-  phones, the glossary and methods are inside Settings). Under it all runs his speech strip.
-- **Settings** (top bar): text size, light/dark theme, voice choice, vibration, and free roam to
-  unlock everything.
+- **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): one line a side, in
+  larger text, with Uncle Sam standing in the middle, always there: half his body showing, right
+  on the bar's bottom edge. Left: the current mission and its name ("Mission 2.4 · Rules of the
+  road", truncated to fit on phones) and your title; hovering or tapping it lists every mission by
+  campaign, plus the field-guide chapters. Right: stars, accomplishments (medals and budget-desk
+  badges), Sound on/off (Uncle Sam's voice), and Main menu. On phones the star count moves into
+  the accomplishments pop-up to make room. Under it all runs his speech strip. The glossary and
+  Sources & methods are in the field guide and the footer; Settings is on the main menu.
+- **Settings** (main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
+  free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
   are gathered on Sources & methods ("By mission"), one link from every mission. The field guide
   (all earlier pages) is listed in the top bar's level menu and in every page's footer.
@@ -351,8 +351,8 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   1/15 of a second of each recording is, and the narrator opens his mouth to match (with a device
   voice, it opens on each word). With reduced motion he holds still.
 - **Thumb-friendly.** Every control is at least 44 × 44 px on a touch screen.
-- **Less on screen.** Five controls in the top bar on phones (Glossary and Methods move into the
-  settings menu), and the top bar's Continue moves down to the action bar at every width; the footer is one line, with the field guide
+- **Less on screen.** Four controls in the top bar on phones (the mission, accomplishments,
+  sound, and the main menu), and the top bar's Continue moves down to the action bar at every width; the footer is one line, with the field guide
   and the note about the figures in Sources & methods; on the desk, the scoreboard and cards come straight after the title. Medal and badge
   messages share one stack under the top bar.
 - **Interruptions.** A call, a locked screen, or a closed tab loses nothing: level steps,

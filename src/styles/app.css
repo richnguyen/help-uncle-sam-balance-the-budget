@@ -2128,8 +2128,8 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 /* Pop-up panels hang from the bar's bottom edge, below the strip. */
 .hud .ab-panel { top: calc(100% + 6px); right: max(12px, calc((100% - 1240px) / 2 + 16px)); }
 .hud .ab-levels .ab-panel { left: max(12px, calc((100% - 1240px) / 2 + 16px)); right: auto; }
-@media (max-width: 1060px) { .hud-right .ab-btn:not(.ab-journey) .ab-label { display: none; } }
-@media (max-width: 860px) { .hud .ab-journey .ab-label { display: none; } }
+@media (max-width: 900px) { .hud-right .ab-btn:not(.ab-journey) .ab-label { display: none; } }
+@media (max-width: 760px) { .hud .ab-journey .ab-label { display: none; } }
 
 /* Uncle Sam: half his body, standing right on the bar's bottom edge (no frame around him). */
 .hud-center { position: relative; display: flex; align-items: flex-end; justify-content: center; align-self: end; }
@@ -2166,7 +2166,8 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
   .hud .ab-level { padding: 3px 4px; gap: 5px; }
   .hud .ab-level .stb-icon { width: 24px; height: 24px; }
   .hud .ab-levelbar .stb-track { padding: 0 2px; gap: 2px; }
-  .hud .ab-ref { display: none; } /* the glossary and methods are in Settings on phones */
+  .hud .ab-level .stb-k { display: none; }
+  .hud .ab-mtitle { font-size: 0.9375rem; }
   .hud .ab-stars { padding: 0 4px; }
   .hud .ab-panel { position: fixed; top: calc(var(--hud-h, 104px) + 6px); }
   .sam-portrait-hud .sam { width: 58px; }
@@ -2175,7 +2176,7 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
   .sam-strip-run, .sam-strip-still { font-size: 0.875rem; }
   .sam-strip-still, .sam-strip-caption { left: 12px; right: 30px; }
 }
-@media (max-width: 420px) { .hud .ab-stars { display: inline-flex; } .hud .ab-stars .ab-hide-sm { display: none; } }
+
 
 /* The achievement pop-up opens under the bar, so Uncle Sam cheers from his usual place. */
 html.celebrate-open .appbar { z-index: 96; }
@@ -2630,13 +2631,6 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 @media (max-width: 520px) { .cty-state, .cty-pick { flex: 1 1 100%; max-width: none; } }
 .cty-yours { padding-bottom: 10px; }
 
-/* ---------- Top bar: one progress bar per campaign ---------- */
-.hud .ab-levelbar .stb-camps { display: flex; flex: 1 1 auto; gap: 6px; align-items: center; min-width: 0; max-width: 300px; padding: 0 6px 0 8px; }
-.stb-camp { flex: 1 1 0; position: relative; height: 8px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
-.stb-camp-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--lv-done); transition: width 0.4s ease; }
-.stb-camp[data-here] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink-2); }
-@media (max-width: 520px) { .hud .ab-levelbar .stb-camps { gap: 4px; padding: 0 2px; } }
-@media (prefers-reduced-motion: reduce) { .stb-camp-fill { transition: none; } }
 
 /* ---------- Mission 2.4: cut or increase? ---------- */
 .base-rows { display: grid; gap: 8px; margin: 4px 0 12px; }
@@ -2651,3 +2645,29 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   .base-row { grid-template-columns: minmax(0, 1fr) auto; }
   .base-track { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ---------- Top bar: one line a side, larger text ---------- */
+.hud .ab-levels, .hud .ab-levelbar { min-width: 0; }
+.hud .ab-level { font-size: 1.0625rem; min-width: 0; max-width: 100%; }
+.hud .ab-level > svg:last-child { flex: none; }
+.ab-mtitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.ab-mtitle::before { content: '·'; margin: 0 6px 0 2px; color: var(--muted); font-weight: 400; }
+.hud .hud-sub { font-size: 0.9375rem; flex: 0 1 auto; }
+.hud .ab-btn, .hud .stb-acc-btn, .hud .ab-stars { font-size: 1rem; }
+.hud .ab-btn { height: 40px; }
+.hud .stb-voice[aria-pressed="true"] { color: var(--ink); }
+@media (max-width: 520px) {
+  .hud-right .hud-row { gap: 2px; }
+  /* No room for four items beside Uncle Sam: the stars move into the accomplishments pop-up. */
+  .hud .ab-stars { display: none; }
+  .hud .stb-acc-btn { padding: 2px 6px; gap: 3px; font-size: 0.9375rem; }
+  .hud .stb-voice { padding: 0 4px; }
+  .hud .ab-journey { padding: 0 6px; margin-left: 0; }
+  .hud .ab-level .stb-icon { display: none; }
+  .hud .ab-level { padding: 3px 2px; }
+}
+@media (max-width: 380px) {
+  .hud .ab-btn { min-width: 40px; padding: 0 4px; }
+  .hud .stb-acc-btn { padding: 2px 5px; }
+}
+@media (min-width: 701px) { .hud .hud-right .ab-btn.stb-voice .ab-label { display: inline; } }
