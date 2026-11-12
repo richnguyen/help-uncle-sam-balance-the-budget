@@ -6,11 +6,12 @@ import { FIELD_GUIDE, REFERENCE } from './nav';
 import { useJourney } from './state';
 
 // The tab bar, along the bottom of every screen outside a mission: the Mall, the Daily Dollar,
-// Continue (in the middle, raised: the next mission), Play together, and the field guide. The
-// tab for the screen you're on is lit; the main menu counts as Continue's. It steps aside while
-// a mission or the budget desk is played, where the step's own Back / Continue bar is.
+// Mission (in the middle: the next mission to play, or the road map once all are done), Play
+// together, and the field guide, all alike. The tab for the screen you're on is lit; the main menu
+// counts as Mission's. It steps aside while a mission or the budget desk is played, where the
+// step's own Back / Continue bar is.
 
-type TabId = 'mall' | 'daily' | 'continue' | 'together' | 'guide';
+type TabId = 'mall' | 'daily' | 'mission' | 'together' | 'guide';
 
 const GUIDE = new Set<string>(['guide', 'sources', 'glossary', ...FIELD_GUIDE.map((g) => g.route), ...REFERENCE.map((g) => g.route)]);
 const TOGETHER = new Set<string>(['together', 'rooms', 'room', 'chain', 'duel', 'duels', 'peoples', 'teach']);
@@ -19,7 +20,7 @@ const TOGETHER = new Set<string>(['together', 'rooms', 'room', 'chain', 'duel', 
 export function tabFor(route: Route): TabId | null {
   if (route === 'mall') return 'mall';
   if (route === 'daily') return 'daily';
-  if (route === 'journey' || route === 'levels') return 'continue';
+  if (route === 'journey' || route === 'levels') return 'mission';
   if (TOGETHER.has(route)) return 'together';
   if (GUIDE.has(route)) return 'guide';
   return null;
@@ -38,16 +39,16 @@ export function TabBar({ route }: { route: Route }) {
     { id: 'mall', href: '#mall', label: 'The Mall', icon: 'build', title: 'Build the Mall' },
     { id: 'daily', href: '#daily', label: 'Daily', icon: 'daily', title: 'The Daily Dollar' },
     next
-      ? { id: 'continue', href: '#' + next.id, label: started ? 'Continue' : 'Start', icon: 'play', title: `${started ? 'Continue' : 'Start'}: ${missionShort(next)}, ${next.title}` }
-      : { id: 'continue', href: '#story', label: 'Your story', icon: 'story', title: 'Your Budget Story' },
+      ? { id: 'mission', href: '#' + next.id, label: 'Mission', icon: 'play', title: `${started ? 'Continue' : 'Start'}: ${missionShort(next)}, ${next.title}` }
+      : { id: 'mission', href: '#levels', label: 'Mission', icon: 'play', title: 'Every mission, on the road map' },
     { id: 'together', href: '#together', label: 'Together', icon: 'together', title: 'Play together' },
     { id: 'guide', href: '#guide', label: 'Guide', icon: 'book', title: 'The field guide' },
   ];
   return (
     <nav className="tabbar" aria-label="Main">
       {tabs.map((t) => (
-        <a key={t.id} className="tab" href={t.href} data-tab={t.id} data-main={t.id === 'continue' || undefined} aria-current={here === t.id ? 'page' : undefined} title={t.title} aria-label={t.title} onClick={() => buzz('tap')}>
-          <span className="tab-icon"><MenuIcon id={t.icon} size={t.id === 'continue' ? 30 : 24} /></span>
+        <a key={t.id} className="tab" href={t.href} data-tab={t.id} aria-current={here === t.id ? 'page' : undefined} title={t.title} aria-label={t.title} onClick={() => buzz('tap')}>
+          <span className="tab-icon"><MenuIcon id={t.icon} size={24} /></span>
           <span className="tab-label">{t.label}</span>
         </a>
       ))}

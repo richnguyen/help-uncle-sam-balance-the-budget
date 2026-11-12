@@ -24,15 +24,14 @@ budget adviser.
   medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
   running. The choices are the tab bar along the bottom.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
-  like an app's: The Mall (Build the Mall), Daily (the Daily Dollar), **Continue** in the middle
-  (raised, in the accent color: the next mission, or Start on a first visit, or Your Budget
-  Story once every mission is done), Together (Play together) and Guide (the field guide). Each
-  is the main menu's own icon with a short name. The tab for the screen you're on is lit, with a
-  bar above it: the main menu counts as Continue's, Rooms, chains and duels as Together's, every
-  field-guide chapter, the glossary and Sources & methods as the Guide's. It steps aside while a
-  mission or the budget desk is played, where the step's own Back / Continue bar is; a screen's
-  own action bar (Build, Higher / Lower) sits right on top of it, with Continue lying flat in the
-  bar there. Every page also leads back to the main menu in one tap ("Main menu", top left).
+  like an app's, five tabs alike: The Mall (Build the Mall), Daily (the Daily Dollar), Mission in
+  the middle (the next mission to play, or the road map once every mission is done), Together
+  (Play together) and Guide (the field guide). Each is the main menu's own icon with a short
+  name. The tab for the screen you're on is lit, with a bar above it: the main menu counts as
+  Mission's, Rooms, chains and duels as Together's, every field-guide chapter, the glossary and
+  Sources & methods as the Guide's. It steps aside while a mission or the budget desk is
+  played, where the step's own Back / Continue bar is; a screen's own action bar (Build,
+  Higher / Lower) sits right on top of it. Every page also leads back to the main menu in one tap ("Main menu", top left).
 - **Official news** (`scripts/fetch-news.mjs` → `src/data/generated/news.json`, `src/game/news.ts`):
   the White House's presidential actions about taxes, tariffs, spending, the budget or the debt,
   CBO's latest cost estimates and reports, and spending and tax bills on the Senate and House

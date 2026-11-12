@@ -2982,12 +2982,6 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 .tab[aria-current="page"] { color: var(--accent); }
 .tab[aria-current="page"] .tab-icon { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .tab[aria-current="page"]::before { content: ""; position: absolute; top: -7px; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
-/* the middle: Continue, raised, a rounded square in the accent color */
-.tab[data-main] { color: var(--ink); }
-.tab[data-main] .tab-icon { width: 58px; height: 58px; margin-top: -28px; border-radius: 18px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 4px var(--surface), 0 8px 18px color-mix(in srgb, var(--accent) 38%, transparent); }
-.tab[data-main][aria-current="page"] { color: var(--accent); }
-.tab[data-main][aria-current="page"] .tab-icon { background: var(--accent); box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px color-mix(in srgb, var(--accent) 40%, transparent), 0 8px 18px color-mix(in srgb, var(--accent) 38%, transparent); }
-.tab[data-main][aria-current="page"]::before { display: none; }
 @media (prefers-reduced-motion: reduce) { .tab-icon { transition: none; } .tab:active .tab-icon { transform: none; } }
 /* A screen's own action bar sits on the tab bar; the page leaves room for both. */
 body:has(.tabbar) .actionbar { bottom: var(--tabh, 66px); padding-bottom: 10px; box-shadow: none; }
@@ -2995,9 +2989,3 @@ body:has(.tabbar) .main { padding-bottom: calc(96px + var(--tabh, 66px)); }
 
 /* The main menu: Uncle Sam stands on this year's deficit; the choices are the tab bar. */
 .menu-main .menu-deficit { grid-area: auto; position: relative; z-index: 1; margin-top: 0; }
-/* Room for the label under the raised Continue; and where a screen's own action bar sits on the
-   tabs, Continue stays in the bar (still the accent color) instead of rising into it. */
-.tab[data-main] { gap: 8px; }
-body:has(.page .actionbar) .tab[data-main] { gap: 3px; }
-body:has(.page .actionbar) .tab[data-main] .tab-icon { width: 52px; height: 32px; margin-top: 0; border-radius: 10px; box-shadow: none; }
-body:has(.page .actionbar) .tab[data-main] .tab-icon svg { width: 22px; height: 22px; }
