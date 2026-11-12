@@ -14,7 +14,7 @@ export type { Mood } from './voice';
 // recorded voice: the narrator sends how loud each moment is (see voice.tsx), and the mouth opens
 // to match. With reduced motion, he holds still and keeps the shapes only.
 
-const C = { navy: '#23406e', red: '#b8372f', white: '#fbfaf6', skin: '#f0c6a0', skinShade: '#dfa983', hair: '#eceae3', line: '#3b2f2a', glass: '#7fa3c8', gold: '#c9a645' };
+const C = { sleeve: '#2f5288', sleeveEdge: '#152a4b', navy: '#23406e', red: '#b8372f', white: '#fbfaf6', skin: '#f0c6a0', skinShade: '#dfa983', hair: '#eceae3', line: '#3b2f2a', glass: '#7fa3c8', gold: '#c9a645' };
 
 const HAT: Record<Mood, string | undefined> = {
   happy: undefined,
@@ -45,33 +45,32 @@ export type SamAct = 'nod' | 'glance' | 'thumbs' | 'oops' | 'hattip' | 'cheer' |
 /** Acts that use his right (or left) arm, so the mood's own hands step aside while they play. */
 const ARM_ACTS = new Set<SamAct>(['thumbs', 'oops', 'hattip', 'cheer', 'salute', 'flag', 'watch', 'coin']);
 const GLOVE = { fill: C.white, stroke: '#d9d5ca', strokeWidth: 0.9 };
-const SLEEVE = { fill: 'none', stroke: C.navy, strokeWidth: 10, strokeLinecap: 'round' as const };
 
 function ActLayer({ act }: { act: SamAct }) {
   switch (act) {
     case 'thumbs': return (
       <g className="sam-act-arm">
-        <path d="M100 150 q6 -26 -6 -52" {...SLEEVE} />
+        <Sleeve d="M100 150 q6 -26 -6 -52" w={10} />
         <rect x="86" y="88" width="13" height="12" rx="4" {...GLOVE} />
         <rect x="90" y="79" width="4.6" height="11" rx="2.3" {...GLOVE} />
       </g>
     );
     case 'oops': return (
       <g className="sam-act-arm sam-scratch">
-        <path d="M20 150 q-12 -36 10 -76" {...SLEEVE} />
+        <Sleeve d="M20 150 q-12 -36 10 -76" w={10} />
         <circle cx="31" cy="73" r="6.2" {...GLOVE} />
         <text x="88" y="76" className="sam-q" fontSize="16" fontWeight="700" fill="var(--muted)">?</text>
       </g>
     );
     case 'hattip': return (
       <g className="sam-act-arm sam-tiphand">
-        <path d="M100 150 q14 -44 -8 -88" {...SLEEVE} />
+        <Sleeve d="M100 150 q14 -44 -8 -88" w={10} />
         <ellipse className="sam-tipglove" cx="91" cy="61" rx="7" ry="5.6" {...GLOVE} />
       </g>
     );
     case 'cheer': return (
       <g className="sam-act-arm">
-        <path d="M30 136 q-12 -18 -6 -56 M90 136 q12 -18 6 -56" {...SLEEVE} strokeWidth="11" />
+        <Sleeve d="M30 136 q-12 -18 -6 -56 M90 136 q12 -18 6 -56" w={11} />
         <circle cx="24" cy="78" r="6.5" {...GLOVE} />
         <circle cx="96" cy="78" r="6.5" {...GLOVE} />
         <g className="sam-spark" fill={C.gold}>
@@ -81,13 +80,13 @@ function ActLayer({ act }: { act: SamAct }) {
     );
     case 'salute': return (
       <g className="sam-act-arm">
-        <path d="M100 150 q16 -34 -12 -72" {...SLEEVE} />
+        <Sleeve d="M100 150 q16 -34 -12 -72" w={10} />
         <ellipse cx="83" cy="75" rx="10" ry="3.8" transform="rotate(-26 83 75)" {...GLOVE} />
       </g>
     );
     case 'flag': return (
       <g className="sam-act-arm">
-        <path d="M104 150 q4 -26 -8 -44" {...SLEEVE} />
+        <Sleeve d="M104 150 q4 -26 -8 -44" w={10} />
         <line x1="96" y1="106" x2="98" y2="56" stroke="#8a6a3a" strokeWidth="1.8" strokeLinecap="round" />
         <g className="sam-flag">
           {[0, 1, 2, 3, 4, 5].map((r) => <rect key={r} x="82" y={57 + r * 1.9} width="15.5" height="1.9" fill={r % 2 ? C.white : C.red} />)}
@@ -100,7 +99,7 @@ function ActLayer({ act }: { act: SamAct }) {
     case 'watch': return (
       <g className="sam-act-arm">
         <path d="M70 122 q-6 6 -14 6" fill="none" stroke={C.gold} strokeWidth="1.2" strokeDasharray="1.6 1.4" />
-        <path d="M102 150 q0 -22 -16 -38" {...SLEEVE} />
+        <Sleeve d="M102 150 q0 -22 -16 -38" w={10} />
         <circle cx="78" cy="106" r="7" fill={C.gold} />
         <circle cx="78" cy="106" r="5.2" fill={C.white} />
         <path className="sam-watch-hand" d="M78 106 v-3.6 M78 106 h2.6" stroke={C.line} strokeWidth="0.9" strokeLinecap="round" />
@@ -109,7 +108,7 @@ function ActLayer({ act }: { act: SamAct }) {
     );
     case 'coin': return (
       <g className="sam-act-arm">
-        <path d="M102 150 q4 -22 -8 -36" {...SLEEVE} />
+        <Sleeve d="M102 150 q4 -22 -8 -36" w={10} />
         <ellipse className="sam-coin" cx="92" cy="104" rx="4.4" ry="4.4" fill={C.gold} stroke="#a8862f" strokeWidth="0.8" />
         <circle cx="93" cy="112" r="6" {...GLOVE} />
       </g>
@@ -126,8 +125,19 @@ function ActLayer({ act }: { act: SamAct }) {
 /** How much of him shows: half his body (the top bar, and anywhere else), or head and shoulders,
  * close up (the main menu). */
 type Crop = 'full' | 'bust';
-// The bust (the main menu) shows him down to his coat, bow tie and lapel pin.
+// The bust is narrower than his arms reach: use it only where he stands still (nowhere, for now).
 const VIEW: Record<Crop, [number, number, number, number]> = { full: [0, 0, 120, 150], bust: [12, 0, 96, 150] };
+
+/** An arm: a dark edge, then the sleeve in a lighter navy than the coat, so an arm across his
+ *  chest (a hand on his heart, at his chin, wringing) reads as an arm and not a floating hand. */
+function Sleeve({ d, w }: { d: string; w: number }) {
+  return (
+    <>
+      <path d={d} fill="none" stroke={C.sleeveEdge} strokeWidth={w + 2.4} strokeLinecap="round" />
+      <path d={d} fill="none" stroke={C.sleeve} strokeWidth={w} strokeLinecap="round" />
+    </>
+  );
+}
 
 /** `greet`: he waves hello (happy mood) — on by default. `act`: what he's doing right now. */
 export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, greet = true, crop = 'full', act = null }: { mood?: Mood; size?: number; title?: string; speaking?: boolean; greet?: boolean; crop?: Crop; act?: SamAct | null }) {
@@ -163,8 +173,8 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
       {/* raised arms when cheering */}
       {mood === 'cheering' && (
         <g className="sam-arms">
-          <path d="M24 134 q-14 -16 -12 -40" fill="none" stroke={C.navy} strokeWidth="11" strokeLinecap="round" />
-          <path d="M96 134 q14 -16 12 -40" fill="none" stroke={C.navy} strokeWidth="11" strokeLinecap="round" />
+          <Sleeve d="M24 134 q-14 -16 -12 -40" w={11} />
+          <Sleeve d="M96 134 q14 -16 12 -40" w={11} />
           <circle cx="12" cy="90" r="6.5" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
           <circle cx="108" cy="90" r="6.5" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
         </g>
@@ -229,13 +239,13 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
       {mood === 'happy' && (
         <>
           {greet && <g className="sam-wave">
-            <path d="M93 140 q13 -12 14 -38" fill="none" stroke={C.navy} strokeWidth="10" strokeLinecap="round" />
+            <Sleeve d="M93 140 q13 -12 14 -38" w={10} />
             <circle cx="107" cy="98" r="6.5" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
             <path d="M103 92 v-3 M107 91 v-3.5 M111 92 v-3" stroke="#d9d5ca" strokeWidth="1.2" strokeLinecap="round" />
           </g>}
           {/* Hidden until he speaks (so a still picture of him has one right arm, not two). */}
           <g className="sam-explain" opacity="0" data-after-wave={greet || undefined}>
-            <path d="M90 148 q8 -12 13 -26" fill="none" stroke={C.navy} strokeWidth="10" strokeLinecap="round" />
+            <Sleeve d="M90 148 q8 -12 13 -26" w={10} />
             <ellipse cx="104" cy="119" rx="7" ry="5" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
           </g>
         </>
@@ -243,7 +253,7 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
       {/* a hand on his heart when proud */}
       {mood === 'proud' && (
         <g className="sam-thumb">
-          <path d="M100 148 q4 -16 -18 -21" fill="none" stroke={C.navy} strokeWidth="10" strokeLinecap="round" />
+          <Sleeve d="M100 148 q4 -16 -18 -21" w={10} />
           <ellipse cx="78" cy="126" rx="7.5" ry="5.6" transform="rotate(-18 78 126)" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
           <path d="M73 123.5 q5 -1.6 10 0 M73.5 126.5 q5 -1.4 9.5 0" fill="none" stroke="#d9d5ca" strokeWidth="1" strokeLinecap="round" />
         </g>
@@ -251,7 +261,7 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
       {/* wringing hands when worried */}
       {mood === 'worried' && (
         <g className="sam-wring">
-          <path d="M24 148 q8 -12 28 -17 M96 148 q-8 -12 -28 -17" fill="none" stroke={C.navy} strokeWidth="9" strokeLinecap="round" />
+          <Sleeve d="M24 148 q8 -12 28 -17 M96 148 q-8 -12 -28 -17" w={9} />
           <circle cx="55" cy="131" r="5.6" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
           <circle cx="65" cy="131" r="5.6" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
         </g>
@@ -259,7 +269,7 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
       {/* hands up when surprised */}
       {mood === 'surprised' && (
         <g className="sam-hands-up">
-          <path d="M22 146 q-9 -20 -4 -46 M98 146 q9 -20 4 -46" fill="none" stroke={C.navy} strokeWidth="9" strokeLinecap="round" />
+          <Sleeve d="M22 146 q-9 -20 -4 -46 M98 146 q9 -20 4 -46" w={9} />
           <ellipse cx="18" cy="97" rx="5.6" ry="6.6" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
           <ellipse cx="102" cy="97" rx="5.6" ry="6.6" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
           <path className="sam-pop" d="M14 72 l-4 -5 M22 68 l-1 -6 M98 68 l1 -6 M106 72 l4 -5" stroke="var(--muted)" strokeWidth="1.8" strokeLinecap="round" />
@@ -268,7 +278,7 @@ export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, 
       {/* a hand at the chin when thinking */}
       {mood === 'thinking' && (
         <g className="sam-arms">
-          <path d="M98 142 q-4 -18 -22 -24" fill="none" stroke={C.navy} strokeWidth="10" strokeLinecap="round" />
+          <Sleeve d="M98 142 q-4 -18 -22 -24" w={10} />
           <circle cx="74" cy="116" r="6" fill={C.white} stroke="#d9d5ca" strokeWidth="0.9" />
         </g>
       )}

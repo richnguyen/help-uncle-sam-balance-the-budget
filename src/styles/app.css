@@ -2228,13 +2228,13 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 .menu-sam-listen { margin-top: 4px; font-size: 0.8125rem; }
 .menu-sam[data-speaking] .menu-sam-bubble { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, var(--ring)), 0 6px 18px rgba(17, 27, 22, 0.12); }
 .sam-portrait-menu { flex: none; border-radius: 0; }
-.sam-portrait-menu .sam-portrait-frame { display: block; width: 124px; }
-.sam-portrait-menu .sam { display: block; width: 124px; height: auto; }
+.sam-portrait-menu .sam-portrait-frame { display: block; width: 155px; }
+.sam-portrait-menu .sam { display: block; width: 155px; height: auto; }
 @media (max-width: 560px) {
   .menu-sam-bubble { max-width: none; flex: 1 1 auto; margin-bottom: 46px; }
   .menu-sam-text { font-size: 0.875rem; }
-  .sam-portrait-menu .sam-portrait-frame { width: 100px; }
-  .sam-portrait-menu .sam { width: 100px; }
+  .sam-portrait-menu .sam-portrait-frame { width: 125px; }
+  .sam-portrait-menu .sam { width: 125px; }
   .menu-sam { margin-bottom: -14px; }
   .menu-sam-bubble { margin-bottom: 32px; }
 }

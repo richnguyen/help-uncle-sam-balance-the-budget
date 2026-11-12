@@ -84,7 +84,8 @@ export function SamPortrait({ variant = 'hud' }: { variant?: 'hud' | 'menu' }) {
     <button type="button" className={'sam-portrait sam-portrait-' + variant} data-speaking={speaking || undefined} data-mood={mood} onClick={tap}
       aria-label={speaking ? 'Uncle Sam is speaking. Tap to stop him' : line ? 'Uncle Sam. Tap to hear his line again' : 'Uncle Sam'}>
       <span className="sam-portrait-frame" aria-hidden="true">
-        <UncleSam crop={variant === 'menu' ? 'bust' : 'full'} mood={mood} speaking={speaking} act={act} greet={greet && mood === 'happy' && !act} size={variant === 'menu' ? 124 : 76} />
+        {/* The whole figure, so a wave, a cheer or a hand that talks is never cut off at the edge. */}
+        <UncleSam crop="full" mood={mood} speaking={speaking} act={act} greet={greet && mood === 'happy' && !act} size={variant === 'menu' ? 155 : 76} />
       </span>
     </button>
   );

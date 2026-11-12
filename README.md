@@ -446,6 +446,13 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   - on a touch screen there is no grey flash on a tap, and the app's controls and drawings aren't
     selected or given the long-press menu by a held finger, while reading text stays selectable;
   - installed, there is no pull-to-refresh or rubber-band bounce at the ends of the page.
+  - on iPhone, a launch screen while it opens: the main menu's own scene with the whole Mall
+    built (a golden morning in light, a floodlit night in dark), the title, and Uncle Sam waving
+    hello. iOS picks one image per screen at its exact pixel size, so there are 26: 13 iPhone
+    screens from the first iPhone SE to the iPhone 17 Pro Max and iPhone Air, light and dark,
+    portrait (`public/launch/`, drawn by `scripts/make-launch-images.mjs`, which also writes the
+    `apple-touch-startup-image` tags into `index.html`). Each phone downloads only its own
+    (about 100 KB). Launched sideways, iOS shows the app's background color instead.
   On iPhone and iPad, iOS 26 opens any site added to the Home Screen as a web app; the
   `apple-touch-icon` and `apple-mobile-web-app-title` give it its icon and name.
 - **Daily Dollar reminders.** An opt-in notification, at most once a day, at the hour the player
