@@ -1982,6 +1982,15 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 .menu-toggle[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); }
 @media (hover: hover) { .menu-toggle:hover { box-shadow: 0 0 0 2px var(--accent); } }
 .menu-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--accent); }
+/* Build the Mall: marble and gold, like the Capitol in the scene behind. */
+.menu-mall { display: inline-flex; flex-shrink: 0; white-space: nowrap; align-items: center; gap: 6px; height: 44px; padding: 0 12px 0 10px; border-radius: 12px; text-decoration: none; color: #3d4a5c;
+  background: linear-gradient(180deg, #ffffff 0%, #eef1f4 55%, #dfe4ea 100%); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9), 0 0 0 1px color-mix(in srgb, var(--gold) 55%, #b9c1cb), 0 4px 14px rgba(40, 60, 90, 0.16); transition: box-shadow 0.15s ease, transform 0.15s ease; }
+.menu-mall-stars { font-weight: 800; font-size: 0.9375rem; color: #8a6510; font-variant-numeric: tabular-nums; }
+:root[data-theme="dark"] .menu-mall { color: #f4e3b5; background: linear-gradient(180deg, #2c3442 0%, #1d2430 100%); box-shadow: inset 0 1px 0 rgba(255,236,180,0.18), 0 0 0 1px color-mix(in srgb, var(--gold) 60%, transparent), 0 4px 14px rgba(0,0,0,0.35); }
+:root[data-theme="dark"] .menu-mall-stars { color: #f2c95c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .menu-mall { color: #f4e3b5; background: linear-gradient(180deg, #2c3442 0%, #1d2430 100%); box-shadow: inset 0 1px 0 rgba(255,236,180,0.18), 0 0 0 1px color-mix(in srgb, var(--gold) 60%, transparent), 0 4px 14px rgba(0,0,0,0.35); } :root:not([data-theme="light"]) .menu-mall-stars { color: #f2c95c; } }
+@media (hover: hover) { .menu-mall:hover { transform: translateY(-1px); box-shadow: 0 0 0 2px var(--gold), 0 6px 18px rgba(40, 60, 90, 0.22); } }
+.menu-mall:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--accent); }
 .menu-profile { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 14px; color: var(--ink); text-decoration: none;
   background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 0 0 1px var(--ring); transition: box-shadow 0.16s ease, transform 0.16s ease; }
 .mp-badge { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--gold); color: #fff; }
@@ -2018,6 +2027,7 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
   .menu-title { font-size: clamp(2.1rem, 9.6vw, 3rem); }
   .menu-tr { position: absolute; top: max(4px, env(safe-area-inset-top, 0px)); right: 0; flex-direction: column-reverse; align-items: flex-end; gap: 6px; }
   .menu-toggle { width: 40px; height: 40px; }
+  .menu-mall { height: 40px; padding: 0 9px 0 8px; gap: 4px; }
   .menu-profile { padding: 6px; gap: 6px; }
   .menu-profile .mp-text { display: none; }
   .menu-profile .mp-stats { flex-direction: column; gap: 0; padding-right: 6px; font-size: 0.75rem; }

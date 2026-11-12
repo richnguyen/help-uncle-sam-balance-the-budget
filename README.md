@@ -19,15 +19,16 @@ American with a very big household who spends more than he brings in. The player
 budget adviser.
 
 - **The main menu** (`#journey`, the first screen) is a hub, and a screen of its own: no top
-  bar and no action bar. The scene of the Mall behind; the title; in the top-right corner, one
-  button, the Settings gear (music and sound switches are inside Settings, under a card for the
-  player's record: rank, stars, missions, medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
+  bar and no action bar. The scene of the Mall behind; the title; in the top-right corner, Build
+  the Mall (a marble-and-gold Capitol button with the stars left to spend), the Settings gear
+  (music and sound switches are inside Settings) and the player's record (rank, missions,
+  medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
   running. The choices are the tab bar along the bottom.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
-  like an app's, five tabs alike: The Mall (Build the Mall), Daily (the Daily Dollar), Mission in
-  the middle (the next mission to play, or the road map once every mission is done), Together
-  (Play together) and Guide (the field guide). Each is the main menu's own icon with a short
-  name. The tab for the screen you're on is lit, with a bar above it: the main menu counts as
+  like an app's, five tabs alike: Mission (the next mission to play, or the road map once every
+  mission is done), Daily (the Daily Dollar), Menu in the middle (the main menu), Together (Play
+  together) and Guide (the field guide). Each is the main menu's own icon with a short
+  name. The tab for the screen you're on is lit, with a bar above it: the road map counts as
   Mission's, Rooms, chains and duels as Together's, every field-guide chapter, the glossary and
   Sources & methods as the Guide's. It steps aside while a mission or the budget desk is
   played, where the step's own Back / Continue bar is; a screen's own action bar (Build,
@@ -50,11 +51,11 @@ budget adviser.
   via last year's totals. From the end of the count it adds the past twelve months' pace,
   second by second, labeled as an estimate. (Spreading last year's total evenly over the
   calendar would badly miss a lopsided month: about $346 billion of fiscal 2027's deficit came in
-  October alone.) Under it, a year at a time: the past twelve months' deficit (all of the last
-  fiscal year, once its September is counted), every person's share of it (the past twelve
-  months' deficit divided by the population), how much the debt grows in a year, and the year's interest cost (the Treasury's gross interest expense
+  October alone.) Under it, a year at a time, two numbers: every person's share of the deficit (the
+  past twelve months' deficit divided by the population) and the year's interest cost (the Treasury's gross interest expense
   on the public debt, not the budget's net interest). The debt clock (`#clock`) uses the same
-  annual figures.
+  annual figures. One short line closes the card: "Treasury daily figures through" the last
+  day counted, and a link to the debt clock.
 - **The main menu's scene and sound.** Behind the menu is an illustrated National Mall
   (`MenuScene.tsx`, drawn for the game): the Washington Monument with its ring of flags, the
   Capitol and its reflecting pool, a golden morning in the light theme and a floodlit night in
@@ -332,7 +333,7 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
   On phones the view scrolls sideways, starting at the landmark being built.
 - **The main menu shows it too:** its skyline's Washington Monument and Capitol are pale
   blueprints until the player has built them, with a crane beside the one going up. Build the
-  Mall is the tab bar's first tab; Settings is the gear at the top right.
+  Mall is the Capitol button at the top right, beside the Settings gear and Your record.
 - A sunny day in the light theme, a floodlit night with lit windows in the dark.
 
 ### A seal for every mission

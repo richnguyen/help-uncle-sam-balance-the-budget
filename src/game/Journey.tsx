@@ -38,7 +38,7 @@ const pillFor = (d: string) => (d === 'Easy' ? 'pill-ok' : d === 'Medium' ? 'pil
 const byName = (line: string, name: string) => (!name ? line : /^Welcome back/.test(line) ? line.replace(/^Welcome back/, `Welcome back, ${name}`) : /^We did it, partner/.test(line) ? line.replace('partner', name) : line);
 
 // The main menu: one screen to start from and come back to. The scene of the Mall behind; the
-// title; who you are, the music and Settings in the top-right corner; Uncle Sam with what he has
+// title; Build the Mall, Settings and who you are in the top-right corner; Uncle Sam with what he has
 // to say, standing on this year's deficit. The choices are the tab bar along the bottom (TabBar).
 function useProgress() {
   const j = useJourney();
@@ -57,6 +57,7 @@ const isDark = () => { const t = document.documentElement.dataset.theme; return 
 
 export default function Journey() {
   const { j, done, next, stars, rank, finished, fresh } = useProgress();
+  const left = balanceOf(j.stars, j.built ?? []);
   const name = useMyName();
   const n = useNarrator();
   const T = budget.receiptsByFY[String(budget.latestFY)]?.reduce((s, r) => s + r.amount, 0) ?? 0;
@@ -93,7 +94,19 @@ export default function Journey() {
           <h1 className="menu-title">Help Uncle Sam <span>Balance the Budget</span></h1>
         </header>
         <div className="menu-tr">
+          {/* Build the Mall, with the stars there are to spend, in marble and gold like the scene. */}
+          <a className="menu-mall" href="#mall" aria-label={`Build the Mall: ${left} ${left === 1 ? 'star' : 'stars'} to spend`} title="Build the Mall">
+            <MenuIcon id="capitol" size={22} /><span className="menu-mall-stars" aria-hidden="true">★ {left}</span>
+          </a>
           <a className="menu-toggle" href="#settings" aria-label="Settings: text size, theme, Uncle Sam’s voice, music" title="Settings"><MenuIcon id="gear" size={20} /></a>
+          <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${done.length} of ${STOPS.length} missions, ${j.medals.length} medals`}>
+            <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
+            <span className="mp-text">
+              <strong>{name || 'Your record'}</strong>
+              <span className="mp-rank">{rank.name}</span>
+            </span>
+            <span className="mp-stats" aria-hidden="true"><span>{done.length}/{STOPS.length}</span><span><MenuIcon id="medal" size={14} /> {j.medals.length}</span></span>
+          </a>
         </div>
         {/* Uncle Sam, close up, with what he has to say, standing on this year's deficit. The
             choices are the tab bar along the bottom. */}
@@ -110,7 +123,7 @@ export default function Journey() {
   );
 }
 
-type MenuIconId = 'build' | 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock';
+type MenuIconId = 'build' | 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock' | 'home' | 'capitol';
 const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
   build: <><path d="M3.5 9 12 4l8.5 5" /><path d="M4.5 9.5h15M6.5 10.5v7M10 10.5v7M14 10.5v7M17.5 10.5v7M3.5 20h17M4.5 17.8h15" /></>,
   play: <><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" /></>,
@@ -130,6 +143,8 @@ const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
   music: <><path d="M9 18V5.5l10-2V16" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></>,
   'music-off': <><path d="M9 18V5.5l10-2V16" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /><path d="M3.5 3.5l17 17" /></>,
   wind: <><path d="M3 9h11a3 3 0 1 0-3-3" /><path d="M3 13h15a3 3 0 1 1-3 3" /><path d="M3 17h6" /></>,
+  home: <><path d="M3.5 11 12 4l8.5 7" /><path d="M5.5 9.5V20h13V9.5" /><path d="M10 20v-5.5h4V20" /></>,
+  capitol: <><path d="M12 2.5v2" /><path d="M8 10.5a4 4 0 0 1 8 0" /><path d="M7 10.5h10M7.5 10.5v2.5M16.5 10.5v2.5" /><path d="M3 13h18M4 13v6M8 13v6M12 13v6M16 13v6M20 13v6M2.5 20.5h19" /></>,
   clock: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 2" /></>,
 };
 export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {

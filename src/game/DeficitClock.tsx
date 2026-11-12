@@ -104,16 +104,11 @@ export function DeficitClock() {
       <p className="sr-only">So far this fiscal year, the government has spent about {moneyWords(c.spendAt(Date.now()), 2)} and taken in about {moneyWords(c.revAt(Date.now()), 2)}, a deficit of about {moneyWords(c.deficitAt(Date.now()), 2)}.</p>
       <div className="deficit-yearhead">Each year, at the past 12 months’ pace</div>
       <dl className="deficit-year">
-        <div><dt>The deficit{c.lastFY && c.paceThrough === `${c.lastFY.fy}-09-30` ? ` (all of FY${c.lastFY.fy})` : ''}</dt><dd>{moneyWords(c.deficitYear, 2)}</dd></div>
         <div><dt>Every person’s share of the deficit</dt><dd>{dollars(c.deficitYear / POP)}</dd></div>
-        <div><dt>The debt grows by</dt><dd>{moneyWords(d.perYear, 2)}</dd></div>
         <div><dt>Interest costs</dt><dd>{moneyWords(d.interestPerYear, 2)}</dd></div>
       </dl>
       <p className="small muted deficit-src">
-        {!c.counted ? 'Since Oct. 1: no count from the Treasury yet this year, so'
-          : c.counted.basis === 'mts' ? `Treasury’s monthly statement through ${dateLabel(c.counted.through)}${c.counted.live ? ' (fetched live)' : ''}, then`
-          : c.counted.basis === 'mts+daily' ? `Treasury’s monthly statement through ${dateLabel(c.counted.monthThrough!)}, then its daily figures through ${dateLabel(c.counted.through)}${c.counted.live ? ' (fetched live)' : ''} (new borrowing less the cash it added), then`
-          : `Treasury’s daily figures through ${dateLabel(c.counted.through)}${c.counted.live ? ' (fetched live)' : ''} (new borrowing from the public less the cash it added), then`} an estimate at the pace of the past 12 months (through {dateLabel(c.paceThrough)}). Interest: FY{d.interestFY}, gross. <a href="#clock">The debt clock</a>
+        {c.counted ? `Treasury daily figures through ${dateLabel(c.counted.through)}` : 'Estimated from Treasury figures'} · <a href="#clock">The debt clock</a>
       </p>
     </section>
   );
