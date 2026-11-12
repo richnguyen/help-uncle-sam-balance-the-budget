@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { budget, debt, dts as bakedDts } from '../data';
 import { type TreasuryDay, treasuryDay } from './dts';
-import { type NewsItem, parseCongressFeed } from '../game/news';
+import type { NewsItem } from '../game/news';
 
 // Standalone build only: refresh the headline numbers straight from the Treasury Fiscal Data API
 // in the visitor's browser, when the page opens and again every half hour while it stays open
@@ -79,10 +79,8 @@ async function fetchLive(): Promise<LiveState> {
   const limit = amt('Statutory Debt Limit');
   const subject = amt('Debt Held by the Public') + amt('Intragovernmental Holdings') - amt('Debt Not Subject to Limit') + amt('Other Debt Subject to Limit');
   if (limit > 0 && subject > 0) out.limit = { date: day[0].record_date, limit, subject };
-  // Congress.gov's floor feeds allow a browser to read them; a miss leaves the baked news alone.
-  const feeds: [string, string][] = [['Senate floor', 'senate-floor-today'], ['House floor', 'house-floor-today'], ['Sent to the President', 'presented-to-president']];
-  const got = await Promise.all(feeds.map(([source, f]) => fetch(`https://www.congress.gov/rss/${f}.xml`).then((r) => (r.ok ? r.text() : '')).then((x) => (x ? parseCongressFeed(x, source) : [])).catch(() => [] as NewsItem[])));
-  out.news = got.flat();
+  // (Congress.gov's floor feeds fed the main menu's headline line; the menu has a tab bar now, so
+  // they aren't fetched. parseCongressFeed in game/news.ts still reads them, should they return.)
   return out;
 }
 

@@ -50,6 +50,7 @@ import { DESK, isUnlocked, LEVELS, missionLong, missionShort, prevOf, STOP_BY_ID
 import { FIELD_GUIDE, REFERENCE } from './game/nav';
 import { ReadingSettings } from './game/Settings';
 import { StatusBar } from './game/StatusBar';
+import { showsTabs, TabBar } from './game/TabBar';
 import { LevelIcon, LockIcon } from './game/icons';
 import { NarrationProvider, prefetchVoice, useNarrator } from './game/voice';
 import { earnedMedals, MEDALS } from './game/medals';
@@ -298,7 +299,8 @@ function Shell() {
           </footer>
         </div>
       </main>
-      <DefaultActions route={route} />
+      {/* Outside a mission: the tab bar (it stands in for the default Continue bar). */}
+      {showsTabs(route) ? <TabBar route={route} /> : <DefaultActions route={route} />}
       <MedalWatcher />
     </>
   );

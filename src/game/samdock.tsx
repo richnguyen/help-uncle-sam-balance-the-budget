@@ -81,11 +81,18 @@ export function useBarHeights() {
       watched.set(name, { el, ro });
     };
     function measure() {
-      const bar = [...document.querySelectorAll('.actionbar, .menu-strip')].find((e) => getComputedStyle(e).display !== 'none' && getComputedStyle(e).position === 'fixed') ?? null;
+      // The bars along the bottom (a screen's action bar, stacked on the tab bar): --abh is how far
+      // up from the bottom they reach, --tabh the tab bar's own height.
+      const bars = [...document.querySelectorAll('.actionbar, .tabbar')].filter((e) => getComputedStyle(e).display !== 'none' && getComputedStyle(e).position === 'fixed');
+      const tabs = bars.find((e) => e.classList.contains('tabbar')) ?? null;
+      const bar = bars.find((e) => !e.classList.contains('tabbar')) ?? null;
       const hud = document.querySelector('.appbar');
       track('bar', bar);
+      track('tabs', tabs);
       track('hud', hud);
-      root.style.setProperty('--abh', `${bar ? Math.round(bar.getBoundingClientRect().height) : 0}px`);
+      const reach = bars.reduce((a, e) => Math.max(a, window.innerHeight - e.getBoundingClientRect().top), 0);
+      root.style.setProperty('--abh', `${Math.round(Math.max(0, reach))}px`);
+      root.style.setProperty('--tabh', `${tabs ? Math.round(tabs.getBoundingClientRect().height) : 0}px`);
       root.style.setProperty('--hud-h', `${hud ? Math.round(hud.getBoundingClientRect().height) : 0}px`);
     }
     measure();

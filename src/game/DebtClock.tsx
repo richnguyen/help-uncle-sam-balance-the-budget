@@ -59,7 +59,7 @@ let lastStep = 0;
 function clearBand() {
   const top = document.querySelector('.appbar')?.getBoundingClientRect().bottom ?? 0;
   let bottom = window.innerHeight;
-  for (const bar of document.querySelectorAll<HTMLElement>('.actionbar, .menu-strip')) {
+  for (const bar of document.querySelectorAll<HTMLElement>('.actionbar, .tabbar')) {
     const cs = getComputedStyle(bar);
     if (cs.display !== 'none' && cs.position === 'fixed') bottom = Math.min(bottom, bar.getBoundingClientRect().top);
   }

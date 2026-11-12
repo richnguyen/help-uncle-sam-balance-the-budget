@@ -19,30 +19,26 @@ American with a very big household who spends more than he brings in. The player
 budget adviser.
 
 - **The main menu** (`#journey`, the first screen) is a hub, and a screen of its own: no top
-  bar and no action bar. Each choice leads to its own page, and every page leads back with one
-  tap ("Main menu", top left; in a level, the top bar's Main menu button). The layout follows how
-  people scan a screen: the big choices on the left, biggest first (Continue or Start the game,
-  then the Daily Dollar, Play together, the field guide, Settings), each with an icon, a title and
-  one line. The three campaigns sit inside Continue ("Campaign 1", "Campaign 2",
-  "Campaign 3"); a tap opens the road map (`#levels`) at that campaign; in the top-right corner, the music and sound switches and the player's
-  record (rank, stars, missions, medals), with this year's deficit running under them. Nothing
-  else: no corner links and no data line. Choices light up, slide and show an arrow under the
-  pointer or keyboard focus, and press in on a tap. Uncle Sam greets the player close up, standing
-  right on top of the menu buttons at the right with a plain speech bubble (no glass pane). At the
-  bottom runs the **Headlines line**: a single-line news crawl (shutdown
-  watch, debt-limit watch, official announcements about spending and taxes, the Daily Dollar,
-  the People's Budget, and what's new in the game) that runs right to left without a seam, pauses under the pointer, on focus or with its pause
-  button, and holds still (scrollable by hand) for people who ask for less motion.
-- **Official news on the Headlines line** (`scripts/fetch-news.mjs` → `src/data/generated/news.json`,
-  `src/game/news.ts`): the White House's presidential actions about taxes, tariffs, spending, the
-  budget or the debt; CBO's latest cost estimates and reports; and, from Congress.gov, spending
-  and tax bills on the Senate and House floors that day and bills sent to the President. Each
-  item carries its source, its time in Eastern time ("3 hr ago", "Yesterday, 4:12 PM ET", "Fri,
-  Nov 6, 2:00 PM ET"), the source's own headline, and a link to the official page. Other White
-  House releases are left out, because many are political messaging and the game doesn't take
-  sides. The Pages workflow fetches the feeds and redeploys every three hours (a failed fetch
-  keeps the news in the repo); on the public site the browser also reads Congress.gov's floor
-  feeds live. Items older than three weeks drop off. `npm run news` refreshes the file locally.
+  bar and no action bar. The scene of the Mall behind; the title; in the top-right corner, the
+  music and sound switches, the Settings gear and the player's record (rank, stars, missions,
+  medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
+  running. The choices are the tab bar along the bottom.
+- **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
+  like an app's: The Mall (Build the Mall), Daily (the Daily Dollar), **Continue** in the middle
+  (raised, in the accent color: the next mission, or Start on a first visit, or Your Budget
+  Story once every mission is done), Together (Play together) and Guide (the field guide). Each
+  is the main menu's own icon with a short name. The tab for the screen you're on is lit, with a
+  bar above it: the main menu counts as Continue's, Rooms, chains and duels as Together's, every
+  field-guide chapter, the glossary and Sources & methods as the Guide's. It steps aside while a
+  mission or the budget desk is played, where the step's own Back / Continue bar is; a screen's
+  own action bar (Build, Higher / Lower) sits right on top of it, with Continue lying flat in the
+  bar there. Every page also leads back to the main menu in one tap ("Main menu", top left).
+- **Official news** (`scripts/fetch-news.mjs` → `src/data/generated/news.json`, `src/game/news.ts`):
+  the White House's presidential actions about taxes, tariffs, spending, the budget or the debt,
+  CBO's latest cost estimates and reports, and spending and tax bills on the Senate and House
+  floors. It ran along the main menu's headline line, which gave way to the tab bar; the Pages
+  workflow still fetches it every three hours, ready for a new home, and the browser no longer
+  reads Congress.gov's feeds live. `npm run news` refreshes the file locally.
 - **This year's deficit, running** (`DeficitClock.tsx`, on the main menu): the federal deficit
   for the fiscal year so far in red, with spending (blue) and revenue (green) beside it. It
   starts from what the Treasury has counted this year: the Monthly Treasury Statement for each
@@ -335,8 +331,7 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
   On phones the view scrolls sideways, starting at the landmark being built.
 - **The main menu shows it too:** its skyline's Washington Monument and Capitol are pale
   blueprints until the player has built them, with a crane beside the one going up. Build the
-  Mall is the menu's second choice, with the stars to spend; Settings is the gear beside the
-  music and sound switches.
+  Mall is the tab bar's first tab; Settings is the gear beside the music and sound switches.
 - A sunny day in the light theme, a floodlit night with lit windows in the dark.
 
 ### A seal for every mission

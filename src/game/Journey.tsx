@@ -1,4 +1,4 @@
-import { type JSX, useEffect, useRef, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { Stars } from '../components/game';
 import { PageHead, Section } from '../components/ui';
 import { ActionBar } from '../components/ActionBar';
@@ -8,14 +8,11 @@ import { OPTIONS_DATA } from '../lib/planData';
 import { useVotes } from '../lib/votes';
 import { LevelIcon, LockIcon } from './icons';
 import { CAMPAIGNS, diffKey, isUnlocked, LEVELS, MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS, unlockText } from './levels';
-import { dayNumber, editionName, loadResults, longDate, nextDeadline, nextTheme, ROUNDS, span, type ThemeId, themeFor, todayKey, untilNext } from './daily';
-import { useDebtClock } from './DebtClock';
+import { span } from './daily';
 import { DeficitClock } from './DeficitClock';
 import { duckMusic, setMusicWanted, startMusic, stopMusic, useMusicWanted, whenAudioAllowed } from './music';
 import { useNarrator } from './voice';
-import { mergeNews, when } from './news';
-import { useLive } from '../lib/live';
-import { backendOn } from '../lib/backend';
+import { when } from './news';
 import { MEDALS } from './medals';
 import { GAME_NAME, SITE_URL } from './share';
 import { ShareButton } from './ShareButton';
@@ -26,7 +23,6 @@ import { useJourney } from './state';
 import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
 import { Seal } from './Seal';
-import { balanceOf, currentLandmark, doneCount } from './build/landmarks';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
 import { SamSays } from './UncleSam';
 import { SamMenuSpot } from './samhud';
@@ -40,18 +36,9 @@ const pillFor = (d: string) => (d === 'Easy' ? 'pill-ok' : d === 'Medium' ? 'pil
 // it (a name can't be recorded ahead of time).
 const byName = (line: string, name: string) => (!name ? line : /^Welcome back/.test(line) ? line.replace(/^Welcome back/, `Welcome back, ${name}`) : /^We did it, partner/.test(line) ? line.replace('partner', name) : line);
 
-// The main menu: one screen to start from and come back to. Big choices on the left, in the
-// order players want them (carry on, pick a level, play with others, today's puzzle, read); who
-// you are in the top-right corner; live numbers on the right; small things in the bottom
-// corners. Every choice leads to its own page, and every page leads back here.
-const NEWS = [
-  { date: '2026-11-11', title: 'New mission 3.4: Compared to what?', body: 'The same budget gap, two yardsticks: history and today’s needs. Plus who pays the income tax in your county.', href: '#level-yardstick' },
-  { date: '2026-11-10', title: 'Every mission is a game, and four new ones', body: 'Score points in every lesson mission, then learn how Congress really budgets: who does what, the rules, and the brakes.', href: '#levels' },
-  { date: '2026-11-09', title: 'Three campaigns, sixteen missions', body: 'Six new missions on how a change hits the economy, who pays, and what grows it, plus plan ideas on every desk.', href: '#levels' },
-  { date: '2026-11-08', title: 'Duel a friend on the final mission', body: 'Two plans built blind, three rounds, and fewer cards breaks a tie.', href: '#together' },
-  { date: '2026-11-07', title: 'The debt clock is live', body: 'Ticking from the Treasury’s own count, with the room left under the debt limit.', href: '#clock' },
-];
-
+// The main menu: one screen to start from and come back to. The scene of the Mall behind; the
+// title; who you are, the music and Settings in the top-right corner; Uncle Sam with what he has
+// to say, standing on this year's deficit. The choices are the tab bar along the bottom (TabBar).
 function useProgress() {
   const j = useJourney();
   const done = STOPS.filter((s) => j.done.includes(s.id));
@@ -72,9 +59,6 @@ export default function Journey() {
   const name = useMyName();
   const n = useNarrator();
   const T = budget.receiptsByFY[String(budget.latestFY)]?.reduce((s, r) => s + r.amount, 0) ?? 0;
-  const key = todayKey();
-  const played = loadResults()[key];
-  const theme = themeFor(key);
   const sound = useAmbienceWanted();
   const music = useMusicWanted();
   // The music and the soundscape play only here: once the browser allows sound (the first tap
@@ -98,20 +82,6 @@ export default function Journey() {
       : next && hard(next.difficulty)
         ? JOURNEY_LINES.hardNext(rank.name.toLowerCase())
         : JOURNEY_LINES.back(rank.name.toLowerCase());
-  const primary = next
-    ? { href: '#' + next.id, title: fresh ? 'Start the game' : 'Continue', sub: `${missionShort(next)}: ${next.title} · about ${next.minutes} min`, icon: 'play' as const }
-    : { href: '#story', title: 'Your Budget Story', sub: 'Your plans and your budget personality, as cards to share', icon: 'story' as const };
-  // Build the Mall: the stars to spend, and the landmark going up.
-  const built = j.built ?? [];
-  const mallCur = currentLandmark(built);
-  const mallBal = balanceOf(j.stars, built);
-  const mallSub = mallCur ? `★ ${mallBal} to spend · ${mallCur.short}, ${doneCount(mallCur, built)} of ${mallCur.tasks.length} built` : 'The whole Mall is built: see it';
-  const items: { href: string; title: string; sub: string; icon: MenuIconId }[] = [
-    { href: '#mall', title: 'Build the Mall', sub: mallSub, icon: 'build' },
-    { href: '#daily', title: 'The Daily Dollar', sub: played && played.length >= ROUNDS ? `#${dayNumber(key)} done: ${played.filter(Boolean).length} of ${ROUNDS} · next in ${untilNext()}` : `#${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''} · five calls, about a minute`, icon: 'daily' },
-    { href: '#together', title: 'Play together', sub: 'Duel a friend, start a room, pass the budget', icon: 'together' },
-    { href: '#guide', title: 'Field guide', sub: 'Every chapter in full, with sources and methods', icon: 'book' },
-  ];
   return (
     <div className="menu">
       <MenuScene />
@@ -139,22 +109,17 @@ export default function Journey() {
             <span className="mp-stats" aria-hidden="true"><span>★ {stars}</span><span>{done.length}/{STOPS.length}</span><span><MenuIcon id="medal" size={14} /> {j.medals.length}</span></span>
           </a>
         </div>
-        <nav className="menu-main" aria-label="Main menu">
-          {/* Uncle Sam, close up, right on top of the buttons, with what he has to say. */}
+        {/* Uncle Sam, close up, with what he has to say, standing on this year's deficit. The
+            choices are the tab bar along the bottom. */}
+        <div className="menu-main">
           <SamMenuSpot />
-          <div className="menu-continue">
-            <MenuItem {...primary} primary />
-            <CampaignChips />
-          </div>
-          {items.map((x) => <MenuItem key={x.href} {...x} />)}
-        </nav>
-        <div className="menu-deficit"><DeficitClock /></div>
+          <div className="menu-deficit"><DeficitClock /></div>
+        </div>
       </div>
       {/* What Uncle Sam says here (he stands above the buttons). */}
       <SamSays mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
         {byName(greeting, name)}
       </SamSays>
-      <TodayStrip />
     </div>
   );
 }
@@ -186,36 +151,6 @@ export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {
 }
 
 const ROADMAP_AT = 'ftd:roadmap-at';
-/** Inside Continue: the three campaigns; a tap opens the road map at that campaign. */
-function CampaignChips() {
-  const j = useJourney();
-  return (
-    <div className="mc-camps" role="group" aria-label="Campaigns">
-      {CAMPAIGNS.map((c) => {
-        const ms = STOPS.filter((s) => s.campaign === c.n);
-        const fin = ms.filter((s) => j.done.includes(s.id)).length;
-        const open = isUnlocked(ms[0].id, j.done, j.settings.freeRoam);
-        return (
-          <a key={c.n} className="mc-camp" href="#levels" data-open={open} data-done={fin === ms.length || undefined}
-            onClick={() => { try { sessionStorage.setItem(ROADMAP_AT, 'campaign-' + c.n); } catch { /* the road map opens at the top */ } }}
-            title={c.title} aria-label={`Campaign ${c.n}: ${c.title}. ${fin} of ${ms.length} missions done${open ? '' : '. Locked'}`}>
-            <span className="mc-k">{open ? null : <LockIcon />}Campaign {c.n}</span>
-          </a>
-        );
-      })}
-    </div>
-  );
-}
-
-function MenuItem({ href, title, sub, icon, primary = false }: { href: string; title: string; sub: string; icon: MenuIconId; primary?: boolean }) {
-  return (
-    <a className={'menu-item' + (primary ? ' menu-item-primary' : '')} href={href}>
-      <span className="mi-icon"><MenuIcon id={icon} size={primary ? 30 : 24} /></span>
-      <span className="mi-text"><span className="mi-title">{title}</span><span className="mi-sub">{sub}</span></span>
-      <span className="mi-go" aria-hidden="true">›</span>
-    </a>
-  );
-}
 
 /** The road map, as its own page: the three campaigns and their missions, with progress at the top. */
 export function LevelsPage() {
@@ -381,80 +316,6 @@ export function SettingsPage() {
       <div className="card"><InstallButton /><ReadingSettings /></div>
       <MenuSoundSettings />
     </>
-  );
-}
-
-/** Something new every day, along the bottom of the menu: deadlines, today's Daily Dollar, and the People's Budget move. */
-const EDITION_ABOUT: Record<ThemeId, string> = { budget: 'All about the budget', tax: 'All about taxes', shutdown: 'All about what Congress funds each year', debt: 'All about the debt' };
-const inDays = (n: number) => (n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`);
-
-function TodayStrip() {
-  const key = todayKey();
-  const played = loadResults()[key];
-  const right = played?.filter(Boolean).length ?? 0;
-  const theme = themeFor(key);
-  const upcoming = theme ? null : nextTheme(key, 21);
-  // Deadlines in the news: a funding lapse coming up, and how much room is left under the debt limit.
-  const due = nextDeadline(key, 45);
-  const clock = useDebtClock();
-  const limitWatch = clock.monthsLeft != null && clock.monthsLeft < 6;
-  // The items, once: each a link, in one line.
-  const items: { href: string; title: string; body: string; news?: boolean; time?: string }[] = [];
-  // Official announcements about spending and taxes, newest first, each with its source and time.
-  const live = useLive();
-  const official = mergeNews(live.news).slice(0, 8);
-  if (due && due.kind === 'shutdown') items.push({ href: '#process', news: true, title: `Shutdown watch: funding runs out ${due.days === 0 ? 'at midnight tonight' : `after ${longDate(due.date)}`} (${inDays(due.days)})`, body: `${due.what}${theme?.id === 'shutdown' ? '' : ' The week before, the Daily Dollar is about what Congress pays for each year.'}` });
-  if (limitWatch) items.push({ href: '#clock', news: true, title: `Debt limit watch: ${clock.monthsLeft! < 1 ? 'less than a month' : `about ${Math.round(clock.monthsLeft!)} month${Math.round(clock.monthsLeft!) === 1 ? '' : 's'}`} of room left`, body: `Uncle Sam can borrow about ${moneyWords(clock.room!, 0)} more before he reaches the legal limit. Then the Treasury’s workarounds buy a little time, and Congress has to act.` });
-  items.push({ href: '#daily', title: `The Daily Dollar #${dayNumber(key)}${theme ? ` · ${editionName(theme)}` : ''}`, body: `${played && played.length >= ROUNDS ? `You got ${right} of ${ROUNDS}. The next one is ready in ${untilNext()}.` : theme ? `${EDITION_ABOUT[theme.id]} this week. Today’s puzzle: five calls, about a minute.` : 'Today’s puzzle is ready: five higher-or-lower calls, about a minute.'}${upcoming ? ` Coming up: ${upcoming.name}, ${span(upcoming)}.` : ''}` });
-  if (backendOn()) items.push({ href: '#peoples', title: 'The People’s Budget', body: 'Your one move for today: push one card in or out of everyone’s budget.' });
-  for (const x of NEWS) items.push({ href: x.href, title: x.title, body: x.body, time: x.date });
-  // Like a news channel's crawl: one line, right to left, looping without a seam (the line is
-  // drawn twice). Its speed stays the same whatever its length. It pauses under the pointer, on
-  // keyboard focus, or with the pause button; with less motion asked for, it holds still and
-  // scrolls by hand.
-  const set = useRef<HTMLSpanElement>(null);
-  const run = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    const el = set.current, r = run.current;
-    if (!el || !r) return;
-    const fit = () => r.style.setProperty('--ticker-s', `${Math.max(20, el.offsetWidth / 70).toFixed(1)}s`);
-    fit();
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
-    ro?.observe(el);
-    return () => ro?.disconnect();
-  }, []);
-  // The deadlines first, then the official news, then today's puzzle and what's new in the game.
-  const deadlines = items.filter((x) => x.news), rest = items.filter((x) => !x.news);
-  const game = (x: (typeof items)[number], copy: boolean) => (
-    <a key={x.href + x.title} className={'ticker-item' + (x.news ? ' today-news' : '')} href={x.href} tabIndex={copy ? -1 : undefined}>
-      {x.time && <time className="ticker-when" dateTime={x.time}>{when(x.time + 'T12:00:00-05:00', true)}</time>}
-      <strong>{x.title}</strong> <span>{x.body}</span>
-    </a>
-  );
-  const line = (copy: boolean) => (
-    <span className="ticker-set" ref={copy ? undefined : set} aria-hidden={copy || undefined}>
-      {deadlines.map((x) => game(x, copy))}
-      {official.map((x) => (
-        <a key={x.id} className="ticker-item ticker-official" href={x.url} target="_blank" rel="noopener noreferrer" tabIndex={copy ? -1 : undefined}>
-          <span className="ticker-src">{x.source}</span>
-          <time className="ticker-when" dateTime={x.time}>{when(x.time, x.dateOnly)}</time>
-          <strong>{x.title}</strong>
-        </a>
-      ))}
-      {rest.map((x) => game(x, copy))}
-    </span>
-  );
-  return (
-    <section className="menu-strip ticker" aria-label="Headlines" data-paused={paused || undefined}>
-      <span className="strip-label" aria-hidden="true">Headlines</span>
-      <div className="ticker-window">
-        <div className="ticker-run" ref={run}>{line(false)}{line(true)}</div>
-      </div>
-      <button type="button" className="ticker-pause" aria-pressed={paused} aria-label={paused ? 'Run the headlines' : 'Pause the headlines'} onClick={() => setPaused(!paused)}>
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">{paused ? <path d="M3.5 2v10l8-5z" fill="currentColor" /> : <path d="M3.5 2h2.5v10H3.5zM8 2h2.5v10H8z" fill="currentColor" />}</svg>
-      </button>
-    </section>
   );
 }
 

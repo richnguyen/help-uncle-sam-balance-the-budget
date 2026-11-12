@@ -2960,3 +2960,44 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 @keyframes seal-stamp { from { transform: scale(1.7) rotate(-20deg); opacity: 0; } 55% { opacity: 1; } to { transform: scale(1) rotate(-5deg); opacity: 1; } }
 @keyframes seal-shine { from { transform: translateX(0); } to { transform: translateX(340px); } }
 @media (prefers-reduced-motion: reduce) { .seal-svg { animation: none; } .seal-shine { animation: none; display: none; } }
+
+/* ---------- the tab bar (TabBar.tsx): along the bottom of every screen outside a mission ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 47;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end;
+  padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--surface) 94%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line); box-shadow: 0 -10px 22px -18px rgba(0, 0, 0, 0.4);
+  transform: translateZ(0);
+}
+@media (min-width: 901px) { .tabbar { padding-inline: max(24px, calc((100vw - 720px) / 2)); } }
+.tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; min-height: 54px; padding: 4px 2px 2px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.01em; line-height: 1.1; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.tab-icon { display: grid; place-items: center; width: 48px; height: 30px; border-radius: 10px; transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease; }
+.tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+@media (hover: hover) { .tab:hover { color: var(--ink); } }
+.tab:active .tab-icon { transform: scale(0.92); }
+.tab:focus-visible { outline: none; }
+.tab:focus-visible .tab-icon { box-shadow: 0 0 0 2px var(--accent); }
+/* the tab for this screen: lit, with a bar above it */
+.tab[aria-current="page"] { color: var(--accent); }
+.tab[aria-current="page"] .tab-icon { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.tab[aria-current="page"]::before { content: ""; position: absolute; top: -7px; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+/* the middle: Continue, raised, a rounded square in the accent color */
+.tab[data-main] { color: var(--ink); }
+.tab[data-main] .tab-icon { width: 58px; height: 58px; margin-top: -28px; border-radius: 18px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 4px var(--surface), 0 8px 18px color-mix(in srgb, var(--accent) 38%, transparent); }
+.tab[data-main][aria-current="page"] { color: var(--accent); }
+.tab[data-main][aria-current="page"] .tab-icon { background: var(--accent); box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px color-mix(in srgb, var(--accent) 40%, transparent), 0 8px 18px color-mix(in srgb, var(--accent) 38%, transparent); }
+.tab[data-main][aria-current="page"]::before { display: none; }
+@media (prefers-reduced-motion: reduce) { .tab-icon { transition: none; } .tab:active .tab-icon { transform: none; } }
+/* A screen's own action bar sits on the tab bar; the page leaves room for both. */
+body:has(.tabbar) .actionbar { bottom: var(--tabh, 66px); padding-bottom: 10px; box-shadow: none; }
+body:has(.tabbar) .main { padding-bottom: calc(96px + var(--tabh, 66px)); }
+
+/* The main menu: Uncle Sam stands on this year's deficit; the choices are the tab bar. */
+.menu-main .menu-deficit { grid-area: auto; position: relative; z-index: 1; margin-top: 0; }
+/* Room for the label under the raised Continue; and where a screen's own action bar sits on the
+   tabs, Continue stays in the bar (still the accent color) instead of rising into it. */
+.tab[data-main] { gap: 8px; }
+body:has(.page .actionbar) .tab[data-main] { gap: 3px; }
+body:has(.page .actionbar) .tab[data-main] .tab-icon { width: 52px; height: 32px; margin-top: 0; border-radius: 10px; box-shadow: none; }
+body:has(.page .actionbar) .tab[data-main] .tab-icon svg { width: 22px; height: 22px; }
