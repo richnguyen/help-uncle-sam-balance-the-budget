@@ -294,9 +294,12 @@ function Shell() {
           <Suspense fallback={<p className="small muted page-loading" role="status">Loading…</p>}>
             <Page param={param} />
           </Suspense>
-          <footer className="footer">
-            <span>Independent civic education project. Not affiliated with any government agency.</span>
-          </footer>
+          {/* The disclaimer, quietly: on the field guide and Your record only. */}
+          {(route === 'guide' || route === 'record') && (
+            <footer className="footer">
+              <span>Independent civic education project. Not affiliated with any government agency.</span>
+            </footer>
+          )}
         </div>
       </main>
       {/* Outside a mission: the tab bar (it stands in for the default Continue bar). */}

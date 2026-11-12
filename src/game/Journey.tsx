@@ -23,6 +23,7 @@ import { useJourney } from './state';
 import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
 import { Seal } from './Seal';
+import { balanceOf, starsSpent } from './build/landmarks';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
 import { SamSays } from './UncleSam';
 import { SamMenuSpot } from './samhud';
@@ -92,22 +93,7 @@ export default function Journey() {
           <h1 className="menu-title">Help Uncle Sam <span>Balance the Budget</span></h1>
         </header>
         <div className="menu-tr">
-          <button type="button" className="menu-toggle" aria-pressed={music} onClick={() => setMusicWanted(!music)} aria-label={music ? 'Music: on. Turn it off' : 'Music: off. Turn it on'} title={music ? 'Music: on' : 'Music: off'}>
-            <MenuIcon id={music ? 'music' : 'music-off'} size={20} />
-          </button>
-          <button type="button" className="menu-toggle" aria-pressed={sound} onClick={() => setAmbienceWanted(!sound)} aria-label={sound ? 'Sounds of the Mall: on. Turn them off' : 'Sounds of the Mall: off. Turn them on'} title={sound ? 'Sounds of the Mall: on' : 'Sounds of the Mall: off'}>
-            <MenuIcon id={sound ? 'wind' : 'mute'} size={20} />
-          </button>
-          {/* Settings: text size, theme, Uncle Sam's voice, music. */}
           <a className="menu-toggle" href="#settings" aria-label="Settings: text size, theme, Uncle Sam’s voice, music" title="Settings"><MenuIcon id="gear" size={20} /></a>
-          <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${stars} of ${MAX_STARS} stars, ${done.length} of ${STOPS.length} missions, ${j.medals.length} medals`}>
-            <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
-            <span className="mp-text">
-              <strong>{name || 'Your record'}</strong>
-              <span className="mp-rank">{rank.name}</span>
-            </span>
-            <span className="mp-stats" aria-hidden="true"><span>★ {stars}</span><span>{done.length}/{STOPS.length}</span><span><MenuIcon id="medal" size={14} /> {j.medals.length}</span></span>
-          </a>
         </div>
         {/* Uncle Sam, close up, with what he has to say, standing on this year's deficit. The
             choices are the tab bar along the bottom. */}
@@ -219,6 +205,13 @@ export function RecordPage() {
   return (
     <div className="journey">
       <PageHead eyebrow="Your record" title="Your record" lede="What you’ve learned, how you voted, and what you’ve earned. Saved in this browser only." />
+      <Section id="stars" title="Your stars" sub="Win stars in missions; spend them on building the Mall. Replay a mission for more.">
+        <div className="record-stars">
+          <div><span className="stat-label">Earned</span><strong className="num">★ {stars}</strong><span className="small muted">of {MAX_STARS}</span></div>
+          <div><span className="stat-label">Spent on the Mall</span><strong className="num">★ {starsSpent(j.built ?? [])}</strong><span className="small muted"><a href="#mall">Build the Mall</a></span></div>
+          <div><span className="stat-label">Left to spend</span><strong className="num">★ {balanceOf(j.stars, j.built ?? [])}</strong><span className="small muted">shown in the top bar</span></div>
+        </div>
+      </Section>
       <Section id="facts" title="Your fact cards" sub="Every chapter you finish adds a card of what you learned, with the source. Share any of them.">
         <div className="factcards">
           {LEVELS.map((l) => {
@@ -309,10 +302,25 @@ function MenuSoundSettings() {
 }
 
 /** Settings, as a page of their own (also in the top bar). */
+/** Settings opens with who you are: your title and stars, a tap from your record. */
+function ProfileCard() {
+  const { j, done, stars, rank } = useProgress();
+  const name = useMyName();
+  const left = balanceOf(j.stars, j.built ?? []);
+  return (
+    <a className="card settings-profile" href="#record">
+      <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
+      <span className="settings-profile-text"><strong>{name || 'Your record'}</strong><span className="small muted">{rank.name} · ★ {left} to spend ({stars} won) · {done.length} of {STOPS.length} missions · {j.medals.length} medals</span></span>
+      <span aria-hidden="true">›</span>
+    </a>
+  );
+}
+
 export function SettingsPage() {
   return (
     <>
       <PageHead eyebrow="Settings" title="Settings" lede="Make the game comfortable to read and hear. These are saved in this browser." />
+      <ProfileCard />
       <div className="card"><InstallButton /><ReadingSettings /></div>
       <MenuSoundSettings />
     </>

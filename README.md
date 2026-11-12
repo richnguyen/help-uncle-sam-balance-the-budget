@@ -19,9 +19,9 @@ American with a very big household who spends more than he brings in. The player
 budget adviser.
 
 - **The main menu** (`#journey`, the first screen) is a hub, and a screen of its own: no top
-  bar and no action bar. The scene of the Mall behind; the title; in the top-right corner, the
-  music and sound switches, the Settings gear and the player's record (rank, stars, missions,
-  medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
+  bar and no action bar. The scene of the Mall behind; the title; in the top-right corner, one
+  button, the Settings gear (music and sound switches are inside Settings, under a card for the
+  player's record: rank, stars, missions, medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
   running. The choices are the tab bar along the bottom.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
   like an app's, five tabs alike: The Mall (Build the Mall), Daily (the Daily Dollar), Mission in
@@ -305,6 +305,8 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
 - **Stars are never lost.** The balance is the stars won (the best on every mission) less the
   stars spent; save them up or spend them as you go. There is nothing to buy, no timer, and no
   way to lose what is built.
+- **The top bar shows the stars left to spend** (tap it for the Mall); Your record keeps the
+  ledger: stars earned (of 63), spent on the Mall, and left to spend.
 - **Every job teaches one true thing,** said by Uncle Sam as it goes up: where work stopped on the
   Washington Monument in 1854 and why the marble changes color, why the Lincoln Memorial has 36
   columns, how Philip Reid, an enslaved worker at the foundry, worked out how to cast the Statue
@@ -330,7 +332,7 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
   On phones the view scrolls sideways, starting at the landmark being built.
 - **The main menu shows it too:** its skyline's Washington Monument and Capitol are pale
   blueprints until the player has built them, with a crane beside the one going up. Build the
-  Mall is the tab bar's first tab; Settings is the gear beside the music and sound switches.
+  Mall is the tab bar's first tab; Settings is the gear at the top right.
 - A sunny day in the light theme, a floodlit night with lit windows in the dark.
 
 ### A seal for every mission
@@ -418,7 +420,9 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
 - **Less on screen.** On phones the top bar holds the mission, stars, accomplishments and the
   main menu, with the sound switch at the start of Uncle Sam's strip, and the top bar's Continue moves down to the action bar at every width; the footer is one line, with the field guide
   and the note about the figures in Sources & methods; on the desk, the scoreboard and cards come straight after the title. Medal and badge
-  messages share one stack under the top bar.
+  messages share one stack under the top bar. The project note ("Independent civic education
+  project. Not affiliated with any government agency.") appears only, quietly, at the foot of the
+  field guide and Your record: never on the main menu or during play.
 - **Interruptions.** A call, a locked screen, or a closed tab loses nothing: level steps,
   answers, and the plan in progress on the desk (for each level, and for each friend's challenge)
   are saved as they happen, and Uncle Sam stops talking when the app goes to the background.

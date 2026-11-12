@@ -3,6 +3,7 @@ import { BADGES, loadProgress } from '../lib/game';
 import { AwardIcon, CaretIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
 import { campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
+import { balanceOf } from './build/landmarks';
 import { FIELD_GUIDE } from './nav';
 import { useJourney } from './state';
 import { useNarrator } from './voice';
@@ -49,6 +50,8 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
   const bar = useRef<HTMLElement>(null);
   const done = STOPS.filter((s) => j.done.includes(s.id)).length;
   const stars = STOPS.reduce((a, s) => a + (j.stars[s.id] ?? 0), 0);
+  // The stars left to spend on building the Mall (what's been won, less what's been built).
+  const left = balanceOf(j.stars, j.built ?? []);
   const next = STOPS.find((s) => !j.done.includes(s.id) && isUnlocked(s.id, j.done, j.settings.freeRoam));
   const here = STOP_BY_ID[route];
   const focus = here ?? next ?? STOPS[STOPS.length - 1];
@@ -124,11 +127,11 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
         {/* Right, in one line: your score, his voice, and the way out. */}
         <div className="hud-side hud-right">
           <div className="hud-row">
-            <span className="stb-stars ab-stars" aria-label={`${stars} of ${MAX_STARS} stars`}><span aria-hidden="true">★</span> <strong className="num">{stars}</strong><span className="muted num ab-hide-sm">/{MAX_STARS}</span></span>
+            <a className="stb-stars ab-stars" href="#mall" aria-label={`${left} stars to spend on building the Mall (${stars} won)`} title={`${left} stars to spend · ${stars} of ${MAX_STARS} won`}><span aria-hidden="true">★</span> <strong className="num">{left}</strong></a>
             <Pop id="acc" open={open} setOpen={setOpen} button={(p) => (
               <button type="button" className="stb-acc-btn" {...p} aria-label={`Accomplishments: ${earned} of ${total}`}><AwardIcon size={17} /> <strong className="num">{earned}</strong></button>
             )}>
-            <div className="ab-panel-head"><strong>Accomplishments</strong><span className="small muted">{earned} of {total} · ★ {stars} of {MAX_STARS} stars · {rank.name}</span></div>
+            <div className="ab-panel-head"><strong>Accomplishments</strong><span className="small muted">{earned} of {total} · ★ {left} to spend, {stars} of {MAX_STARS} won · {rank.name}</span></div>
             <div className="stat-label">Medals</div>
             <ul className="stb-pop-list">
               {MEDALS.map((m) => <li key={m.id} data-got={j.medals.includes(m.id)}><AwardIcon size={14} /><span><strong>{m.name}</strong><span className="small muted"> {m.desc}</span></span></li>)}
