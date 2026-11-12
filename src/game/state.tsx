@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { load, save } from '../lib/storage';
+import { syncThemeColor } from '../lib/appmode';
 import type { SavedPlan } from './plans';
 
 // The player's journey: which levels are done, stars earned, quiz attempts, their choices on each
@@ -99,6 +100,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
       if (hostTheme.current) root.dataset.theme = hostTheme.current;
       else delete root.dataset.theme;
     } else root.dataset.theme = st.settings.theme;
+    syncThemeColor(st.settings.theme);
   }, [st.settings.text, st.settings.theme]);
 
   const value: Journey = {

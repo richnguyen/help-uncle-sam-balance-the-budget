@@ -1,17 +1,147 @@
 {
   "name": "Help Uncle Sam Balance the Budget",
   "short_name": "Uncle Sam",
-  "description": "A civic game about the federal budget: ten short levels on where the money goes, why the government borrows, and how you would fix it, built on official U.S. government data.",
+  "description": "A civic game about the federal budget: 21 short missions on where the money goes, why the government borrows, and how you would fix it, built on official U.S. government data.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
+  "lang": "en-US",
+  "dir": "ltr",
   "display": "standalone",
+  "orientation": "natural",
   "background_color": "#f2f4ef",
   "theme_color": "#1d5a43",
-  "categories": ["education", "games"],
+  "categories": [
+    "education",
+    "games"
+  ],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": [
+      "focus-existing",
+      "auto"
+    ]
+  },
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Continue the game",
+      "short_name": "Continue",
+      "url": "./#journey",
+      "icons": [
+        {
+          "src": "icons/shortcut-play.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "The Daily Dollar",
+      "short_name": "Daily Dollar",
+      "description": "Today's puzzle: five calls, about a minute",
+      "url": "./#daily",
+      "icons": [
+        {
+          "src": "icons/shortcut-daily.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Build the Mall",
+      "short_name": "Build",
+      "description": "Spend your stars on the National Mall's landmarks",
+      "url": "./#mall",
+      "icons": [
+        {
+          "src": "icons/shortcut-build.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Play together",
+      "short_name": "Together",
+      "description": "Duel a friend, start a room, pass the budget",
+      "url": "./#together",
+      "icons": [
+        {
+          "src": "icons/shortcut-together.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screens/narrow-menu.jpg",
+      "sizes": "824x1648",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "The main menu, with Uncle Sam and the National Mall"
+    },
+    {
+      "src": "screens/narrow-game.jpg",
+      "sizes": "824x1648",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "A mission's game: calling bills against a spending limit"
+    },
+    {
+      "src": "screens/narrow-mall.jpg",
+      "sizes": "824x1648",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Building the Washington Monument with stars"
+    },
+    {
+      "src": "screens/narrow-desk.jpg",
+      "sizes": "824x1648",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "The budget desk: fixing the budget with real policy options"
+    },
+    {
+      "src": "screens/wide-menu.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "The main menu, with this year's deficit"
+    },
+    {
+      "src": "screens/wide-mall.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "The National Mall, rebuilt with stars won in missions"
+    },
+    {
+      "src": "screens/wide-game.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "A mission's game, one round at a time"
+    }
   ]
 }

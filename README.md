@@ -430,6 +430,24 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   manifest and home-screen icons (`public/manifest.webmanifest`, `public/icons/`, drawn by
   `scripts/make-icons.mjs`) make that possible; opened from the home screen, the game returns to
   the level the player was in.
+- **Installed, it behaves like an app** (`public/manifest.webmanifest`, `index.html`,
+  `src/lib/appmode.ts`):
+  - its own window (`display: standalone`), held upright on phones (`orientation: natural`);
+  - reopening it, a shortcut or a reminder brings back the window already open
+    (`launch_handler: focus-existing`) and goes to the page asked for, without a reload;
+  - a long press on the icon offers four shortcuts: Continue, the Daily Dollar, Build the Mall,
+    Play together (their icons are drawn by `scripts/make-app-images.mjs`);
+  - Chrome's richer install dialog shows a description and screenshots, four for phones and three
+    for computers (`public/screens/`, by the same script);
+  - the status bar matches the page, light or dark (`theme-color` per color scheme, following the
+    theme picked in Settings), and the page paints dark from the first frame in dark mode
+    (`color-scheme`);
+  - iPhones don't turn the big dollar figures into phone-number links (`format-detection`);
+  - on a touch screen there is no grey flash on a tap, and the app's controls and drawings aren't
+    selected or given the long-press menu by a held finger, while reading text stays selectable;
+  - installed, there is no pull-to-refresh or rubber-band bounce at the ends of the page.
+  On iPhone and iPad, iOS 26 opens any site added to the Home Screen as a web app; the
+  `apple-touch-icon` and `apple-mobile-web-app-title` give it its icon and name.
 - **Daily Dollar reminders.** An opt-in notification, at most once a day, at the hour the player
   picks (in settings, or on the Daily Dollar's finished screen). Sent with Web Push by a Supabase
   Edge Function that Cron runs hourly; no account or email. On iPhone it needs the game on the home

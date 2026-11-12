@@ -1427,6 +1427,14 @@ html.modal-open { overflow: hidden; }
 @media (pointer: coarse) {
   /* Like an app: the page scrolls, but a pinch or a double tap doesn't zoom it (see lib/nozoom.ts). */
   html, body { touch-action: pan-x pan-y; }
+  /* No grey flash on a tap (every control has its own pressed look), and the app's controls and
+     drawings aren't selected or given the iPhone's long-press menu by a held finger. Reading
+     text (facts, chapters, sources) stays selectable. */
+  html { -webkit-tap-highlight-color: transparent; }
+  button, .btn, [role="button"], .menu-item, .menu-tr, .hud, .actionbar, .steptrack, .game-hud, .chip, .seg, .quiz-choice, .vote-btn, .ballot-choice, .pairs-pick, .bm-stage, .bm-mall, .bm-card, .menu-scene, .sam-portrait, svg, img {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  a:not(.btn):not(.menu-item):active { opacity: 0.65; }
   a, button, summary, label, input, select, [role="button"] { touch-action: pan-x pan-y; }
   .btn, .btn-sm { min-height: 44px; }
   .btn-sm { padding-inline: 14px; }
@@ -1969,14 +1977,14 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 
 /* Who you are, in the top-right corner. */
 .menu-tr { grid-area: tr; justify-self: end; align-self: start; display: flex; align-items: center; gap: 8px; }
-.menu-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--ink-2);
+.menu-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; cursor: pointer; color: var(--ink-2);
   background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 0 0 1px var(--ring); transition: box-shadow 0.15s ease, color 0.15s ease, background-color 0.15s ease; }
 .menu-toggle[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); }
 @media (hover: hover) { .menu-toggle:hover { box-shadow: 0 0 0 2px var(--accent); } }
 .menu-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--accent); }
-.menu-profile { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 999px; color: var(--ink); text-decoration: none;
+.menu-profile { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 14px; color: var(--ink); text-decoration: none;
   background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 0 0 1px var(--ring); transition: box-shadow 0.16s ease, transform 0.16s ease; }
-.mp-badge { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--gold); color: #fff; }
+.mp-badge { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--gold); color: #fff; }
 .mp-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
 .mp-text strong { font-size: 0.9375rem; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-rank { font-size: 0.75rem; color: var(--ink-2); }
@@ -2211,9 +2219,10 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 }
 
 /* ---------- the main menu: Uncle Sam close up, right on top of the buttons ---------- */
-.menu-sam { position: relative; z-index: 0; display: flex; align-items: flex-end; justify-content: flex-end; gap: 6px; margin-bottom: -18px; }
+/* He stands up out of the Continue card far enough to show his coat and bow tie. */
+.menu-sam { position: relative; z-index: 0; display: flex; align-items: flex-end; justify-content: flex-end; gap: 6px; margin-bottom: -16px; }
 .menu-continue { z-index: 1; }
-.menu-sam-bubble { position: relative; flex: 0 1 auto; max-width: 300px; margin-bottom: 44px; padding: 10px 14px 9px; border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--ring), 0 6px 18px rgba(17, 27, 22, 0.12); }
+.menu-sam-bubble { position: relative; flex: 0 1 auto; max-width: 300px; margin-bottom: 40px; padding: 10px 14px 9px; border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--ring), 0 6px 18px rgba(17, 27, 22, 0.12); }
 .menu-sam-bubble::after { content: ""; position: absolute; right: -7px; bottom: 16px; width: 14px; height: 14px; background: var(--surface); transform: rotate(45deg); box-shadow: 1px -1px 0 0 var(--ring); clip-path: polygon(0 0, 100% 0, 100% 100%); }
 .menu-sam-text { margin: 0; font-size: 0.9375rem; line-height: 1.45; }
 .menu-sam-listen { margin-top: 4px; font-size: 0.8125rem; }
@@ -2227,7 +2236,7 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
   .sam-portrait-menu .sam-portrait-frame { width: 100px; }
   .sam-portrait-menu .sam { width: 100px; }
   .menu-sam { margin-bottom: -14px; }
-  .menu-sam-bubble { margin-bottom: 36px; }
+  .menu-sam-bubble { margin-bottom: 32px; }
 }
 
 /* ---------- Uncle Sam's acts: reactions to the player, and his idle habits ---------- */
@@ -2925,3 +2934,9 @@ html.celebrate-open .celebrate { max-height: calc(100vh - var(--hud-h, 120px) - 
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .menu-scene { --ms-plan: rgba(160, 196, 255, 0.6); --ms-plan-fill: rgba(160, 196, 255, 0.06); --ms-crane: #b9862c; } }
 :root[data-theme="dark"] .menu-scene { --ms-plan: rgba(160, 196, 255, 0.6); --ms-plan-fill: rgba(160, 196, 255, 0.06); --ms-crane: #b9862c; }
 @media (prefers-reduced-motion: reduce) { .ms-crane-load, .bm-mallcrane-load { animation: none; } }
+
+/* The installed app: no pull-to-refresh or rubber-band bounce at the ends of the page, and no
+   swipe between pages by accident; scroll areas inside keep their scroll to themselves. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html, body { overscroll-behavior: none; }
+}

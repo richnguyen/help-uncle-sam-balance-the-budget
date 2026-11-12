@@ -126,7 +126,8 @@ function ActLayer({ act }: { act: SamAct }) {
 /** How much of him shows: half his body (the top bar, and anywhere else), or head and shoulders,
  * close up (the main menu). */
 type Crop = 'full' | 'bust';
-const VIEW: Record<Crop, [number, number, number, number]> = { full: [0, 0, 120, 150], bust: [16, 0, 88, 126] };
+// The bust (the main menu) shows him down to his coat, bow tie and lapel pin.
+const VIEW: Record<Crop, [number, number, number, number]> = { full: [0, 0, 120, 150], bust: [12, 0, 96, 150] };
 
 /** `greet`: he waves hello (happy mood) — on by default. `act`: what he's doing right now. */
 export function UncleSam({ mood = 'happy', size = 140, title, speaking = false, greet = true, crop = 'full', act = null }: { mood?: Mood; size?: number; title?: string; speaking?: boolean; greet?: boolean; crop?: Crop; act?: SamAct | null }) {
