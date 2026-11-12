@@ -339,6 +339,15 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
   music and sound switches.
 - A sunny day in the light theme, a floodlit night with lit windows in the dark.
 
+### A seal for every mission
+
+A finished mission's card shows its seal, not Uncle Sam (he's already in the top bar):
+a scalloped rosette like the one on a certificate, in the mission's difficulty color, with the
+mission's icon on an engraved disc, "MISSION 2.4 · COMPLETE" around the rim, the stars earned,
+and two ribbon tails (`src/game/Seal.tsx`). It lands like a stamp and catches the light once
+(not for people who ask for less motion). The final certificate in Your record, for finishing
+all 21 missions, has the gold grand seal.
+
 ### Design notes: five UX lessons from Royal Match, without the pressure tactics
 
 1. **Keep colors simple.** Game chrome uses four bold, high-contrast fills by difficulty (green

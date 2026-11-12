@@ -12,7 +12,8 @@ import { LevelIcon } from './icons';
 import { campaignOf, chapterStars, checksOf, diffKey, gameOf, isUnlocked, LEVELS, type Level, missionLong, missionShort, nextOf, type Quiz, type Step, STOP_BY_ID, STOPS, unlockText, type VoteSpec } from './levels';
 import { useJourney } from './state';
 import { finishLevelTime, levelMinutes, resetLevelTime, useLevelTimer } from './levelTime';
-import { plain, SamSays, UncleSam } from './UncleSam';
+import { plain, SamSays } from './UncleSam';
+import { Seal } from './Seal';
 import { lockedLine, QUIZ_LINES } from './script';
 import { EstimateGuess, SizesCard, SortCard, SplitCard } from './guesses';
 import { GameStep } from './minigame';
@@ -389,7 +390,8 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
   return (
     <section className="complete card" aria-labelledby="complete-t">
       <div className="complete-top">
-        <UncleSam mood="proud" size={120} />
+        {/* The mission's seal (Uncle Sam is already in the top bar). */}
+        <Seal icon={STOP_BY_ID[level.id].icon} ring={`MISSION ${STOP_BY_ID[level.id].campaign}.${STOP_BY_ID[level.id].mission} · COMPLETE`} stars={stars} diff={diffKey(level.difficulty)} />
         <div>
           <div className="eyebrow">{missionShort(STOP_BY_ID[level.id])} complete · <span className="complete-stars" aria-label={`${stars} of 3 stars`}>{'★'.repeat(stars)}<span className="muted">{'★'.repeat(3 - stars)}</span></span></div>
           <h2 className="complete-title" id="complete-t">{level.badge}: explained</h2>

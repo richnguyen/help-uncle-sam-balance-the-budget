@@ -25,9 +25,10 @@ import { InstallButton } from './install';
 import { useJourney } from './state';
 import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
+import { Seal } from './Seal';
 import { balanceOf, currentLandmark, doneCount } from './build/landmarks';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
-import { SamSays, UncleSam } from './UncleSam';
+import { SamSays } from './UncleSam';
 import { SamMenuSpot } from './samhud';
 
 export { LockIcon } from './icons';
@@ -344,7 +345,7 @@ export function RecordPage() {
         </div>
         {finished && (
           <div className="certificate card">
-            <UncleSam mood="proud" size={90} />
+            <Seal icon="capitol" ring={`INFORMED BUDGET VOTER · ALL ${STOPS.length} MISSIONS`} grand size={110} />
             <div>
               <div className="eyebrow">Certificate</div>
               <div className="complete-title">Informed Budget Voter</div>
