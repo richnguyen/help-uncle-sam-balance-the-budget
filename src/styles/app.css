@@ -3048,12 +3048,13 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .fc > * { margin: 0; }
 .fc[data-kind="news"], .fc[data-kind="deadline"] { border-left: 4px solid var(--fc-news); }
 .fc[data-kind="deadline"] { background: color-mix(in srgb, var(--warning) 9%, var(--surface)); }
-.fc-head { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 0.8125rem; }
+.fc-head { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 0.8125rem; }
+.fc-head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 .fc-badge { display: inline-flex; align-items: center; gap: 5px; flex: none; padding: 3px 9px 3px 7px; border-radius: 999px; font-weight: 750; letter-spacing: 0.01em;
   color: var(--fc-c); background: color-mix(in srgb, var(--fc-c) 12%, transparent); }
 .fc-badge[data-topic="bills"] { --fc-c: var(--fc-bills); } .fc-badge[data-topic="budget"] { --fc-c: var(--fc-budget); } .fc-badge[data-topic="polls"] { --fc-c: var(--fc-polls); }
 .fc-badge[data-topic="lessons"] { --fc-c: var(--fc-lessons); } .fc-badge[data-topic="news"] { --fc-c: var(--fc-news); }
-.fc-source { flex: 1; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-source { max-width: 100%; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fc-source a { color: inherit; }
 .fc-save { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: -6px -10px -6px 0; border: 0; border-radius: 12px; background: none; color: var(--muted); cursor: pointer; }
 .fc-save[aria-pressed="true"] { color: var(--gold); }
@@ -3274,3 +3275,31 @@ a.stb-stars { color: inherit; text-decoration: none; }
 @media (prefers-reduced-motion: reduce) { .mb-scrim, .mb-sheet { animation: none; } }
 /* With nothing being said, the speech strip stays empty and quiet. */
 .sam-strip[data-state="caption"] { background: transparent; box-shadow: none; }
+
+/* Who a post comes from: our own small marks (never an office's logo or seal). */
+.fc-mark { --m: #4b5a52; flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--m); background: color-mix(in srgb, var(--m) 12%, var(--surface)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--m) 45%, transparent); }
+.fc-mark-text { font-family: var(--font-display); font-weight: 800; font-size: 0.8125rem; letter-spacing: 0.02em; line-height: 1; }
+.fc-mark[data-mark="cbo"] { --m: #0f6f73; } .fc-mark[data-mark="crs"] { --m: #3d4fa3; } .fc-mark[data-mark="jct"] { --m: #7a3f86; }
+.fc-mark[data-mark="gao"] { --m: #5b6b2f; } .fc-mark[data-mark="omb"] { --m: #6b4f2a; } .fc-mark[data-mark="ssa"] { --m: #1d5f9a; }
+.fc-mark[data-mark="cms"] { --m: #2c7a5a; } .fc-mark[data-mark="mint"] { --m: #9a5b1f; } .fc-mark[data-mark="nara"] { --m: #5a4a3a; }
+.fc-mark[data-mark="wh"] { --m: #3f4f63; } .fc-mark[data-mark="treas"] { --m: var(--accent); } .fc-mark[data-mark="congress"] { --m: #24456f; }
+.fc-mark[data-mark="game"] { --m: #1f3a6b; background: #fff; }
+:root[data-theme="dark"] .fc-mark { --m: #b9c6bf; } :root[data-theme="dark"] .fc-mark[data-mark="game"] { background: #e9eef8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fc-mark { --m: #b9c6bf; } :root:not([data-theme="light"]) .fc-mark[data-mark="game"] { background: #e9eef8; } }
+
+/* A bill's road to law. */
+.fc-track { list-style: none; margin: 2px 0 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); }
+.fc-track li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.fc-track li + li::before { content: ""; position: absolute; top: 6px; right: 50%; width: 100%; height: 2px; background: var(--line); z-index: 0; }
+.fc-track li[data-done] + li[data-done]::before { background: var(--fc-bills); }
+.fc-track-dot { position: relative; z-index: 1; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2px var(--line); }
+.fc-track li[data-done] .fc-track-dot { background: var(--fc-bills); box-shadow: none; }
+.fc-track li[data-here] .fc-track-dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--fc-bills) 25%, transparent); }
+.fc-trackwrap { display: flex; flex-direction: column; gap: 6px; }
+.fc-track-cap { margin: 0; font-size: 0.8125rem; }
+
+/* How big, next to the others. */
+.fc-size { display: flex; flex-direction: column; gap: 6px; }
+.fc-size-bar { display: block; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.fc-size-bar > span { display: block; height: 100%; border-radius: 4px; background: var(--fc-budget); }
+.fc-size-k { font-size: 0.75rem; color: var(--muted); }

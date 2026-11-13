@@ -30,9 +30,9 @@ budget adviser.
   Together (Play together) and Guide (the field guide). Each is the main menu's own icon with a short
   name. The tab for the screen you're on is lit, with a bar above it: the road map counts as
   Mission's, Rooms, chains and duels as Together's, every field-guide chapter, the glossary and
-  Sources & methods as the Guide's. It steps aside while a mission or the budget desk is
-  played, where the step's own Back / Continue bar is; a screen's own action bar (Build,
-  Higher / Lower) sits right on top of it. Every page also leads back to the main menu in one tap ("Main menu", top left).
+  Sources & methods as the Guide's. It stays in missions and at the budget desk too, with the
+  step's own Back / Continue bar right on top of it, as is a screen's own action bar (Build,
+  Higher / Lower). The Feed tab is the way back to the main menu.
 - **Official news** (`scripts/fetch-news.mjs` → `src/data/generated/news.json`, `src/game/news.ts`):
   the White House's presidential actions about taxes, tariffs, spending, the budget or the debt,
   CBO's latest cost estimates and reports, and spending and tax bills on the Senate and House
@@ -67,8 +67,16 @@ budget adviser.
   first tap or key, ducking under Uncle Sam's voice. **Sounds of the Mall** (`ambience.ts`):
   wind and birdsong, or crickets at night, off until switched on. Both play only on the menu,
   are remembered, and have switches in Settings too. On phones the scene is a banner with the
-  title in its sky, and the choices follow. The road map, the record (fact cards, ballot,
-  medals, certificates) and Settings are pages of their own (`#levels`, `#record`, `#settings`).
+  title in its sky, and the choices follow. The road map and Settings are pages of their own
+  (`#levels`, `#settings`); Your record is on top of the Guide tab (`#record` goes there).
+- **Your record, on top of the Guide tab** (`RecordTop` in `src/game/Journey.tsx`): one card with
+  your name and title, your missions by campaign (a bar each, filled as you finish), Continue and
+  the road map, and six numbers (stars won, stars to spend, medals, polls, bills, quick checks).
+  Then every mission as a badge, its seal once finished (a dashed outline until then); tap one
+  for a sheet with what it taught, Share and Play again. Your ballot, briefly: a bar of the
+  questions answered, then one line per vote with your answer as a mark and how many players
+  agreed. *How everyone played*: players, those who finished, votes on budget ideas, and a link
+  to the full results and votes. Then medals, saved posts, and the final certificate.
 - **The field guide** (`#guide`, from the main menu): every chapter in full, each with the level
   it goes with (read chapters are marked), and Sources & methods and the glossary inside it.
   Every chapter's banner links back to the field guide and to Sources & methods.
@@ -271,10 +279,11 @@ budget adviser.
   - Adviser titles and a copyable "budget ballot".
 - **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): Uncle Sam stands at the
   left, always there, across the bar's two lines: half his body showing, right on its bottom edge.
-  Line one, in larger text: the current mission and its name ("Mission 2.4 · Rules of the road",
-  truncated to fit on phones) and your title, which opens the list of every mission by campaign
-  plus the field-guide chapters; then stars, accomplishments (medals and budget-desk badges), and
-  Main menu. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
+  Line one, in larger text: the page's title ("The Daily Dollar", "Record & guide"; in a mission,
+  its number, "Mission 2.4", since the mission's name heads the page). Each page's own heading is
+  kept for screen readers only, so the title isn't said twice, and there is no small title above
+  it. Then stars, accomplishments (medals and budget-desk badges), and Main menu. Progress
+  through the missions is in Your record, not the top bar. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
   his words, running right to left beside him, the word he's saying at the left end next to him. The glossary and Sources & methods are in the
   field guide and the footer; Settings is the gear on the main menu.
 - **A mission page wastes no room on repeats** (`src/game/LevelPage.tsx`): one compact line
@@ -287,7 +296,7 @@ budget adviser.
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
   are gathered on Sources & methods ("By mission"), one link from every mission. The field guide
-  (all earlier pages) is listed in the top bar's level menu and in every page's footer.
+  (all earlier pages) is on the Guide tab, under Your record.
 
 ### The feed: every post the game has, official ones first
 
@@ -326,8 +335,17 @@ like a civic briefing, built for a phone and a thumb.
     top of the feed, and as a timeline to swipe, year by year.
   - *The Daily Dollar*, today's puzzle.
 - **Source and date on every post** (Congress.gov · CRS summary · Updated Nov 10, 2026; CBO; U.S.
-  Treasury), and **Save** on every post; saved posts are listed in Your record, with *Your civic
-  impact* (polls answered, bills weighed in on, quick checks right).
+  Treasury), and **Save** on every post; saved posts are listed in Your record, which also counts
+  polls answered, bills weighed in on, and quick checks right.
+- **Who it's from, at a glance.** Each post opens with a small round mark for its source, drawn
+  for the game (a monogram for CBO, JCT, CRS, GAO, OMB, SSA, CMS and the National Archives; a
+  dome for Congress, a portico for the White House, a columned building for the Treasury, a 1¢
+  for the Mint; Uncle Sam's hat for the game's own posts). They are deliberately not the
+  offices' logos or seals, which would suggest an office stands behind the game.
+- **Visual aids.** A bill shows its road to law as six dots (introduced, committee, one chamber,
+  both, the President, law) with where it stands and what's next; a poll shows the option's
+  ten-year savings as a bar against the biggest of the CBO's options in the game; a law, its
+  effect against the biggest in the game.
 - **Neutral by design.** Summaries are CRS's; the arguments come from CBO; nothing is ranked but
   plans and ideas. Players' answers show only after you answer, as bars labeled "players of this
   game, not a scientific poll". Bill answers are saved in the site's database (`feed_votes`, one
@@ -480,7 +498,7 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   and the note about the figures in Sources & methods; on the desk, the scoreboard and cards come straight after the title. Medal and badge
   messages share one stack under the top bar. The project note ("Independent civic education
   project. Not affiliated with any government agency.") appears only, quietly, at the foot of the
-  field guide and Your record: never on the main menu or during play.
+  Guide tab (Your record and the field guide): never on the main menu or during play.
 - **Interruptions.** A call, a locked screen, or a closed tab loses nothing: level steps,
   answers, and the plan in progress on the desk (for each level, and for each friend's challenge)
   are saved as they happen, and Uncle Sam stops talking when the app goes to the background.

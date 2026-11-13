@@ -2,6 +2,8 @@ import { useEffect, useId, useState, type ReactNode } from 'react';
 import { backendOn, feedTallies, saveFeedVote } from '../../lib/backend';
 import { moneyWords } from '../../lib/format';
 import { useVotes } from '../../lib/votes';
+import { OPTIONS_DATA } from '../../lib/planData';
+import { laws } from '../../data';
 import { puzzleFor, todayKey } from '../daily';
 import { useHaptics } from '../haptics';
 import { LevelIcon } from '../icons';
@@ -50,15 +52,57 @@ function SaveButton({ item }: { item: FeedItem }) {
   );
 }
 
+// ---- Who a post comes from: a small mark of our own drawing (never an agency's logo or seal,
+// which would suggest the office stands behind this game; it doesn't, and says so).
+
+type Mark = { id: string; label: string; text?: string; glyph?: ReactNode; name: string };
+const GLYPH = {
+  dome: <><path d="M12 3v2" /><path d="M7.5 11a4.5 4.5 0 0 1 9 0" /><path d="M6.5 11h11M7.5 11v3M16.5 11v3" /><path d="M4 14h16M5 14v5M9 14v5M12 14v5M15 14v5M19 14v5M3.5 19.5h17" /></>,
+  portico: <><path d="M3.5 9 12 4.5 20.5 9z" /><path d="M5 9.5h14M6.5 10v7M10 10v7M14 10v7M17.5 10v7M4 17.5h16M3 20h18" /></>,
+  building: <><path d="M4 8.5 12 4l8 4.5" /><path d="M5 9h14M6.5 9.5v8M10 9.5v8M14 9.5v8M17.5 9.5v8M4 18h16M3 20.5h18" /></>,
+  hat: <><path d="M8 4.5h8l-1 11H9z" fill="#c8372d" stroke="none" /><path d="M9.3 7.5h5.4M9.6 10.5h4.8M9.9 13.5h4.2" stroke="#fff" strokeWidth="1.4" /><path d="M8 4.5h8l-1 11H9z" /><path d="M3.5 17.2c2.5-1.6 14.5-1.6 17 0-1.6 1.6-15.4 1.6-17 0z" fill="#1f3a6b" stroke="none" /><path d="M8.6 15.4h6.8" stroke="#1f3a6b" strokeWidth="2.2" /></>,
+};
+const MARKS: { test: RegExp; mark: Mark }[] = [
+  { test: /\bJCT\b|Joint Committee on Taxation/i, mark: { id: 'jct', label: 'JCT', text: 'JCT', name: 'Joint Committee on Taxation' } },
+  { test: /\bCRS\b|Congressional Research Service/i, mark: { id: 'crs', label: 'CRS', text: 'CRS', name: 'Congressional Research Service' } },
+  { test: /\bCBO\b|Congressional Budget Office/i, mark: { id: 'cbo', label: 'CBO', text: 'CBO', name: 'Congressional Budget Office' } },
+  { test: /\bGAO\b/i, mark: { id: 'gao', label: 'GAO', text: 'GAO', name: 'Government Accountability Office' } },
+  { test: /\bOMB\b/i, mark: { id: 'omb', label: 'OMB', text: 'OMB', name: 'Office of Management and Budget' } },
+  { test: /Social Security Administration|\bSSA\b/i, mark: { id: 'ssa', label: 'SSA', text: 'SSA', name: 'Social Security Administration' } },
+  { test: /\bCMS\b/i, mark: { id: 'cms', label: 'CMS', text: 'CMS', name: 'Centers for Medicare & Medicaid Services' } },
+  { test: /U\.S\. Mint/i, mark: { id: 'mint', label: 'Mint', text: '1¢', name: 'U.S. Mint' } },
+  { test: /National Archives|Truman Library/i, mark: { id: 'nara', label: 'Archives', text: 'NA', name: 'National Archives' } },
+  { test: /White House/i, mark: { id: 'wh', label: 'White House', glyph: GLYPH.portico, name: 'The White House' } },
+  { test: /Treasury|Fiscal Data/i, mark: { id: 'treas', label: 'Treasury', glyph: GLYPH.building, name: 'U.S. Department of the Treasury' } },
+  { test: /Congress\.gov|Senate floor|House floor|Sent to the President|Public Law|P\.L\.|U\.S\.C\./i, mark: { id: 'congress', label: 'Congress', glyph: GLYPH.dome, name: 'Congress' } },
+];
+const GAME_MARK: Mark = { id: 'game', label: 'Help Uncle Sam', glyph: GLYPH.hat, name: 'Help Uncle Sam Balance the Budget (this game)' };
+export function markFor(item: FeedItem): Mark {
+  const src = `${item.kind === 'news' ? item.news.source + ' ' : ''}${item.source.name}`;
+  // CRS summaries come through Congress.gov: credit CRS, which wrote them.
+  return MARKS.find((m) => m.test.test(src))?.mark ?? GAME_MARK;
+}
+
+function SourceMark({ mark }: { mark: Mark }) {
+  return (
+    <span className="fc-mark" data-mark={mark.id} title={`From: ${mark.name}`} aria-hidden="true">
+      {mark.glyph ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" focusable="false">{mark.glyph}</svg> : <span className="fc-mark-text">{mark.text}</span>}
+    </span>
+  );
+}
+
 function Head({ item, badge }: { item: FeedItem; badge?: string }) {
   const s = item.source;
   const date = item.kind === 'news' ? when(item.news.time, item.news.dateOnly) : s.date ? (item.kind === 'bill' ? `Updated ${fmtDate(s.date)}` : /^\d{4}-\d/.test(s.date) ? fmtDate(s.date) : s.date) : '';
   return (
     <header className="fc-head">
-      <span className="fc-badge" data-topic={item.topic}><Icon d={TOPIC_ICON[item.topic]} size={15} />{badge ?? KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}</span>
-      <span className="fc-source">
-        {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a> : s.name}
-        {date && <> · <time>{date}</time></>}
+      <SourceMark mark={markFor(item)} />
+      <span className="fc-head-text">
+        <span className="fc-badge" data-topic={item.topic}><Icon d={TOPIC_ICON[item.topic]} size={14} />{badge ?? KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}</span>
+        <span className="fc-source">
+          {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a> : s.name}
+          {date && <> · <time>{date}</time></>}
+        </span>
       </span>
       <SaveButton item={item} />
     </header>
@@ -95,6 +139,28 @@ function initials(name: string) {
   return ((parts[0]?.[0] ?? '') + (parts.at(-1)?.[0] ?? '')).toUpperCase();
 }
 
+/** How a bill becomes law, as six stops; the ones it has passed are filled. */
+const TRACK = ['Introduced', 'Committee', 'Passed one chamber', 'Passed both chambers', 'To the President', 'Law'];
+function trackAt(status: string) {
+  if (status === 'Became law') return 5;
+  if (status === 'Sent to President' || status === 'Vetoed') return 4;
+  if (status === 'Passed both chambers') return 3;
+  if (status === 'Passed House' || status === 'Passed Senate') return 2;
+  if (status === 'Reported by committee' || status === 'In committee') return 1;
+  return 0;
+}
+function StageTrack({ status }: { status: string }) {
+  const at = trackAt(status);
+  return (
+    <div className="fc-trackwrap">
+      <ol className="fc-track" aria-hidden="true">
+        {TRACK.map((t, i) => <li key={t} data-done={i <= at || undefined} data-here={i === at || undefined} title={t}><span className="fc-track-dot" /></li>)}
+      </ol>
+      <p className="fc-track-cap">Step {at + 1} of {TRACK.length}: <strong>{TRACK[at]}</strong>{at < TRACK.length - 1 ? <span className="muted"> · next, {TRACK[at + 1].toLowerCase()}</span> : null}</p>
+    </div>
+  );
+}
+
 function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
   const j = useJourney();
   const buzz = useHaptics();
@@ -128,6 +194,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
         <span className="fc-billno">{bill.label}{bill.companion ? <span className="muted"> · twin bill {bill.companion}</span> : null}</span>
       </div>
       <h3 className="fc-title">{bill.title}</h3>
+      <StageTrack status={bill.status} />
       {bill.sponsor && (
         <p className="fc-sponsor">
           <span className="fc-avatar" aria-hidden="true">{initials(bill.sponsor.name)}</span>
@@ -297,6 +364,7 @@ function LawCard({ item }: { item: Extract<FeedItem, { kind: 'law' }> }) {
       <Head item={item} />
       <h3 className="fc-title fc-title-sm">{l.name} <span className="muted">({l.signed.slice(0, 4)})</span></h3>
       <p className="fc-law-num"><strong>{up ? '+' : '−'}{moneyWords(Math.abs(l.deficitEffect) * 1e9, 2)}</strong> <span className="muted">{up ? 'added to' : 'cut from'} deficits over {l.window}, as scored when it passed</span></p>
+      <span className="fc-size-bar" data-dir={up ? 'up' : 'down'} role="img" aria-label={`${Math.round((Math.abs(l.deficitEffect) / MAX_LAW) * 100)}% of the biggest effect among the laws in the game`}><span style={{ width: `${Math.max(3, (Math.abs(l.deficitEffect) / MAX_LAW) * 100)}%` }} /></span>
       <p className="fc-clamp">{l.summary}</p>
       <a className="fc-link" href="#laws">All the laws that moved the needle <Icon d={ICON.chevron} size={14} /></a>
     </>
@@ -304,6 +372,9 @@ function LawCard({ item }: { item: Extract<FeedItem, { kind: 'law' }> }) {
 }
 
 // ---- Polls (the CBO's options; the same votes as the game's cards)
+
+const MAX_OPTION = Math.max(...OPTIONS_DATA.options.map((o) => Math.abs(Number(o.savings10))));
+const MAX_LAW = Math.max(...laws.map((l) => Math.abs(l.deficitEffect)));
 
 function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
   const o = item.option;
@@ -319,7 +390,11 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
       <Head item={item} />
       <p className="fc-ask fc-ask-top">Would you include this in a plan to shrink the deficit?</p>
       <h3 className="fc-title">{o.name}</h3>
-      <p className="fc-chip">{saves ? 'Saves' : 'Costs'} {moneyWords(Math.abs(o.savings10) * 1e9, 2)} over 10 years <span className="muted">(CBO)</span></p>
+      <div className="fc-size">
+        <p className="fc-chip">{saves ? 'Saves' : 'Costs'} {moneyWords(Math.abs(o.savings10) * 1e9, 2)} over 10 years <span className="muted">(CBO)</span></p>
+        <span className="fc-size-bar" role="img" aria-label={`Size among CBO’s options: ${Math.round((Math.abs(o.savings10) / MAX_OPTION) * 100)}% of the biggest`}><span style={{ width: `${Math.max(3, (Math.abs(o.savings10) / MAX_OPTION) * 100)}%` }} /></span>
+        <span className="fc-size-k">compared with the biggest of CBO’s options in the game</span>
+      </div>
       <div className="fc-tabs" role="tablist" aria-label="Arguments">
         <button type="button" role="tab" id={`${uid}-a`} aria-selected={tab === 'for'} aria-controls={`${uid}-p`} onClick={() => setTab('for')}>Arguments for</button>
         <button type="button" role="tab" id={`${uid}-b`} aria-selected={tab === 'against'} aria-controls={`${uid}-p`} onClick={() => setTab('against')}>Arguments against</button>
