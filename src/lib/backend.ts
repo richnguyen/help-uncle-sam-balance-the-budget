@@ -82,7 +82,7 @@ export const rpc = <T>(fn: string, args: object = {}) => call<T>(`rpc/${fn}`, { 
 export const authRpc = <T>(fn: string, args: object = {}) => call<T>(`rpc/${fn}`, { method: 'POST', body: JSON.stringify(args), auth: true });
 
 /** Saves this player's single row in a table (insert or replace). */
-export const upsertOwn = (table: 'ballots' | 'players' | 'peoples_moves', row: object) =>
+export const upsertOwn = (table: 'ballots' | 'players' | 'peoples_moves' | 'feed_votes', row: object) =>
   call<null>(table, { method: 'POST', body: JSON.stringify(row), auth: true, prefer: 'resolution=merge-duplicates,return=minimal' });
 
 /** This player's own row, if they have signed in before. */
@@ -177,3 +177,8 @@ export function countStep(step: ChallengeStep, challengeKey: string) {
   save('steps', Object.fromEntries(Object.entries(seen).slice(-50)));
   rpc('count_challenge_step', { p_step: step }).catch(() => {});
 }
+
+// The feed's polls (feed_votes): one answer per player per card, and the counts.
+export type FeedTallies = Record<string, Record<string, number>>;
+export const feedTallies = (items: string[]) => rpc<FeedTallies>('feed_tallies', { items: items.slice(0, 50) });
+export const saveFeedVote = (item: string, choice: string) => upsertOwn('feed_votes', { item, choice });

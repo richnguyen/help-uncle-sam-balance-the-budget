@@ -1,6 +1,7 @@
 # Builds the standalone site and publishes it to GitHub Pages on every push to main, and every
-# three hours so the main menu's Headlines line carries the latest official announcements
-# about spending and taxes (scripts/fetch-news.mjs; a failed fetch keeps the news in the repo).
+# three hours so the main menu's feed carries the latest official announcements and bills
+# about spending and taxes (scripts/fetch-news.mjs and scripts/fetch-bills.mjs; a failed fetch
+# keeps what is in the repo).
 # The standalone build refreshes the national debt and the latest monthly Treasury
 # figures live in each visitor's browser; everything else uses the data in src/data/.
 #
@@ -36,6 +37,13 @@ jobs:
       - run: npm ci
       - name: Fetch the latest official news
         run: node scripts/fetch-news.mjs || echo "News fetch failed; building with the news already in the repo."
+      # The feed's bills: Congress.gov's API, with the free api.data.gov key kept as the repository
+      # secret CONGRESS_API_KEY (Settings → Secrets and variables → Actions). Without it, the
+      # shared DEMO_KEY is tried; if that's refused, the bills already in the repo are used.
+      - name: Fetch spending and tax bills for the feed
+        env:
+          CONGRESS_API_KEY: ${{ secrets.CONGRESS_API_KEY }}
+        run: node scripts/fetch-bills.mjs || echo "Bills fetch failed; building with the bills already in the repo."
       - name: Fetch the Treasury's latest daily figures
         run: node scripts/fetch-dts.mjs || echo "Treasury fetch failed; building with the figures already in the repo."
       - run: npm run build

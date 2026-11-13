@@ -249,3 +249,22 @@ await as(Z[9], `update public.ballots set ballot = ballot - 'zip' - 'state'`);
 at = (await as(null, 'select public.ballot_area_totals() as t')).rows[0].t;
 ok(!at.states.VA && !at.zip3['223'], 'removing one ZIP drops Virginia back under 10, so it disappears');
 for (const u of Z) await db.query('delete from auth.users where id = $1', [u]);
+
+// The feed's polls: one answer per player per card, changeable; counts only.
+const F = ['00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000f4'];
+for (const u of F) await db.query('insert into auth.users (id) values ($1)', [u]);
+await as(F[0], `insert into public.feed_votes (item, choice) values ('poll:carbon-tax-25', 'yes'), ('bill:hr227-119', 'support')`);
+await as(F[1], `insert into public.feed_votes (item, choice) values ('poll:carbon-tax-25', 'no')`);
+await as(F[2], `insert into public.feed_votes (item, choice) values ('poll:carbon-tax-25', 'unsure')`);
+ok(await fails(() => as(F[1], `insert into public.feed_votes (item, choice) values ('poll:carbon-tax-25', 'yes')`)), 'feed: one answer per player per card');
+await as(F[1], `update public.feed_votes set choice = 'yes' where item = 'poll:carbon-tax-25'`);
+ok(await fails(() => as(F[3], `insert into public.feed_votes (item, choice) values ('poll:Carbon Tax', 'yes')`)) && await fails(() => as(F[3], `insert into public.feed_votes (item, choice) values ('poll:carbon-tax-25', 'maybe-later')`)), 'feed: odd card ids and choices are refused');
+ok(await fails(() => as(null, `insert into public.feed_votes (item, choice) values ('poll:carbon-tax-25', 'yes')`)), 'feed: answering needs a sign-in');
+ok((await as(F[1], 'select * from public.feed_votes')).rows.length === 1, 'feed: a player sees only their own answers');
+await as(F[1], `update public.feed_votes set choice = 'no' where user_id = '${F[0]}'`);
+ok((await as(F[0], 'select choice from public.feed_votes where item = $1', ['poll:carbon-tax-25'])).rows[0].choice === 'yes', 'feed: no one changes another player’s answer');
+const ft = (await as(null, `select public.feed_tallies(array['poll:carbon-tax-25', 'bill:hr227-119', 'poll:nothing-here']) as t`)).rows[0].t;
+console.log('  feed_tallies:', JSON.stringify(ft));
+ok(ft['poll:carbon-tax-25'].yes === 2 && ft['poll:carbon-tax-25'].unsure === 1 && Number(ft['poll:carbon-tax-25'].total) === 3 && ft['bill:hr227-119'].support === 1 && !ft['poll:nothing-here'], 'feed: counts per card, for anyone, with no identities');
+await as(F[2], `delete from public.feed_votes where item = 'poll:carbon-tax-25'`);
+ok(Number((await as(null, `select public.feed_tallies(array['poll:carbon-tax-25']) as t`)).rows[0].t['poll:carbon-tax-25'].total) === 2, 'feed: a player can take an answer back');

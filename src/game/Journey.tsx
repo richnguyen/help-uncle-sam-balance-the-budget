@@ -27,6 +27,7 @@ import { balanceOf, starsSpent } from './build/landmarks';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
 import { SamSays } from './UncleSam';
 import { SamMenuSpot } from './samhud';
+import { Feed } from './feed/Feed';
 
 export { LockIcon } from './icons';
 
@@ -115,6 +116,8 @@ export default function Journey() {
           <div className="menu-deficit"><DeficitClock /></div>
         </div>
       </div>
+      {/* Below: the feed, every post the game has, official ones first while they're fresh. */}
+      <Feed />
       {/* What Uncle Sam says here (he stands above the buttons). */}
       <SamSays mood={finished ? 'cheering' : fresh ? 'happy' : next && hard(next.difficulty) ? 'worried' : 'thinking'} auto say={greeting}>
         {byName(greeting, name)}
@@ -226,6 +229,25 @@ export function RecordPage() {
           <div><span className="stat-label">Spent on the Mall</span><strong className="num">★ {starsSpent(j.built ?? [])}</strong><span className="small muted"><a href="#mall">Build the Mall</a></span></div>
           <div><span className="stat-label">Left to spend</span><strong className="num">★ {balanceOf(j.stars, j.built ?? [])}</strong><span className="small muted">shown in the top bar</span></div>
         </div>
+      </Section>
+      <Section id="impact" title="Your civic impact" sub="What you’ve weighed in on and checked yourself on, in the game and in the feed.">
+        <div className="record-stars record-impact">
+          <div><span className="stat-label">Polls answered</span><strong className="num">{Object.keys(votes.mine.options).length + Object.keys(votes.mine.issues).length}</strong><span className="small muted">budget ideas and big questions</span></div>
+          <div><span className="stat-label">Bills weighed in on</span><strong className="num">{Object.keys(j.feedVotes ?? {}).filter((k) => k.startsWith('bill:')).length}</strong><span className="small muted">from the feed</span></div>
+          <div><span className="stat-label">Quick checks</span><strong className="num">{Object.values(j.feedChecks ?? {}).filter(Boolean).length}/{Object.keys(j.feedChecks ?? {}).length}</strong><span className="small muted">right on the first try</span></div>
+        </div>
+      </Section>
+      <Section id="saved" title="Saved for later" sub={(j.saved ?? []).length ? 'Posts you saved from the feed, newest first.' : 'Tap the bookmark on any post in the feed to keep it here.'}>
+        {(j.saved ?? []).length > 0 && (
+          <ul className="saved-list">
+            {(j.saved ?? []).map((s) => (
+              <li key={s.id} className="card saved-item">
+                <a href={s.href} {...(/^https?:/.test(s.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}><strong>{s.title}</strong><span className="small muted">{s.source}</span></a>
+                <button type="button" className="btn btn-sm" onClick={() => j.toggleSaved(s)} aria-label={`Remove from saved: ${s.title}`}>Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
       </Section>
       <Section id="facts" title="Your fact cards" sub="Every chapter you finish adds a card of what you learned, with the source. Share any of them.">
         <div className="factcards">

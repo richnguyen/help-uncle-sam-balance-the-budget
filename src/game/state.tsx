@@ -9,6 +9,8 @@ import type { SavedPlan } from './plans';
 export type TextSize = 'normal' | 'large' | 'larger';
 export type ThemeChoice = 'system' | 'light' | 'dark';
 
+export interface SavedPost { id: string; kind: string; title: string; href: string; source: string; at: string }
+
 export interface JourneyState {
   v: 2;
   done: string[]; // completed level ids (level-1 … level-10)
@@ -23,6 +25,11 @@ export interface JourneyState {
   games?: Record<string, { best: number; stars: number; plays: number }>; // each mission game's best score
   built?: string[]; // Build the Mall: the jobs paid for with stars, in order (task ids)
   decor?: string[]; // Build the Mall: the decorations placed (unlocked by accomplishments)
+  /** The feed: posts saved for later (a snapshot, since bills and news rotate out), with when. */
+  saved?: SavedPost[];
+  /** The feed: the player's answer on each poll and bill (choice value), and each quick check. */
+  feedVotes?: Record<string, string>;
+  feedChecks?: Record<string, boolean>;
   settings: { text: TextSize; theme: ThemeChoice; freeRoam: boolean; narration: boolean; voice: string; haptics: boolean; sounds: boolean; voiceV?: number };
 }
 
@@ -75,6 +82,10 @@ interface Journey extends JourneyState {
   /** Build the Mall: pay for a job (the page checks the cost and the order). */
   build: (taskId: string) => void;
   placeDecor: (id: string) => void;
+  /** The feed: save a post for later, or let it go. */
+  toggleSaved: (post: Omit<SavedPost, 'at'>) => void;
+  feedVote: (id: string, choice: string) => void;
+  feedCheck: (id: string, correct: boolean) => void;
   start: () => void;
   reset: () => void;
 }
@@ -131,8 +142,14 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     savePlan: (level, plan) => update((p) => ({ ...p, plans: { ...(p.plans ?? {}), [level]: plan } })),
     build: (id) => update((p) => ((p.built ?? []).includes(id) ? p : { ...p, built: [...(p.built ?? []), id] })),
     placeDecor: (id) => update((p) => ((p.decor ?? []).includes(id) ? p : { ...p, decor: [...(p.decor ?? []), id] })),
+    toggleSaved: (post) => update((p) => {
+      const cur = p.saved ?? [];
+      return { ...p, saved: cur.some((x) => x.id === post.id) ? cur.filter((x) => x.id !== post.id) : [{ ...post, at: new Date().toISOString() }, ...cur] };
+    }),
+    feedVote: (id, choice) => update((p) => ({ ...p, feedVotes: { ...(p.feedVotes ?? {}), [id]: choice } })),
+    feedCheck: (id, correct) => update((p) => (p.feedChecks?.[id] != null ? p : { ...p, feedChecks: { ...(p.feedChecks ?? {}), [id]: correct } })),
     start: () => update((p) => (p.started ? p : { ...p, started: new Date().toISOString() })),
-    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, built: [], decor: [], settings: p.settings })),
+    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, built: [], decor: [], saved: [], feedVotes: {}, feedChecks: {}, settings: p.settings })),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

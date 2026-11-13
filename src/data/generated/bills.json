@@ -1,0 +1,282 @@
+{
+ "fetchedAt": "2026-11-13T00:33:53.936Z",
+ "congress": 119,
+ "bills": [
+  {
+   "id": "s1176-119",
+   "label": "S. 1176",
+   "title": "Healthy Food Access for All Americans Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-03-27",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Healthy Food Access for All Americans Act \nThis bill establishes a federal tax credit and grant program for qualified food providers that invest in facilities located in a food desert.\nTo qualify for either the federal tax credit or a grant, a food provider must be (1) certified by the Internal Revenue Service as a special access food provider, and (2) located in a food desert.\nThe bill defines a food desert as a population census tract or area in which \na specified portion of the population lives more than 1 mile (for metropolitan areas) or 10 miles (for non-metropolitan areas) from a grocery store,\nthe poverty rate is at least 20%, or\nthe median family income does not exceed a certain percentage.\nFor a grocery store that meets such requirements, the bill allows a business tax credit of up to 15% of the costs of a new store or 10% of the costs to renovate an existing store.\nThe bill also authorizes grants of up to 15% of costs to build a permanent food bank or 10% of the annual operating costs of a mobile market, farmers market, or temporary or mobile food bank for which the primary purpose is the distribution of food in a food desert. Such grants are excluded from gross income for federal tax purposes. \nThe tax credit and any grant amount must be repaid if the food provider fails to meet certification requirements for a specified period of time.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-11-10",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/1176",
+   "updated": "2026-11-10",
+   "summaryCut": false,
+   "companion": "H.R. 2473"
+  },
+  {
+   "id": "hr1-119",
+   "label": "H.R. 1",
+   "title": "An act to provide for reconciliation pursuant to title II of H. Con. Res. 14.",
+   "area": "",
+   "status": "Became law",
+   "latestAction": {
+    "date": "2025-07-04",
+    "text": "Public Law"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "This act reduces taxes, reduces or increases spending for various federal programs, increases the statutory debt limit, and otherwise addresses agencies and programs throughout the federal government. \nIt is known as a reconciliation bill and includes legislation submitted by several congressional committees pursuant to provisions in the FY2025 congressional budget resolution (H Con. Res. 14) that directed the committees to submit legislation to the House or Senate Budget Committee that will increase or decrease the deficit and increase the statutory debt limit by specified amounts. (Reconciliation bills are considered by Congress using expedited legislative procedures that prevent a filibuster and restrict amendments in the Senate.)\nTITLE I--COMMITTEE ON AGRICULTURE, NUTRITION, AND FORESTRY\nThis title addresses a wide range of Department of Agriculture (USDA) programs, including by changing the Supplemental Nutrition Assistance Program (SNAP) and extending programs authorized by the Agriculture Improvement Act of 2018 (commonly known as the 2018 farm bill).\nSubtitle A--Nutrition",
+   "summaryStage": "Public Law",
+   "summaryDate": "2026-11-09",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/house-bill/1",
+   "updated": "2026-11-09",
+   "summaryCut": true
+  },
+  {
+   "id": "s4647-119",
+   "label": "S. 4647",
+   "title": "AGE Act of 2026",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2026-06-01",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Americans Giving Care to Elders Act of 2026 or the AGE Act of 2026\nThis bill provides a new nonrefundable federal tax credit for 20% of a taxpayer’s expenses to care for an older adult, subject to limitations. The amount of expenses incurred during any year that may be taken into account for the tax credit may not exceed $6,000. Further, the tax credit begins to phase out once a taxpayer’s adjusted gross income exceeds $120,000.\nThe tax credit applies to expenses to care for certain relatives or members of the taxpayer's household who have attained the age of 65 and require assistance with activities of daily living.\nExpenses eligible for the tax credit include amounts paid for\nmedical care,\nlodging away from home,\nadult day services,\npersonal care,\nrespite care,\nassistive technologies and devices (including remote health monitoring),\nenvironmental modifications (including home modifications), and\ncounseling or training for a caregiver.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-11-06",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/4647",
+   "updated": "2026-11-06",
+   "summaryCut": false
+  },
+  {
+   "id": "s3848-119",
+   "label": "S. 3848",
+   "title": "Apples to Apples Comparison Act of 2026",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2026-02-11",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Apples to Apples Comparison Act of 2026\nThis bill requires additional reporting and disclosures regarding Medicare enrollment and expenditures.\nSpecifically, the bill requires the Centers for Medicare & Medicaid Services to annually report on and publish information on its website regarding expenditures for Medicare hospital services and medical services, the Medicare prescription drug benefit, and Medicare Advantage (MA), including for those who are enrolled in one program but not others or have supplemental insurance. This information must be broken down by county and metropolitan statistical area for each month over the prior 10-year period and for each month over the next 5-year period. \nIn addition, the Medicare Payment Advisory Commission must annually analyze and report on expenditures for Medicare beneficiaries who have an MA plan compared to those who do not have an MA plan. The Boards of Trustees for Medicare must annually report on expenditures for (1) Medicare beneficiaries who have either hospital services or medical services but not both, and (2) Medicare beneficiaries who have both hospital and medical services but do not have an MA plan.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-11-05",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/3848",
+   "updated": "2026-11-05",
+   "summaryCut": false,
+   "companion": "H.R. 4093"
+  },
+  {
+   "id": "s695-119",
+   "label": "S. 695",
+   "title": "Small Business Investment Act of 2025",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-02-24",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Small Business Investment Act of 2025 \nThis bill reduces the time period a noncorporate taxpayer is required to hold qualified small business stock (QSBS) before a percentage of the gain on the sale or exchange of such stock may be excluded from gross income. (Limitations apply.) The bill also expands QSBS to include qualified debt instruments and certain corporate stock.\nUnder current law, a noncorporate taxpayer may exclude from gross income 100% of the gain from the sale or exchange of QSBS acquired after September 27, 2010 (or a smaller percentage if acquired on or before such date) and held for more than five years. Further, under current law, QSBS must be C corporation stock. (Exclusions and other requirements apply.)\nThe bill allows a noncorporate taxpayer to exclude from gross income\n50% of the gain on the sale or exchange of QSBS (purchased after the enactment date of the bill) held for three years,\n75% of the gain on the sale or exchange of such stock held for four years, and\n100% of the gain on the sale or exchange of such stock held for five years.\nFurther, the bill expands QSBS to include stock acquired through the conversion of a qualified convertible debt instrument (e.g., bond converted into stock). Under the bill, the holding period of such stock includes the time period during which the qualified convertible debt instrument is held.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-11-04",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/695",
+   "updated": "2026-11-04",
+   "summaryCut": true
+  },
+  {
+   "id": "s615-119",
+   "label": "S. 615",
+   "title": "Chemical Tax Repeal Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-02-18",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Chemical Tax Repeal Act \nThis bill repeals the Hazardous Substance Superfund excise tax imposed on certain chemicals and chemical substances.\nUnder current law, an excise tax is imposed through December 31, 2031, on taxable chemicals and taxable chemical substances that are (1) manufactured or produced in the United States, or (2) imported into the United States. The excise tax rate varies between 44 cents per ton to $9.74 per ton, depending on the chemical and certain other variables. (There are 42 listed taxable chemicals and 151 listed taxable chemical substances.)\nFurther, under current law, amounts collected from the excise tax on taxable chemicals and taxable chemical substances are deposited into the Hazardous Substance Superfund, which finances the remediation of certain environmentally contaminated sites.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-11-04",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/615",
+   "updated": "2026-11-04",
+   "summaryCut": false
+  },
+  {
+   "id": "s584-119",
+   "label": "S. 584",
+   "title": "Tax Fairness for Survivors Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-02-13",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Tax Fairness for Survivors Act \nThis bill excludes certain payments related to sexual assault or sexual harassment claims from gross income for federal tax purposes.\nSpecifically, the bill excludes from gross income amounts received by an individual from a judgment, award, or settlement of a claim (including backpay, frontpay, punitive damages, attorney’s fees, or any payments made to release, resolve, or settle a claim) related to sexual harassment or a nonconsensual sexual act or sexual contact. Further, under the bill, such amounts are not wages or compensation and, thus, not subject to certain payroll taxes (Social Security, railroad retirement, and unemployment insurance).\nUnder current law, amounts received from a judgment, award or settlement of a claim may be excluded from gross income if attributable to a personal physical injury or physical sickness. However, under current law, compensatory and other amounts received from a judgment, award or settlement unrelated to a personal physical injury or physical sickness generally are included in gross income. (Some exceptions apply.)",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-11-04",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/584",
+   "updated": "2026-11-04",
+   "summaryCut": false
+  },
+  {
+   "id": "hr1871-119",
+   "label": "H.R. 1871",
+   "title": "Water Conservation Rebate Tax Parity Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-03-05",
+    "text": "Introduced in House"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Water Conservation Rebate Tax Parity Act\nThis bill excludes from gross income (for federal tax purposes) certain subsidies for the purchase or installation of measures to conserve water or manage stormwater or wastewater.\nUnder current law, subsidies received from public utilities for the purchase or installation of measures to reduce electricity or natural gas consumption or improve the management of energy demand in a dwelling are not included in gross income and, therefore, not subject to federal income tax.\nUnder the bill, the exclusion from gross income for such subsidies is expanded to include subsidies provided (directly or indirectly) after 2021\nby a public utility to a customer or by a state or local government to a resident for the purchase or installation of measures that evaluate water use, reduce water consumption, or improve water management in one or more dwelling units;\nby a stormwater management company to a customer or by a state or local government to a resident for the purchase or installation of measures to reduce or manage stormwater, including measures to improve or reduce the impact of flooding caused by stormwater, for one or more dwelling units; or\nby a state or local government to a resident for the purchase or installation of measures that manage wastewater, including septic tanks and cesspools, with respect to a principal residence.",
+   "summaryStage": "Introduced in House",
+   "summaryDate": "2026-11-03",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/house-bill/1871",
+   "updated": "2026-11-03",
+   "summaryCut": false,
+   "companion": "S. 857"
+  },
+  {
+   "id": "s2443-119",
+   "label": "S. 2443",
+   "title": "Veterans Jobs Opportunity Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-07-24",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Veterans Jobs Opportunity Act\nThis bill allows veteran-owned small businesses in underserved communities to claim a tax credit for qualified start-up expenses in the amount of 15% (up to $50,000) of such expenses. (Conditions and limitations apply.)\nUnder the bill, a business qualifies for the veteran small business start-up tax credit if it\nis owned and controlled by one or more veterans (or spouses of veterans);\nis located in a Historically Underutilized Business Zone (HUBZone) program area, empowerment zone or enterprise community, an area of low or moderate income, or county with persistent poverty; and\nhas gross receipts for the prior tax year of $5 million or less (or employed 50 or fewer full-time employees in the prior tax year).\nThe bill generally defines qualified start-up expenses as amounts incurred or paid to\ninvestigate the creation or acquisition of the business,\ncreate the business,\nengage in activities for the production of income before the day the business opens, and\npurchase or lease real property (or purchase personal property) for use in the active conduct of a trade or business.\nHowever, under the bill, the veteran small business start-up tax credit is allowed only in the first two tax years for which a business may claim a tax deduction for ordinary and necessary trade or business expenses.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-10-30",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/2443",
+   "updated": "2026-10-30",
+   "summaryCut": true
+  },
+  {
+   "id": "s1666-119",
+   "label": "S. 1666",
+   "title": "Improving Social Security’s Service to Victims of Identity Theft Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2025-05-07",
+    "text": "Introduced in Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Improving Social Security's Service to Victims of Identity Theft Act\nThis bill requires the Social Security Administration to provide a single point of contact for any individual whose Social Security account number has been misused or whose Social Security card has been lost in transit. The single point of contact must consist of a team or subset of specially trained employees, and must track the individual's case to completion and coordinate with other specialized units to resolve issues as quickly as possible.",
+   "summaryStage": "Introduced in Senate",
+   "summaryDate": "2026-10-28",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/1666",
+   "updated": "2026-10-28",
+   "summaryCut": false
+  },
+  {
+   "id": "s5441-119",
+   "label": "S. 5441",
+   "title": "TAS Act",
+   "area": "",
+   "status": "Reported by committee",
+   "latestAction": {
+    "date": "2026-09-17",
+    "text": "Reported to Senate"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Taxpayer Assistance and Service Act or the TAS Act\nThis bill makes various changes to federal tax administration, services, and dispute resolution. The bill also expands the U.S. Tax Court’s authority and establishes standards for certain paid tax return preparers.\nThe bill expands electronic tax return filing and requires the Internal Revenue Service (IRS) to digitize paper tax returns and correspondence. The bill also requires the IRS to \nestablish a dashboard of call wait times, \nexpand access to tax returns and other tax information,\nsend quarterly tax delinquency reminders, and\nmeet certain additional notice requirements.\nThe bill expands the use of Tax Court small case procedures, expands the Tax Court's subpoena authority, and allows the Tax Court to adjudicate claims for a tax refund.\nThe bill establishes a framework for who may obtain, use, and retain a tax return preparer identification number, including (1) qualification standards; and (2) authorities and requirements for denial, suspension, revocation, penalties for misconduct, and reinstatement.\nFinally, the bill\nextends certain tax deadlines for U.S. nationals unlawfully or wrongfully detained or held hostage abroad,\nincreases various penalties for the unauthorized disclosure of tax return information,\nexpands the authority of the National Taxpayer Advocate and IRS Office of Appeals,",
+   "summaryStage": "Reported to Senate",
+   "summaryDate": "2026-10-27",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/senate-bill/5441",
+   "updated": "2026-10-27",
+   "summaryCut": true
+  },
+  {
+   "id": "hr227-119",
+   "label": "H.R. 227",
+   "title": "Clergy Act",
+   "area": "",
+   "status": "Became law",
+   "latestAction": {
+    "date": "2026-10-20",
+    "text": "Public Law"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Clergy Act\nThis act establishes a two-year window for members of the clergy who have opted out of Social Security and Medicare taxes (and are thus ineligible for benefits under those programs) to opt back in.\nUnder current law, certain ministers, members of religious orders, and Christian Science practitioners who object to participation in public insurance programs on religious or conscientious grounds may apply to the Internal Revenue Service (IRS) for an exemption from Social Security and Medicare taxes on ministerial earnings. Individuals who are approved for the exemption do not receive Social Security or Medicare benefits in retirement unless they have qualifying credits from other employment. The exemption is irrevocable. \nUnder the act, clergy members may choose to revoke their exemption by filing an application with the IRS by the due date of their federal income tax return for the second taxable year after December 31, 2028 (i.e., April 15, 2031, unless an individual obtains an extension to file their taxes). A clergy member may choose for the revocation to take effect in taxable year 2029 or taxable year 2030. A revocation under the act is permanent.\nClergy members who opt back in will generally need 10 years of covered employment (40 credits) to be eligible for Social Security and Medicare benefits, as is currently required for these programs.",
+   "summaryStage": "Public Law",
+   "summaryDate": "2026-10-22",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/house-bill/227",
+   "updated": "2026-10-29",
+   "summaryCut": true
+  },
+  {
+   "id": "hr9609-119",
+   "label": "H.R. 9609",
+   "title": "Less Bureaucracy, Better Student Aid Act",
+   "area": "",
+   "status": "Introduced",
+   "latestAction": {
+    "date": "2026-07-09",
+    "text": "Introduced in House"
+   },
+   "introduced": "",
+   "sponsor": null,
+   "cosponsors": 0,
+   "summary": "Less Bureaucracy, Better Student Aid Act\nThis bill transfers specified functions relating to federal student aid from the Department of Education (ED) to the Department of the Treasury.\nSpecifically, the bill transfers to Treasury all the functions and authorities exercised by ED related to servicing and collections of defaulted federal student loan debt, servicing of non-defaulted federal student loan debt, and other specified programs (e.g., Federal Pell Grants and Federal Direct Loans). ED and Treasury must jointly determine effective dates for these transfers in accordance with the bill's requirements. (On March 19, 2026, ED announced an interagency agreement with Treasury for Treasury to assume operational responsibility for collecting on defaulted federal student loans, while ED must maintain its statutory responsibilities.)\nAdditionally, the bill transfers to Treasury all personnel and appropriations related to the functions that are transferred under this bill.\nThe bill outlines the authority of the Office of Management and Budget (OMB) related to the functions that are transferred under this bill, including that OMB must ensure that this bill does not create a net increase in full-time equivalent employees at Treasury or ED. Further, OMB must certify compliance with the bill to specified congressional committees.",
+   "summaryStage": "Introduced in House",
+   "summaryDate": "2026-10-20",
+   "cbo": null,
+   "url": "https://www.congress.gov/bill/119th-congress/house-bill/9609",
+   "updated": "2026-10-20",
+   "summaryCut": true
+  }
+ ]
+}

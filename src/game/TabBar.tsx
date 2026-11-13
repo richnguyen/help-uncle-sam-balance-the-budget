@@ -6,7 +6,7 @@ import { FIELD_GUIDE, REFERENCE } from './nav';
 import { useJourney } from './state';
 
 // The tab bar, along the bottom of every screen outside a mission: Mission (the next mission to
-// play, or the road map once all are done), the Daily Dollar, the main menu in the middle, Play
+// play, or the road map once all are done), the Daily Dollar, the feed (the main menu) in the middle, Play
 // together, and the field guide, all alike. The tab for the screen you're on is lit. (Build the
 // Mall is the button at the main menu's top right, and the top bar's stars.) It steps aside while a mission or the budget desk is played, where the
 // step's own Back / Continue bar is.
@@ -40,7 +40,7 @@ export function TabBar({ route }: { route: Route }) {
       ? { id: 'mission', href: '#' + next.id, label: 'Mission', icon: 'play', title: `${started ? 'Continue' : 'Start'}: ${missionShort(next)}, ${next.title}` }
       : { id: 'mission', href: '#levels', label: 'Mission', icon: 'play', title: 'Every mission, on the road map' },
     { id: 'daily', href: '#daily', label: 'Daily', icon: 'daily', title: 'The Daily Dollar' },
-    { id: 'menu', href: '#journey', label: 'Menu', icon: 'home', title: 'The main menu' },
+    { id: 'menu', href: '#journey', label: 'Feed', icon: 'home', title: 'The feed, on the main menu' },
     { id: 'together', href: '#together', label: 'Together', icon: 'together', title: 'Play together' },
     { id: 'guide', href: '#guide', label: 'Guide', icon: 'book', title: 'The field guide' },
   ];

@@ -29,6 +29,7 @@ received the "reminders are on" message on November 6, 2026.
 | `reminder_counts` | day | how many reminders were sent (no identities) | nobody directly; read through `reminder_stats()` |
 | `challenge_steps` | day × step | how many friends took a challenge, met the goal, and sent a plan back (no identities) | nobody directly; written and read only through functions |
 | `peoples_moves` | player per day | today's People's Budget move: one card, pushed in (+1) or out (-1) | only that player; only today's move can be changed or taken back |
+| `feed_votes` | player per feed card | the player's answer on a bill in the feed (support, oppose, unsure; poll answers are also allowed) | only that player; totals through `feed_tallies(items)` |
 
 Everyone can read totals through functions that return counts only: `ballot_totals()`,
 `player_totals()`, `card_rankings(level)`, `state_rankings()` (states with 5+ players),
@@ -58,9 +59,12 @@ no name, no password.
    [`20261109000000_share_stats.sql`](migrations/20261109000000_share_stats.sql), then
    [`20261110000000_challenge_funnel.sql`](migrations/20261110000000_challenge_funnel.sql), then
    [`20261111000000_daily_reminders.sql`](migrations/20261111000000_daily_reminders.sql), then
-   [`20261112000000_ballot_zip.sql`](migrations/20261112000000_ballot_zip.sql). Each is safe to
+   [`20261112000000_ballot_zip.sql`](migrations/20261112000000_ballot_zip.sql), then
+   [`20261113000000_feed_votes.sql`](migrations/20261113000000_feed_votes.sql). Each is safe to
    run again. (The game already saves an opted-in ZIP inside the ballot, so the last one only adds
-   format checks and the area totals; until it runs, the game says area results come later.)
+   format checks and the area totals; until it runs, the game says area results come later. Until
+   the feed's migration runs, a bill answer is kept on the player's device and the feed says
+   players' totals will appear.)
 4. **Copy two public values** from **Connect** (top of the dashboard) or **Settings → API Keys**:
    - the **Project URL**, like `https://abcdefghijklmnop.supabase.co`
    - the **publishable key**, starting `sb_publishable_`

@@ -26,8 +26,8 @@ budget adviser.
   running. The choices are the tab bar along the bottom.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
   like an app's, five tabs alike: Mission (the next mission to play, or the road map once every
-  mission is done), Daily (the Daily Dollar), Menu in the middle (the main menu), Together (Play
-  together) and Guide (the field guide). Each is the main menu's own icon with a short
+  mission is done), Daily (the Daily Dollar), Feed in the middle (the main menu and its feed),
+  Together (Play together) and Guide (the field guide). Each is the main menu's own icon with a short
   name. The tab for the screen you're on is lit, with a bar above it: the road map counts as
   Mission's, Rooms, chains and duels as Together's, every field-guide chapter, the glossary and
   Sources & methods as the Guide's. It steps aside while a mission or the budget desk is
@@ -288,6 +288,55 @@ budget adviser.
 - **The fine print:** each level's full field-guide chapter and original government documents
   are gathered on Sources & methods ("By mission"), one link from every mission. The field guide
   (all earlier pages) is listed in the top bar's level menu and in every page's footer.
+
+### The feed: every post the game has, official ones first
+
+Below Uncle Sam and the deficit, the main menu is a feed (`src/game/feed/`): one column of posts,
+like a civic briefing, built for a phone and a thumb.
+
+- **Six kinds of post, each with its own look and its own one action.**
+  - *Bills in Congress* (`scripts/fetch-bills.mjs` → `bills.json`): spending and tax bills whose
+    Congressional Research Service summary was written or updated in the last 60 days. Each card
+    shows where the bill stands (Introduced … Became law), its number and any twin bill, the
+    sponsor (initials on a plain disc, not party colors), CRS's summary cut to three lines with
+    *Read summary* to open it, *What it costs* (CBO's cost estimate, or that there isn't one yet),
+    the latest action, and *Would you support this bill?* (Support · Oppose · Not sure).
+  - *Budget lessons*: one surprising number, a small chart (a donut or a run of bars) and three
+    cards to swipe, all computed from the Treasury data the game uses (where the money went and
+    came from, the deficits, the interest bill, the debt per person, tariffs), plus every law in
+    *Laws that moved the needle* with its scored effect on deficits.
+  - *Polls*: each of the CBO's budget options, *Would you include this in a plan to shrink the
+    deficit?*, with *Arguments for* (what it saves, what it does) and *Arguments against* (who
+    bears the cost), from CBO's own text. *Include it / Leave it out* is the same vote as the
+    game's policy cards, so the answer counts in both places.
+  - *Civic lessons*: every mission as a lesson (steps, minutes, difficulty; *What you'll do* opens
+    the steps; *Start the lesson*), quick checks from the missions answered right in the feed with
+    the explanation, field-guide chapters, and words from the glossary.
+  - *Announcements*: the official news the main menu has always carried (White House actions on
+    taxes and spending, CBO, the House and Senate floors, bills sent to the President) in compact
+    cards with an amber edge, and deadlines within two months (the funding deadline) with *Save to
+    calendar* (a .ics file).
+  - *The Daily Dollar*, today's puzzle.
+- **Source and date on every post** (Congress.gov · CRS summary · Updated Nov 10, 2026; CBO; U.S.
+  Treasury), and **Save** on every post; saved posts are listed in Your record, with *Your civic
+  impact* (polls answered, bills weighed in on, quick checks right).
+- **Neutral by design.** Summaries are CRS's; the arguments come from CBO; nothing is ranked but
+  plans and ideas. Players' answers show only after you answer, as bars labeled "players of this
+  game, not a scientific poll". Bill answers are saved in the site's database (`feed_votes`, one
+  answer per player per bill, counts only); elsewhere they stay on the device.
+- **The mix.** Fresh official posts (the last two weeks) come first, newest first, then a "You're
+  all caught up" line, then the rest in a steady daily shuffle. The rhythm is three posts to
+  glance at, one to tap, one to dig into (3-1-1), never three of the same kind in a row, with a
+  row to swipe sideways (field-guide chapters, missions) every dozen posts.
+- **Getting around.** A row of topics (All, Bills, Budget, Polls, Lessons, News) stays pinned at
+  the top; a *Top* button appears after two screens; open a post and press Back, and the feed is
+  where you left it (same posts, same place). On a wide screen, the topics and links sit in a left
+  column, the posts in a 640-pixel column, and *Coming up* (deadlines, tax day) and the
+  most-answered polls on the right.
+- **Light on the phone.** Posts load ten at a time from a cursor (the next batch when you're about
+  70% through), with skeleton cards while they load; only the posts near the screen are in the
+  page (the rest are measured spacers); the end is a card that says so, with a way to start over
+  in a new order and the links a footer would hold.
 
 ### Build the Mall: stars that build something
 
@@ -677,6 +726,7 @@ npm run data:county    # county income tax and ZIP-to-county files, public/count
 | Which county a ZIP is in | Census Bureau 2020 ZCTA relationship files (to counties and, for Connecticut, to towns) and the Connecticut planning-region crosswalk | www2.census.gov files (`scripts/fetch-county-tax.mjs`; Connecticut's nine planning regions replaced its counties in 2022, so its ZIPs go to towns, then regions) |
 | 2026 tax brackets, standard deduction, payroll tax parameters | IRS Rev. Proc. 2025-32, Publication 15, Topic 560 | irs.gov documents, recorded in `src/data/curated/tax.json` |
 | Social Security and Medicare trust fund projections | 2026 Social Security and Medicare Trustees Reports | `src/data/curated/trustees.json` (cited) |
+| Spending and tax bills in the feed: status, sponsor, latest action, CRS summaries, CBO cost estimates | Congress.gov (Library of Congress) | Congress.gov API (`scripts/fetch-bills.mjs`, every few hours in the Pages workflow; a free api.data.gov key in the repository secret `CONGRESS_API_KEY`, or the shared DEMO_KEY) |
 | Laws' deficit effects; budget-process history; who benefits | CBO/JCT cost estimates; CRS reports; agency statistics | `src/data/curated/*.json` (each entry cites its official URL) |
 
 CBO's projections are the preferred benchmark for the gap chart and the sandbox. The pipeline uses
