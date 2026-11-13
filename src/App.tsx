@@ -51,6 +51,7 @@ import { FIELD_GUIDE, REFERENCE } from './game/nav';
 import { ReadingSettings } from './game/Settings';
 import { StatusBar } from './game/StatusBar';
 import { showsTabs, TabBar } from './game/TabBar';
+import { useMoveToasts } from './game/feed/follow';
 import { LevelIcon, LockIcon } from './game/icons';
 import { NarrationProvider, prefetchVoice, useNarrator } from './game/voice';
 import { earnedMedals, MEDALS } from './game/medals';
@@ -280,6 +281,8 @@ function Shell() {
   }, [route]);
   const Page = PAGES[route];
   useBarHeights();
+  // A followed bill that moved since the last visit: a toast, once a visit.
+  useMoveToasts();
   return (
     <>
       {/* The main menu is a screen of its own: no top bar, no action bar. */}

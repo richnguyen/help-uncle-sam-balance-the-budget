@@ -3,7 +3,9 @@ import { useVotes } from '../../lib/votes';
 import { DEADLINES } from '../daily';
 import { useHaptics } from '../haptics';
 import { useJourney } from '../state';
-import { CaughtUp, Carousel, FeedCard, Icon, ICON, SkeletonCard } from './cards';
+import { CaughtUp, Carousel, FeedCard, Icon, ICON, NewContext, SkeletonCard } from './cards';
+import { useMoves } from './follow';
+import { isNewSince, markFeedSeen, sinceVisit } from './since';
 import { buildItems, mix, page, rowKey, TOPICS, type FeedRow, type Topic } from './items';
 
 // The main menu's feed, under Uncle Sam and the deficit: one column of posts with a sticky row of
@@ -26,7 +28,18 @@ export function Feed() {
   const [topic, setTopic] = useState<Topic | 'all'>(mem?.topic ?? 'all');
   const [seed, setSeed] = useState(mem?.seed ?? today());
   const items = useMemo(() => buildItems(), []);
-  const all = useMemo(() => mix(items, topic, seed), [items, topic, seed]);
+  // What's new since the last visit (kept for this session), and followed bills that moved.
+  const moves = useMoves();
+  const newIds = useMemo(() => {
+    const since = sinceVisit();
+    const ids = new Set(items.filter((i) => isNewSince(i, since)).map((i) => i.id));
+    for (const m of moves) ids.add(`bill:${m.id}`);
+    return ids;
+  }, [items, moves.map((m) => m.id + m.now).join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const all = useMemo(() => mix(items, topic, seed, Date.now(), newIds), [items, topic, seed, newIds]);
+  // The feed is open: what's in it now counts as seen for the Feed tab's count.
+  useEffect(() => { markFeedSeen(); }, []);
+
   const [count, setCount] = useState(() => Math.max(BATCH, mem?.count ?? BATCH));
   const [loading, setLoading] = useState(false);
   const loaded = all.slice(0, count);
@@ -133,7 +146,7 @@ export function Feed() {
           <div style={{ height: offsets[a] }} aria-hidden="true" />
           {visible.map((r, i) => (
             <div key={rowKey(r)} data-key={rowKey(r)} ref={track} className="feed-row" aria-posinset={a + i + 1} aria-setsize={done ? all.length : -1}>
-              <Row row={r} />
+              <Row row={r} isNew={newIds.has(rowKey(r))} fresher={newIds.size} />
             </div>
           ))}
           <div style={{ height: offsets[loaded.length] - offsets[b] }} aria-hidden="true" />
@@ -154,10 +167,10 @@ export function Feed() {
   );
 }
 
-function Row({ row }: { row: FeedRow }) {
-  if (row.kind === 'caughtup') return <CaughtUp fresh={row.fresh} />;
-  if (row.kind === 'carousel') return <Carousel row={row} />;
-  return <FeedCard item={row.item} />;
+function Row({ row, isNew, fresher }: { row: FeedRow; isNew: boolean; fresher: number }) {
+  if (row.kind === 'caughtup') return <CaughtUp fresh={row.fresh} fresher={fresher} since={sinceVisit()} />;
+  if (row.kind === 'item') return <NewContext.Provider value={isNew}><FeedCard item={row.item} /></NewContext.Provider>;
+  return <Carousel row={row} />;
 }
 
 function Filters({ topic, pick, vertical }: { topic: Topic | 'all'; pick: (t: Topic | 'all') => void; vertical?: boolean }) {

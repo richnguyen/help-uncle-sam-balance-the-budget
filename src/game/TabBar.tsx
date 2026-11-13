@@ -5,6 +5,8 @@ import { isUnlocked, missionShort, STOPS } from './levels';
 import { FIELD_GUIDE, REFERENCE } from './nav';
 import { useJourney } from './state';
 import { useMyName } from './plans';
+import { useMoves } from './feed/follow';
+import { useNewCount } from './feed/since';
 
 // The tab bar, along the bottom of every screen: Mission (the next mission to
 // play, or the road map once all are done), the Daily Dollar, the feed (the main menu) in the middle, Play
@@ -38,6 +40,8 @@ export function TabBar({ route }: { route: Route }) {
   const here = tabFor(route);
   // The player's first name, once given, in place of "You".
   const me = useMyName() || 'You';
+  // On the Feed tab: what's arrived since the feed was last open, and followed bills that moved.
+  const fresh = useNewCount() + useMoves().length;
   const tabs: { id: TabId; href: string; label: string; icon: Parameters<typeof MenuIcon>[0]['id']; title: string }[] = [
     next
       ? { id: 'mission', href: '#' + next.id, label: 'Mission', icon: 'play', title: `${started ? 'Continue' : 'Start'}: ${missionShort(next)}, ${next.title}` }
@@ -51,7 +55,7 @@ export function TabBar({ route }: { route: Route }) {
     <nav className="tabbar" aria-label="Main">
       {tabs.map((t) => (
         <a key={t.id} className="tab" href={t.href} data-tab={t.id} aria-current={here === t.id ? 'page' : undefined} title={t.title} aria-label={t.title} onClick={() => buzz('tap')}>
-          <span className="tab-icon"><MenuIcon id={t.icon} size={24} /></span>
+          <span className="tab-icon"><MenuIcon id={t.icon} size={24} />{t.id === 'menu' && fresh > 0 && here !== 'menu' && <span className="tab-count" aria-label={`${fresh} new`}>{fresh > 9 ? '9+' : fresh}</span>}</span>
           <span className="tab-label">{t.label}</span>
         </a>
       ))}

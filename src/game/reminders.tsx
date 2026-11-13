@@ -77,6 +77,9 @@ export async function turnOff() {
   } catch { /* the server drops it on its own once the push service says it's gone */ }
 }
 
+/** Whether this device has notifications on (they carry bill alerts too). */
+export const notificationsOn = () => savedState().on && reminderSupport() === 'ok';
+
 /** On each visit: if the browser renewed this device's address, or notifications were blocked since, catch up. */
 export function syncReminders() {
   const s = savedState();

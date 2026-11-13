@@ -6,7 +6,9 @@
 //   GET                        -> { publicKey }: the site asks for this before a device subscribes
 //   POST { "welcome": address } -> "Reminders are on", once, to a device that opted in < 10 min ago
 //   POST + header x-cron-secret -> today's reminder to every device whose chosen hour has come
-//                                  (Supabase Cron calls this every hour; see supabase/README.md)
+//                                  (Supabase Cron calls this every hour; see supabase/README.md),
+//                                  then an alert to every device that follows a bill that moved
+//                                  (the stages come from the site's own bills.json)
 //
 // Secrets (Edge Functions → Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
 // (https://balancethebudget.us or a mailto: address), CRON_SECRET. Supabase provides SUPABASE_URL
@@ -171,7 +173,45 @@ export async function handle(req: Request, env: Env, fetchImpl: typeof fetch = f
   }
   if (sent.length) await db(env, 'mark_reminders_sent', { p_endpoints: sent }, fetchImpl);
   if (gone.length) await db(env, 'drop_push_subscriptions', { p_endpoints: gone }, fetchImpl);
-  return json({ due: due.length, sent: sent.length, gone: gone.length, failed }, 200, origin);
+  // Then the bills players follow. A failure here never stops the reminders above.
+  let bills: BillRun = { checked: 0, alerts: 0, sent: 0 };
+  try { bills = await billAlerts(env, fetchImpl); } catch (e) { console.error('bill alerts', e); }
+  return json({ due: due.length, sent: sent.length, gone: gone.length, failed, bills }, 200, origin);
+}
+
+// ---------- bills that players follow ----------
+interface PublishedBill { id: string; label: string; title: string; status: string; url: string }
+type BillRun = { checked: number; alerts: number; sent: number };
+const BILL_ID = /^[a-z]{1,8}[0-9]{1,5}-[0-9]{2,3}$/;
+
+/** The alert for one followed bill that moved: its number and new stage, then its title. */
+export const billAlert = (b: PublishedBill) => ({
+  title: `${b.label}: ${b.status}`,
+  body: `A bill you follow moved. ${b.title.length > 110 ? b.title.slice(0, 107) + '…' : b.title}`,
+  url: `${SITE}#guide`,
+  tag: `bill-${b.id}`,
+});
+
+/** Read the stages the site published, alert the followers of each bill that moved, then remember. */
+export async function billAlerts(env: Env, fetchImpl: typeof fetch = fetch): Promise<BillRun> {
+  const r = await fetchImpl(`${SITE}bills.json`, { headers: { Accept: 'application/json' } });
+  if (!r.ok) return { checked: 0, alerts: 0, sent: 0 };
+  const pub = await r.json() as { bills?: PublishedBill[] };
+  const bills = (pub.bills ?? []).filter((b) => b && BILL_ID.test(b.id) && typeof b.status === 'string' && b.status.length > 0 && b.status.length <= 40);
+  if (!bills.length) return { checked: 0, alerts: 0, sent: 0 };
+  const now = Object.fromEntries(bills.map((b) => [b.id, b.status]));
+  const byId = Object.fromEntries(bills.map((b) => [b.id, b]));
+  const due = await db<(Device & { bill: string; status: string })[]>(env, 'bill_alerts_due', { p_now: now }, fetchImpl);
+  let sent = 0;
+  const gone = new Set<string>();
+  for (let i = 0; i < due.length; i += 25) {
+    const batch = due.slice(i, i + 25).filter((d) => !gone.has(d.endpoint) && byId[d.bill]);
+    const results = await Promise.all(batch.map((d) => sendPush(d, billAlert({ ...byId[d.bill], status: d.status }), env, fetchImpl)));
+    results.forEach((res, k) => { if (res === 'ok') sent++; else if (res === 'gone') gone.add(batch[k].endpoint); });
+  }
+  if (gone.size) await db(env, 'drop_push_subscriptions', { p_endpoints: [...gone] }, fetchImpl);
+  await db(env, 'mark_bills_alerted', { p_now: now }, fetchImpl);
+  return { checked: bills.length, alerts: due.length, sent };
 }
 
 /** The service key: the new secret key when the project has one, else the legacy service_role key. */

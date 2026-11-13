@@ -268,3 +268,26 @@ console.log('  feed_tallies:', JSON.stringify(ft));
 ok(ft['poll:carbon-tax-25'].yes === 2 && ft['poll:carbon-tax-25'].unsure === 1 && Number(ft['poll:carbon-tax-25'].total) === 3 && ft['bill:hr227-119'].support === 1 && !ft['poll:nothing-here'], 'feed: counts per card, for anyone, with no identities');
 await as(F[2], `delete from public.feed_votes where item = 'poll:carbon-tax-25'`);
 ok(Number((await as(null, `select public.feed_tallies(array['poll:carbon-tax-25']) as t`)).rows[0].t['poll:carbon-tax-25'].total) === 2, 'feed: a player can take an answer back');
+
+// Following bills: one row per player per bill; the sender lists devices whose followed bill moved.
+const G = ['00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000a3'];
+for (const u of G) await db.query('insert into auth.users (id) values ($1)', [u]);
+const gsub = (k) => ({ endpoint: `https://fcm.googleapis.com/fcm/send/follow-${k}`, p256dh: 'B'.repeat(87), auth: 'A'.repeat(22) });
+await save(G[0], gsub(0), 8, 'America/Chicago');
+await save(G[1], gsub(1), 8, 'America/Chicago');
+await as(G[0], `insert into public.bill_follows (bill, status) values ('s1176-119', 'Introduced'), ('hr1-119', 'Became law')`);
+await as(G[1], `insert into public.bill_follows (bill, status) values ('s1176-119', 'Introduced')`);
+await as(G[2], `insert into public.bill_follows (bill, status) values ('s1176-119', 'Introduced')`); // no device with notifications
+ok(await fails(() => as(G[0], `insert into public.bill_follows (bill, status) values ('s1176-119', 'Introduced')`)), 'follows: once per bill');
+ok(await fails(() => as(G[0], `insert into public.bill_follows (bill, status) values ('Not a bill', 'x')`)), 'follows: odd bill ids are refused');
+ok(await fails(() => as(null, `insert into public.bill_follows (bill, status) values ('s5-119', 'Introduced')`)), 'follows: need a sign-in');
+ok((await as(G[1], 'select bill from public.bill_follows')).rows.length === 1, 'follows: a player sees only their own');
+ok(await fails(() => as(G[0], `select * from public.bill_alerts_due('{}'::jsonb)`)) && await fails(() => as(G[0], `select public.mark_bills_alerted('{}'::jsonb)`)), 'follows: players cannot list or mark alerts');
+const nowStages = JSON.stringify({ 's1176-119': 'Passed Senate', 'hr1-119': 'Became law' });
+const dueB = (await asService('select endpoint, bill, status from public.bill_alerts_due($1::jsonb)', [nowStages])).rows;
+console.log('  bill_alerts_due:', JSON.stringify(dueB.map((r) => [r.endpoint.slice(-8), r.bill, r.status])));
+ok(dueB.length === 2 && dueB.every((r) => r.bill === 's1176-119' && r.status === 'Passed Senate') && dueB.some((r) => r.endpoint === gsub(0).endpoint) && dueB.some((r) => r.endpoint === gsub(1).endpoint), 'follows: a moved bill reaches each follower’s device; an unmoved one doesn’t');
+const marked = (await asService('select public.mark_bills_alerted($1::jsonb) as n', [nowStages])).rows[0].n;
+ok(marked === 3 && (await asService('select * from public.bill_alerts_due($1::jsonb)', [nowStages])).rows.length === 0, `follows: after the alerts, every follower is up to date (${marked} rows), so nothing goes twice`);
+await as(G[1], `delete from public.bill_follows where bill = 's1176-119'`);
+ok((await as(G[1], 'select * from public.bill_follows')).rows.length === 0, 'follows: a player can stop following');

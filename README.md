@@ -360,6 +360,16 @@ like a civic briefing, built for a phone and a thumb.
   both, the President, law) with where it stands and what's next; a poll shows the option's
   ten-year savings as a bar against the biggest of the CBO's options in the game; a law, its
   effect against the biggest in the game.
+- **Follow a bill.** *Follow this bill* on any bill card remembers the stage it was at. When the
+  bills fetched on the next deploy show it at a new stage, its card says *Moved since you last
+  looked: Introduced → Passed Senate*, the Feed tab counts it, a toast says so on the visit, and
+  *Bills you follow* on the You tab lists every followed bill with where it stands (a moved one
+  marked until seen; Unfollow there). With notifications on (the Daily Dollar reminder switch),
+  the game also sends a notification when a followed bill moves (see `supabase/README.md`).
+- **New since your last visit.** The game remembers when the feed was last open. Bills and
+  announcements that arrived since then lead the feed with a *New* mark (the marks hold for the
+  whole visit), the Feed tab shows how many are waiting from any other screen, and the caught-up
+  line says how many were new and when the last visit was. A first visit marks nothing.
 - **Neutral by design.** Summaries are CRS's; the arguments come from CBO; nothing is ranked but
   plans and ideas. Players' answers show only after you answer, as bars labeled "players of this
   game, not a scientific poll". Bill answers are saved in the site's database (`feed_votes`, one

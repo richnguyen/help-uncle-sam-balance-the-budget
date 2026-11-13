@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useId, useState, type ReactNode } from 'react';
 import { backendOn, feedTallies, saveFeedVote } from '../../lib/backend';
 import { moneyWords } from '../../lib/format';
 import { useVotes } from '../../lib/votes';
@@ -10,8 +10,10 @@ import { LevelIcon } from '../icons';
 import { missionShort } from '../levels';
 import { when } from '../news';
 import { useJourney } from '../state';
+import { visitLabel } from './since';
 import type { Bill, FeedItem, FeedRow, Slice, Stat, Topic } from './items';
 import { PostArt, type ART_GLYPH } from './art';
+import { FollowButton, MovedNote } from './follow';
 import { Seal } from '../Seal';
 import { diffKey, type IconId } from '../levels';
 
@@ -94,14 +96,18 @@ function SourceMark({ mark }: { mark: Mark }) {
   );
 }
 
+/** Posts newer than the last visit wear a "New" mark (set by the feed). */
+export const NewContext = createContext(false);
+
 function Head({ item, badge }: { item: FeedItem; badge?: string }) {
+  const isNew = useContext(NewContext);
   const s = item.source;
   const date = item.kind === 'news' ? when(item.news.time, item.news.dateOnly) : s.date ? (item.kind === 'bill' ? `Updated ${fmtDate(s.date)}` : /^\d{4}-\d/.test(s.date) ? fmtDate(s.date) : s.date) : '';
   return (
     <header className="fc-head">
       <SourceMark mark={markFor(item)} />
       <span className="fc-head-text">
-        <span className="fc-badge" data-topic={item.topic}><Icon d={TOPIC_ICON[item.topic]} size={14} />{badge ?? KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}</span>
+        <span className="fc-badge-row"><span className="fc-badge" data-topic={item.topic}><Icon d={TOPIC_ICON[item.topic]} size={14} />{badge ?? KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}</span>{isNew && <span className="fc-new">New</span>}</span>
         <span className="fc-source">
           {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a> : s.name}
           {date && <> · <time>{date}</time></>}
@@ -221,6 +227,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
         {bill.companion && <span className="fc-billno muted">Twin bill: {bill.companion}</span>}
       </div>
       <h3 className="fc-title">{bill.title}</h3>
+      <MovedNote bill={bill} />
       <StageTrack status={bill.status} />
       {bill.sponsor && (
         <p className="fc-sponsor">
@@ -254,6 +261,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
         {mine && (tally && tally.total ? <Bars rows={BILL_CHOICES.map((c) => ({ ...c, n: tally[c.value] ?? 0 }))} total={tally.total} mine={mine} />
           : <p className="fc-fine">{site ? 'Saved. Players’ totals appear here as answers come in.' : 'Saved on this device. Players’ totals show on balancethebudget.us.'} Not a scientific poll.</p>)}
       </div>
+      <FollowButton bill={bill} />
       <a className="fc-link" href={bill.url} target="_blank" rel="noopener noreferrer">The bill on Congress.gov <Icon d={ICON.ext} size={14} /></a>
     </>
   );
@@ -589,11 +597,13 @@ export function Carousel({ row }: { row: Extract<FeedRow, { kind: 'carousel' }> 
   );
 }
 
-export function CaughtUp({ fresh }: { fresh: number }) {
+export function CaughtUp({ fresh, fresher, since }: { fresh: number; fresher: number; since: string | null }) {
   return (
     <div className="fc-caughtup" role="note">
       <span className="fc-caughtup-icon" aria-hidden="true"><Icon d={ICON.check} size={18} /></span>
-      <span><strong>You’re all caught up</strong> on the last two weeks’ {fresh} bills and announcements. Below: lessons, polls and the budget’s numbers.</span>
+      <span><strong>You’re all caught up</strong>{since
+        ? <> on {fresher ? `the ${fresher} new since your last visit (${visitLabel(since)}), and ` : `everything since your last visit (${visitLabel(since)}), and `}the last two weeks’ {fresh} bills and announcements.</>
+        : <> on the last two weeks’ {fresh} bills and announcements.</>} Below: lessons, polls and the budget’s numbers.</span>
     </div>
   );
 }

@@ -82,7 +82,7 @@ export const rpc = <T>(fn: string, args: object = {}) => call<T>(`rpc/${fn}`, { 
 export const authRpc = <T>(fn: string, args: object = {}) => call<T>(`rpc/${fn}`, { method: 'POST', body: JSON.stringify(args), auth: true });
 
 /** Saves this player's single row in a table (insert or replace). */
-export const upsertOwn = (table: 'ballots' | 'players' | 'peoples_moves' | 'feed_votes', row: object) =>
+export const upsertOwn = (table: 'ballots' | 'players' | 'peoples_moves' | 'feed_votes' | 'bill_follows', row: object) =>
   call<null>(table, { method: 'POST', body: JSON.stringify(row), auth: true, prefer: 'resolution=merge-duplicates,return=minimal' });
 
 /** This player's own row, if they have signed in before. */
@@ -182,3 +182,7 @@ export function countStep(step: ChallengeStep, challengeKey: string) {
 export type FeedTallies = Record<string, Record<string, number>>;
 export const feedTallies = (items: string[]) => rpc<FeedTallies>('feed_tallies', { items: items.slice(0, 50) });
 export const saveFeedVote = (item: string, choice: string) => upsertOwn('feed_votes', { item, choice });
+
+// Following bills (bill_follows): the stage now, so the hourly alert run knows when it moves.
+export const followBill = (bill: string, status: string) => upsertOwn('bill_follows', { bill, status });
+export const unfollowBill = (bill: string) => call<null>(`bill_follows?bill=eq.${encodeURIComponent(bill)}`, { method: 'DELETE', auth: true, prefer: 'return=minimal' });

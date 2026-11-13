@@ -16,6 +16,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const OUT = new URL('../src/data/generated/bills.json', import.meta.url);
+const PUBLIC = new URL('../public/bills.json', import.meta.url);
 const KEY = process.env.CONGRESS_API_KEY || 'DEMO_KEY';
 const DEMO = KEY === 'DEMO_KEY';
 const API = 'https://api.congress.gov/v3';
@@ -161,4 +162,7 @@ let before = '';
 try { before = readFileSync(OUT, 'utf8'); } catch { /* first run */ }
 const text = JSON.stringify(out, null, 1) + '\n';
 writeFileSync(OUT, text);
+// A small public copy next to the site (dist/bills.json), for the alert sender: which stage each
+// bill is at. The sender compares it with what players follow (supabase/functions/daily-reminders).
+writeFileSync(PUBLIC, JSON.stringify({ fetchedAt: out.fetchedAt, bills: bills.map((b) => ({ id: b.id, label: b.label, title: b.title, status: b.status, url: b.url })) }) + '\n');
 console.log(`${bills.length} bills (${calls} calls${DEMO ? ', DEMO_KEY' : ''}) → src/data/generated/bills.json${before === text ? ' (unchanged)' : ''}`);

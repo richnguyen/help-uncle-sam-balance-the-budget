@@ -309,13 +309,15 @@ function shuffle<T>(a: T[], rnd: () => number) { const b = [...a]; for (let i = 
 /**
  * Three glances, one tap, one deeper read, over and over (the 3-1-1 rhythm), never three bills in
  * a row. Fresh official posts come first, newest first, then a "caught up" line, then the rest;
- * a row to swipe every dozen posts. With a topic picked, just that topic, newest or shuffled.
+ * a row to swipe every dozen posts. Posts new since the last visit come first of all. With a
+ * topic picked, just that topic, newest or shuffled.
  */
-export function mix(items: FeedItem[], topic: Topic | 'all', seed: string, now = Date.now()): FeedRow[] {
+export function mix(items: FeedItem[], topic: Topic | 'all', seed: string, now = Date.now(), newIds: Set<string> = new Set()): FeedRow[] {
   const rnd = seeded(seed);
   const pick = topic === 'all' ? items : items.filter((i) => i.topic === topic);
-  const fresh = pick.filter((i) => isFresh(i, now)).sort((a, b) => (b.time ?? '').localeCompare(a.time ?? ''));
-  const rest = shuffle(pick.filter((i) => !isFresh(i, now)), rnd);
+  // What's new since the last visit leads; then the newest first.
+  const fresh = pick.filter((i) => isFresh(i, now) || newIds.has(i.id)).sort((a, b) => Number(newIds.has(b.id)) - Number(newIds.has(a.id)) || (b.time ?? '').localeCompare(a.time ?? ''));
+  const rest = shuffle(pick.filter((i) => !isFresh(i, now) && !newIds.has(i.id)), rnd);
   const lanes: Record<Effort, FeedItem[]> = { passive: [], interactive: [], deep: [] };
   for (const i of rest) lanes[i.effort].push(i);
   // Fresh posts take the glance slots first.

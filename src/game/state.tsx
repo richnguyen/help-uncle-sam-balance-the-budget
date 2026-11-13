@@ -9,6 +9,8 @@ import type { SavedPlan } from './plans';
 export type TextSize = 'normal' | 'large' | 'larger';
 export type ThemeChoice = 'system' | 'light' | 'dark';
 
+export interface FollowedBill { label: string; title: string; url: string; status: string; seen: string; at: string }
+
 export interface SavedPost { id: string; kind: string; title: string; href: string; source: string; at: string }
 
 export interface JourneyState {
@@ -30,6 +32,8 @@ export interface JourneyState {
   /** The feed: the player's answer on each poll and bill (choice value), and each quick check. */
   feedVotes?: Record<string, string>;
   feedChecks?: Record<string, boolean>;
+  /** Bills followed from the feed: what it said when followed or last looked at, so a move shows. */
+  follows?: Record<string, FollowedBill>;
   settings: { text: TextSize; theme: ThemeChoice; freeRoam: boolean; narration: boolean; voice: string; haptics: boolean; sounds: boolean; voiceV?: number };
 }
 
@@ -86,6 +90,10 @@ interface Journey extends JourneyState {
   toggleSaved: (post: Omit<SavedPost, 'at'>) => void;
   feedVote: (id: string, choice: string) => void;
   feedCheck: (id: string, correct: boolean) => void;
+  /** Follow a bill (or stop): remembers its stage now, so a later move can be shown. */
+  toggleFollow: (bill: Omit<FollowedBill, 'seen' | 'at'>, id: string) => void;
+  /** The player has seen where these followed bills stand now. */
+  seeFollows: (now: Record<string, string>) => void;
   start: () => void;
   reset: () => void;
 }
@@ -148,8 +156,19 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     }),
     feedVote: (id, choice) => update((p) => ({ ...p, feedVotes: { ...(p.feedVotes ?? {}), [id]: choice } })),
     feedCheck: (id, correct) => update((p) => (p.feedChecks?.[id] != null ? p : { ...p, feedChecks: { ...(p.feedChecks ?? {}), [id]: correct } })),
+    toggleFollow: (b, id) => update((p) => {
+      const cur = { ...(p.follows ?? {}) };
+      if (cur[id]) delete cur[id]; else cur[id] = { ...b, seen: b.status, at: new Date().toISOString() };
+      return { ...p, follows: cur };
+    }),
+    seeFollows: (now) => update((p) => {
+      const cur = { ...(p.follows ?? {}) };
+      let changed = false;
+      for (const [id, st] of Object.entries(now)) if (cur[id] && cur[id].seen !== st) { cur[id] = { ...cur[id], seen: st, status: st }; changed = true; }
+      return changed ? { ...p, follows: cur } : p;
+    }),
     start: () => update((p) => (p.started ? p : { ...p, started: new Date().toISOString() })),
-    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, built: [], decor: [], saved: [], feedVotes: {}, feedChecks: {}, settings: p.settings })),
+    reset: () => update((p) => ({ ...DEFAULT, marks: [], medals: [], plans: {}, games: {}, built: [], decor: [], saved: [], feedVotes: {}, feedChecks: {}, follows: {}, settings: p.settings })),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

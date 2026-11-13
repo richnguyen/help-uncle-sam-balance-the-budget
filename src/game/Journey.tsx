@@ -29,6 +29,7 @@ import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } fro
 import { SamSays } from './UncleSam';
 import { SamMenuSpot } from './samhud';
 import { Feed } from './feed/Feed';
+import { FollowedBills } from './feed/follow';
 
 export { LockIcon } from './icons';
 
@@ -289,6 +290,12 @@ export function RecordTop() {
         </dl>
         <p className="small muted rc-note">Saved in this browser only. Stars spent on the Mall: ★ {starsSpent(j.built ?? [])}.</p>
       </section>
+
+      {Object.keys(j.follows ?? {}).length > 0 && (
+        <Section id="following" title="Bills you follow" sub="Where each bill stands now. A bill that moved since you last looked is marked.">
+          <FollowedBills />
+        </Section>
+      )}
 
       <SettingsBlock />
 

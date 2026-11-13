@@ -30,6 +30,7 @@ received the "reminders are on" message on November 6, 2026. The feed's `feed_vo
 | `challenge_steps` | day × step | how many friends took a challenge, met the goal, and sent a plan back (no identities) | nobody directly; written and read only through functions |
 | `peoples_moves` | player per day | today's People's Budget move: one card, pushed in (+1) or out (-1) | only that player; only today's move can be changed or taken back |
 | `feed_votes` | player per feed card | the player's answer on a bill in the feed (support, oppose, unsure; poll answers are also allowed) | only that player; totals through `feed_tallies(items)` |
+| `bill_follows` | player per followed bill | the bill and the stage it was at when followed or last alerted (at most 50 per player) | only that player; the alert run reads it with the service key |
 
 Everyone can read totals through functions that return counts only: `ballot_totals()`,
 `player_totals()`, `card_rankings(level)`, `state_rankings()` (states with 5+ players),
@@ -60,7 +61,8 @@ no name, no password.
    [`20261110000000_challenge_funnel.sql`](migrations/20261110000000_challenge_funnel.sql), then
    [`20261111000000_daily_reminders.sql`](migrations/20261111000000_daily_reminders.sql), then
    [`20261112000000_ballot_zip.sql`](migrations/20261112000000_ballot_zip.sql), then
-   [`20261113000000_feed_votes.sql`](migrations/20261113000000_feed_votes.sql). Each is safe to
+   [`20261113000000_feed_votes.sql`](migrations/20261113000000_feed_votes.sql), then
+   [`20261114000000_bill_follows.sql`](migrations/20261114000000_bill_follows.sql). Each is safe to
    run again. (The game already saves an opted-in ZIP inside the ballot, so the last one only adds
    format checks and the area totals; until it runs, the game says area results come later. Until
    the feed's migration runs, a bill answer is kept on the player's device and the feed says
@@ -89,6 +91,18 @@ no name, no password.
    Cloudflare's test site key, so they can't sign in once CAPTCHA is on; that is intended.
 
 ## Daily Dollar reminders (Web Push)
+
+**Bill alerts ride on the same notifications.** A player who follows a bill in the feed and has
+notifications on gets one alert when it moves ("S. 1176: Passed Senate"). The hourly run of the
+same function, after the day's reminders, reads the stages the site publishes
+(`https://balancethebudget.us/bills.json`, written by `scripts/fetch-bills.mjs` on every deploy),
+compares them with `bill_follows` (`bill_alerts_due`), alerts each device, then records the new
+stage for every follower (`mark_bills_alerted`), so nothing is sent twice. To turn it on: run
+[`migrations/20261114000000_bill_follows.sql`](migrations/20261114000000_bill_follows.sql) in the
+SQL Editor, then redeploy the function (the same `supabase functions deploy daily-reminders
+--no-verify-jwt --project-ref ygphfbeqgguypvmiundz`, or paste the new `index.ts` into the
+dashboard's editor). No new secrets. Tested with `npm run test:alerts` (stand-ins for Supabase,
+the site and the push services; real encryption and signing) and `npm run test:db`.
 
 Players can turn on one notification a day, at an hour they pick, when a new Daily Dollar is
 ready (settings, or the Daily Dollar's finished screen). No new server: the sender is a Supabase
