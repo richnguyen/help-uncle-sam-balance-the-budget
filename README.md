@@ -128,6 +128,10 @@ budget adviser.
   geography. 56 flags (50 states, DC, five territories) from Wikimedia Commons at 72 px wide (about
   250 KB in all); each file's license and author are listed on the Sources page (55 public domain,
   Mississippi's "copyrighted free use"). Rerun the script when a state adopts a new flag.
+- **Quick play posts** (`src/game/feed/items.ts`, `src/game/quickplay.ts`): the feed's Lessons
+  carry one post per mission with a game: the game's name and goal, its rounds, and "up to 2
+  stars". One tap opens the mission straight into Quick play; a locked mission's post says what
+  unlocks it instead.
 - **Sponsors and floor votes** (`scripts/rollcall.mjs`, `src/game/feed/votes.tsx`): a bill's sponsor
   reads exactly as Congress.gov lists them ("Rep. Arrington, Jodey C. [R-TX-19]"), with no colors
   or scores. For bills past introduction, `fetch-bills.mjs` follows the recorded votes Congress.gov
@@ -135,7 +139,12 @@ budget adviser.
   keeps, for each, the question, the result, the yeas and nays, a link to the record, and every
   member's vote with party and state as the record lists them. Bill cards in the feed and followed
   bills in Your record show them, and if the player saved a ZIP code in mission 1.4, how that
-  state's members voted. Facts only: no ratings of members. `npm run test:rollcall` checks the
+  state's members voted. Each roll call also shows the sponsor's own vote (found by chamber,
+  state and last name; nothing is shown when the match is ambiguous) and, for a Senate tie, the
+  Vice President's tie-breaking vote. Votes that decided the bill (passage, concurring, conference
+  reports, veto overrides) are kept ahead of procedural ones, so a bill with many cloture votes
+  still shows how it passed, and a passage with no roll call (voice vote, unanimous consent) says
+  so, from Congress.gov's actions. Facts only: no ratings of members. `npm run test:rollcall` checks the
   parser on records in each chamber's format.
 - **Play counts for the playtest** (`supabase/migrations/20261115000000_play_counts.sql`,
   `countPlay` in `src/lib/backend.ts`): anonymous daily totals, never who did what: each budget desk
@@ -897,7 +906,7 @@ npm run data:county    # county income tax and ZIP-to-county files, public/count
 | Which county a ZIP is in | Census Bureau 2020 ZCTA relationship files (to counties and, for Connecticut, to towns) and the Connecticut planning-region crosswalk | www2.census.gov files (`scripts/fetch-county-tax.mjs`; Connecticut's nine planning regions replaced its counties in 2022, so its ZIPs go to towns, then regions) |
 | 2026 tax brackets, standard deduction, payroll tax parameters | IRS Rev. Proc. 2025-32, Publication 15, Topic 560 | irs.gov documents, recorded in `src/data/curated/tax.json` |
 | Social Security and Medicare trust fund projections | 2026 Social Security and Medicare Trustees Reports | `src/data/curated/trustees.json` (cited) |
-| Spending and tax bills in the feed: status, sponsor, latest action, CRS summaries, CBO cost estimates | Congress.gov (Library of Congress) | Congress.gov API (`scripts/fetch-bills.mjs`, every few hours in the Pages workflow; a free api.data.gov key in the repository secret `CONGRESS_API_KEY`, or the shared DEMO_KEY) |
+| Spending and tax bills in the feed: status, sponsor, latest action, CRS summaries, CBO cost estimates | Congress.gov (Library of Congress) | Congress.gov API (`scripts/fetch-bills.mjs`, every few hours in the Pages workflow; a free api.data.gov key in the repository secret `CONGRESS_API_KEY`; the shared DEMO_KEY only for runs by hand) |
 | Laws' deficit effects; budget-process history; who benefits | CBO/JCT cost estimates; CRS reports; agency statistics | `src/data/curated/*.json` (each entry cites its official URL) |
 
 CBO's projections are the preferred benchmark for the gap chart and the sandbox. The pipeline uses

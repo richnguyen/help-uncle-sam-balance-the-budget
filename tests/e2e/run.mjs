@@ -38,7 +38,7 @@ const GATES = {
 const QUICK = ['check', 'cardfit', 'deskui', 'feed', 'zip', 'quick', 'seal', 'voicecheck'];
 // Every test (one file each in this folder), with its usual time in seconds on 3 workers, which
 // seeds the longest-first schedule until this machine has timed its own runs.
-const SEED = {"check": 24, "viral": 40, "chain-test": 47, "rooms-test": 24, "peoples-local": 54, "stats-test": 43, "voicecheck": 2, "nohint": 199, "guess": 17, "hint5": 8, "themes-ui": 16, "dueltest": 82, "menutest": 64, "newfeat": 43, "campaigns": 29, "sims": 34, "sims2": 80, "mgames": 234, "process": 34, "zip": 79, "county": 72, "yardstick": 64, "hudshot": 17, "mline": 42, "build": 71, "nozoom": 21, "appmode": 17, "launch": 102, "samarm": 8, "seal": 36, "feed": 35, "tracker": 37, "starter": 8, "rated": 37, "terms": 136, "twist": 12, "twoway": 13, "deskui": 15, "cardfit": 10, "quick": 19, "playcounts": 22, "floorvotes": 9};
+const SEED = {"check": 24, "viral": 40, "chain-test": 47, "rooms-test": 24, "peoples-local": 54, "stats-test": 43, "voicecheck": 2, "nohint": 199, "guess": 17, "hint5": 8, "themes-ui": 16, "dueltest": 82, "menutest": 64, "newfeat": 43, "campaigns": 29, "sims": 34, "sims2": 80, "mgames": 234, "process": 34, "zip": 79, "county": 72, "yardstick": 64, "hudshot": 17, "mline": 42, "build": 71, "nozoom": 21, "appmode": 17, "launch": 102, "samarm": 8, "seal": 36, "feed": 35, "tracker": 37, "starter": 8, "rated": 37, "terms": 136, "twist": 12, "twoway": 13, "deskui": 15, "cardfit": 10, "quick": 19, "playcounts": 22, "floorvotes": 9, "feedquick": 25};
 const TESTS = Object.keys(SEED).map((name) => ({ name, file: join(DIR, name + '.js') }));
 
 // ---- options
