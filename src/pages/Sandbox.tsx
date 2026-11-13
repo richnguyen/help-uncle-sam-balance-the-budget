@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { TimeChart } from '../components/charts';
-import { DragBars, EconMeter, GapBar, type GapSegment, LeverIcon, SIDE_COLOR, SplitBar, Stars, useToasts, useTween } from '../components/game';
+import { DragBars, EconMeter, econLabel, GapBar, type GapSegment, LeverIcon, SIDE_COLOR, SplitBar, Stars, useToasts, useTween } from '../components/game';
 import { Carousel } from '../components/Carousel';
 import { ActionBar } from '../components/ActionBar';
 import { Accomplishments, CongressLink } from '../game/DeskExtras';
@@ -69,12 +69,12 @@ type Filter = 'all' | 'revenue' | 'spending';
 type Sort = 'impact' | 'gentle';
 
 /** The three stars; hovering, focusing or tapping them shows what earns each one. */
-function StarsPopover({ stars, checks, extra }: { stars: number; checks: { id: string; label: string; done: boolean; tip: string }[]; extra?: React.ReactNode }) {
+function StarsPopover({ stars, checks, extra, size = 'lg' }: { stars: number; checks: { id: string; label: string; done: boolean; tip: string }[]; extra?: React.ReactNode; size?: 'sm' | 'md' | 'lg' }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="starpop" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       <button type="button" className="starpop-btn" aria-expanded={open} aria-controls="starpop-panel" onClick={() => setOpen((o) => !o)} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}>
-        <Stars n={stars} size="lg" label={`${stars} of 3 stars. Show what earns each star.`} />
+        <Stars n={stars} size={size} label={`${stars} of 3 stars. Show what earns each star.`} />
       </button>
       {open && (
         <div className="starpop-panel" id="starpop-panel" role="tooltip">
@@ -121,6 +121,15 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const [lv, setLv] = useState<Levers>(draft?.lv ?? { ...ZERO });
   const [filter, setFilter] = useState<Filter>('all');
   const [sort, setSort] = useState<Sort>('impact');
+  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
+  // The pinned scoreboard's height, so a card fits between it and the bottom bars on a phone.
+  const boardRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = boardRef.current; if (!el) return;
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--board-h', `${Math.round(el.getBoundingClientRect().height)}px`));
+    ro.observe(el);
+    return () => { ro.disconnect(); document.documentElement.style.removeProperty('--board-h'); };
+  }, []);
   const [progress, setProgressState] = useState<Progress>(() => loadProgress());
   const [copied, setCopied] = useState<'idle' | 'done' | 'manual'>('idle');
   const votes = useVotes();
@@ -332,7 +341,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   };
   // On phones the hint lives in the bottom action bar; the scoreboard's copy is for wide screens.
   // (once the goal is met the bar holds the next steps, so the scoreboard's Hint gives the star tips).
-  const hintButton = desk?.hint ? <button type="button" className={'btn btn-hint' + (met ? '' : ' bar-dup')} onClick={giveHint}>Hint</button> : null;
+  const hintButton = desk?.hint ? <button type="button" className="btn btn-hint" onClick={giveHint}>Hint</button> : null;
   const text = planText({ mission, names: selected.map((o) => o.name), deficit: pct(Math.max(0, last.deficit) / last.gdp, 1), debt: pct(last.debt / last.gdp, 0), stars: ev.stars, fy: lastFY });
   const copy = async () => {
     try { await navigator.clipboard.writeText(text); setCopied('done'); } catch { setCopied('manual'); }
@@ -367,120 +376,107 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : special && !met && prog <= 0.001 ? (duel ? { mood: 'happy' as Mood, line: DUEL_LINES.playing } : challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
   // Uncle Sam coaches from the top bar (samhud.tsx): his line runs across the strip under it.
   const coachBlock = desk ? <SamSays mood={said.mood} auto={party == null && !(met && !wasMet.current)} delay={special ? 300 : 900}>{said.line}</SamSays> : null;
-  const progressBlock = (
-    <div aria-live="polite" className="sb-progress">
-      <div className="sb-big">{met ? 'Mission complete!' : `${Math.min(99, Math.floor(shownProg * 100))}% of the way there`}</div>
-      <GapBar segments={segments} progress={Math.max(0, prog)} />
-      <div className="small muted">{met ? `You beat the goal: deficit ${last.deficit <= 0 ? 'balanced' : pct(last.deficit / last.gdp, 1) + ' of GDP'} and debt ${pct(last.debt / last.gdp, 0)} of GDP in FY${lastFY}.` : `Still needed: ${neededText}.`}</div>
-    </div>
-  );
-  const checksBlock = (
-    <ul className="checks">
-      {ev.checks.map((c) => (
-        <li key={c.id} data-done={c.done}>
-          <span className="check-mark" aria-hidden="true">{c.done ? '★' : '☆'}</span>
-          <div><strong>{c.label}</strong><div className="small muted">{c.tip}</div></div>
-        </li>
-      ))}
-    </ul>
-  );
-  const econBlock = (vertical: boolean) => (
-    <div className="sb-block">
-      <div className="stat-label">Hit to the economy</div>
-      <EconMeter peakStep={econ.peakStep} vertical={vertical} />
-      <label className="switch"><input type="checkbox" checked={gradual} onChange={(e) => setGradual(e.target.checked)} /> Phase in over 3 years</label>
-    </div>
-  );
-  const splitBlock = (vertical: boolean) => (
-    <div className="sb-block">
-      <div className="stat-label">{vertical ? 'Who pays (10-year savings)' : 'Who pays: taxes vs. spending cuts (10-year savings)'}</div>
-      <SplitBar revenue={revTen} spending={spTen} vertical={vertical} />
-    </div>
-  );
   const efficiencyBlock = efficiency != null ? (
     <div className="sb-block small"><strong>Efficiency {efficiency}/100.</strong> {efficiency >= 91 ? 'Your plan is about as gentle on the economy as the least-cost plan.' : `The least-cost plan for this mission does about ${Math.round((1 - efficiency / 100) * 100)}% less economic harm.`}</div>
   ) : null;
   const copyBox = copied === 'manual' ? <textarea className="input" readOnly rows={6} value={text} onFocus={(e) => e.currentTarget.select()} aria-label="Your plan, ready to copy" /> : null;
-  const nextBlock = desk && met ? (
-    <div className="sb-block sb-next">
-      <strong>{missionShort(STOP_BY_ID[desk.id])} complete.</strong>
-      <div className="sb-actions">
-        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary" href="#guide">See your certificate</a>}
-        <a className="btn" href="#levels">Road map</a>
-      </div>
-    </div>
-  ) : null;
   const deckTools = (
     <div className="deck-head">
-      <h2 className="section-title" id="deck-t">Your policy cards</h2>
+      <h2 className="section-title deck-title" id="deck-t">Your cards</h2>
       {starter && (
         <p className="deck-starter small">
           {showAll
-            ? <>All {ctx.options.length} cards. <button type="button" className="link-btn" onClick={() => setShowAll(false)}>Back to the starter deck</button></>
-            : <><strong>A starter deck:</strong> {starter.size} cards, taxes and cuts, that can reach the goal together. <button type="button" className="link-btn" onClick={() => setShowAll(true)}>Show all {ctx.options.length} cards</button></>}
+            ? <>All {ctx.options.length} cards · <button type="button" className="link-btn" onClick={() => setShowAll(false)}>Back to the starter deck</button></>
+            : <><strong>Starter deck:</strong> {starter.size} cards that can reach the goal together · <button type="button" className="link-btn" onClick={() => setShowAll(true)}>Show all {ctx.options.length} cards</button></>}
         </p>
       )}
       <div className="deck-tools">
-        <Seg<Filter> label="Show" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'All' }, { value: 'revenue', label: 'Taxes' }, { value: 'spending', label: 'Spending cuts' }]} />
-        <Seg<Sort> label="Sort" value={sort} onChange={setSort} options={[{ value: 'impact', label: 'Biggest impact' }, { value: 'gentle', label: 'Gentlest first' }]} />
+        <Seg<Filter> label="Show" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'All' }, { value: 'revenue', label: 'Taxes' }, { value: 'spending', label: 'Cuts' }]} />
+        <button type="button" className="btn deck-sort" onClick={() => setSort(sort === 'impact' ? 'gentle' : 'impact')} aria-label={`Sort: ${sort === 'impact' ? 'biggest first' : 'gentlest first'}. Tap to change.`}>
+          <span aria-hidden="true">⇅</span> {sort === 'impact' ? 'Biggest' : 'Gentlest'}
+        </button>
       </div>
     </div>
   );
-  const deckNote = <p className="small muted">Scroll sideways for more cards. Numbers are CBO’s estimates. “Per household” spreads the FY{lastFY} amount across all {Math.round(HH / 1e6)} million U.S. households; real effects fall on the groups named on each card.</p>;
+  const deckNote = <p className="small muted deck-note">Swipe for more cards; flip one for its details. Numbers are official estimates, mostly CBO’s.</p>;
+  // The cards, made like a card game's: the front shows what kind of card it is and its traits;
+  // the back (flip it) has the details. What a card does to the gap shows once it's played.
+  const flip = (id: string) => setFlipped((f) => ({ ...f, [id]: !f[id] }));
+  const FLIP = <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></svg>;
   const cardEls = (
     deck.map((o) => {
               const on = ids.includes(o.id);
+              const back = !!flipped[o.id];
+              const cost = o.savings10 < 0;
               const y = optionPath(o, base, gradual).at(-1)!;
               const share = shareOf[o.id] ?? 0;
               const t = votes.options[o.id] ?? { support: 0, oppose: 0 };
               const n = t.support + t.oppose;
               const rules = [
-                o.econ.tags.includes('retirees') && 'Affects current retirees',
-                o.econ.tags.includes('lowIncome') && 'Hits low-income families',
-                o.econ.tags.includes('investment') && 'Cuts public investment',
+                o.econ.tags.includes('retirees') && 'Hits retirees',
+                o.econ.tags.includes('lowIncome') && 'Hits low-income',
+                o.econ.tags.includes('investment') && 'Cuts investment',
               ].filter(Boolean) as string[];
+              const kind = cost ? (o.side === 'revenue' ? 'Tax cut' : 'More spending') : o.side === 'revenue' ? 'Tax' : `Cut · ${LEVER_NAME[o.lever]}`;
+              const effect = cost ? `Widens the gap ${Math.max(1, Math.round(-share * 100))}%` : share >= 1 ? 'Closes the whole gap' : `Closes ${share < 0.01 ? '<1' : Math.round(share * 100)}% of the gap`;
+              const play = (cls: string) => (
+                <button type="button" className={cls + (on ? ' on' : '')} aria-pressed={on} onClick={() => toggle(o.id)} aria-label={`${on ? 'Take back' : 'Play'}: ${o.name}`}>
+                  {on ? '✓ In your plan' : 'Play card'}
+                </button>
+              );
               return (
-                <article key={o.id} className="pcard" data-on={on} data-side={o.side} data-card={o.id} data-cost={o.savings10 < 0 || undefined} data-hint={hint?.card === o.id || undefined}>
-                  {hint?.card === o.id && <span className="pcard-hint">Uncle Sam’s hint</span>}
-                  <div className="pcard-top">
-                    <span className="pcard-icon" style={{ color: SIDE_COLOR[o.side] }}><LeverIcon lever={o.lever} /></span>
-                    <span className="pcard-kind">{o.savings10 < 0 ? (o.side === 'revenue' ? 'Tax cut · adds to deficits' : 'More spending · adds to deficits') : o.side === 'revenue' ? 'Tax' : `Spending cut · ${LEVER_NAME[o.lever]}`}</span>
-                  </div>
-                  <h3 className="pcard-title">{o.name}</h3>
-                  <div className="pcard-big">{o.savings10 < 0 ? <>Widens the gap <strong>{Math.max(1, Math.round(-share * 100))}%</strong></> : share >= 1 ? <>Closes <strong>the whole gap</strong>{share >= 1.5 ? ` (${(share).toFixed(1)}× over)` : ''}</> : <>Closes <strong>{share < 0.01 ? '<1%' : `${Math.round(share * 100)}%`}</strong> of the gap</>}</div>
-                  <div className="pcard-sub num">{o.savings10 < 0 ? `costs ${money(-y)}` : money(y)} in FY{lastFY} · about {dollars(Math.abs(y) / HH)} per household</div>
-                  <div className="pcard-meta">
-                    {o.savings10 > 0 && <DragBars level={dragLevel(score(o.econ))} />}
-                    {o.savings10 < 0 && <span className="pill pill-cost">Adds to deficits: pair it with savings</span>}
-                    {o.econ.growth === 1 && <span className="pill">Helps long-run growth</span>}
-                    {o.econ.growth === -1 && <span className="pill">Hurts long-run growth</span>}
-                    {rules.map((r) => <span key={r} className="pill pill-warn">{r}</span>)}
-                  </div>
-                  <button type="button" className={'pcard-add' + (on ? ' on' : '')} aria-pressed={on} onClick={() => toggle(o.id)}>
-                    {on ? '✓ In your plan' : '+ Add to plan'}
-                  </button>
-                  <CongressLink id={o.id} topic={o.name} />
-                  <details className="pcard-more">
-                    <summary>What it does</summary>
-                    <p><Terms inline>{o.summary}</Terms></p>
-                    <p><strong>Who pays:</strong> {o.affects}.</p>
-                    <p><strong>Who benefits:</strong> {o.benefits}.</p>
-                    <p><strong>Economic effect:</strong> {o.econ.why}</p>
-                    {o.obbbaNote && <p className="muted">{o.obbbaNote}</p>}
-                    <p><a href={o.source.url} target="_blank" rel="noreferrer">{o.savings10 < 0 ? `Official estimate: adds ${money(-o.savings10 * 1e9)} to deficits over 10 years` : `CBO’s estimate: ${money(o.savings10 * 1e9)} over 10 years`}</a></p>
-                  </details>
-                  {votes.available && (
-                    <div className="vote-row">
-                      <button type="button" className={'vote-btn' + (votes.mine.options[o.id] === 1 ? ' on' : '')} aria-pressed={votes.mine.options[o.id] === 1} disabled={votes.canVote === false} onClick={() => votes.voteOption(o.id, 1 as Choice)}>Support</button>
-                      <button type="button" className={'vote-btn' + (votes.mine.options[o.id] === -1 ? ' on' : '')} aria-pressed={votes.mine.options[o.id] === -1} disabled={votes.canVote === false} onClick={() => votes.voteOption(o.id, -1 as Choice)}>Oppose</button>
-                      {n > 0 ? (
-                        <span className="vote-tally" aria-label={`${t.support} support, ${t.oppose} oppose`}>
-                          <span className="vote-bar"><span style={{ width: `${(t.support / n) * 100}%`, background: 'var(--vote-yes)' }} /><span style={{ width: `${(t.oppose / n) * 100}%`, background: 'var(--vote-no)' }} /></span>
-                          <span className="small muted num">{pct(t.support / n, 0)} support · {n}</span>
-                        </span>
-                      ) : <span className="small muted">No votes yet</span>}
+                <article key={o.id} className="pcard" data-on={on} data-side={o.side} data-card={o.id} data-cost={cost || undefined} data-hint={hint?.card === o.id || undefined} data-flipped={back || undefined}>
+                  <div className="pcard-inner">
+                    <div className="pcard-face pcard-front" inert={back || undefined}>
+                      <div className="pcard-top">
+                        <span className="pcard-kind">{kind}</span>
+                        <button type="button" className="pcard-flip" onClick={() => flip(o.id)} aria-label={`Flip: details of ${o.name}`} title="Flip for details">{FLIP}</button>
+                      </div>
+                      <div className="pcard-art" aria-hidden="true">
+                        <span className="pcard-icon"><LeverIcon lever={o.lever} size={46} /></span>
+                        {hint?.card === o.id && <span className="pcard-hint">Uncle Sam’s hint</span>}
+                      </div>
+                      <h3 className="pcard-title">{o.name}</h3>
+                      <div className="pcard-meta">
+                        {!cost && <DragBars level={dragLevel(score(o.econ))} />}
+                        {cost && <span className="pill pill-cost">Adds to deficits</span>}
+                        {o.econ.growth === 1 && <span className="pill">Helps growth</span>}
+                        {o.econ.growth === -1 && <span className="pill">Hurts growth</span>}
+                        {rules.map((r) => <span key={r} className="pill pill-warn">{r}</span>)}
+                      </div>
+                      {on && <div className="pcard-effect" data-cost={cost || undefined}>{effect}</div>}
+                      {play('pcard-add')}
                     </div>
-                  )}
+                    <div className="pcard-face pcard-back" inert={!back || undefined}>
+                      <div className="pcard-top">
+                        <span className="pcard-kind">{kind}</span>
+                        <button type="button" className="pcard-flip" onClick={() => flip(o.id)} aria-label={`Flip back: ${o.name}`} title="Flip back">{FLIP}</button>
+                      </div>
+                      <div className="pcard-more">
+                        <h4 className="pcard-back-title">{o.name}</h4>
+                        <p><Terms inline>{o.summary}</Terms></p>
+                        <p><strong>Who pays:</strong> {o.affects}.</p>
+                        <p><strong>Who benefits:</strong> {o.benefits}.</p>
+                        <p><strong>Economy:</strong> {o.econ.why}</p>
+                        <p className="num"><strong>Size:</strong> {cost ? `costs ${money(-y)}` : money(y)} in FY{lastFY}, about {dollars(Math.abs(y) / HH)} per household. <a href={o.source.url} target="_blank" rel="noreferrer">{cost ? `Official estimate: adds ${money(-o.savings10 * 1e9)} to deficits over 10 years` : `CBO’s estimate: ${money(o.savings10 * 1e9)} over 10 years`}</a></p>
+                        {o.obbbaNote && <p className="muted">{o.obbbaNote}</p>}
+                        <CongressLink id={o.id} topic={o.name} />
+                        {votes.available && (
+                          <div className="vote-row">
+                            <button type="button" className={'vote-btn' + (votes.mine.options[o.id] === 1 ? ' on' : '')} aria-pressed={votes.mine.options[o.id] === 1} disabled={votes.canVote === false} onClick={() => votes.voteOption(o.id, 1 as Choice)}>Support</button>
+                            <button type="button" className={'vote-btn' + (votes.mine.options[o.id] === -1 ? ' on' : '')} aria-pressed={votes.mine.options[o.id] === -1} disabled={votes.canVote === false} onClick={() => votes.voteOption(o.id, -1 as Choice)}>Oppose</button>
+                            {n > 0 ? (
+                              <span className="vote-tally" aria-label={`${t.support} support, ${t.oppose} oppose`}>
+                                <span className="vote-bar"><span style={{ width: `${(t.support / n) * 100}%`, background: 'var(--vote-yes)' }} /><span style={{ width: `${(t.oppose / n) * 100}%`, background: 'var(--vote-no)' }} /></span>
+                                <span className="small muted num">{pct(t.support / n, 0)} support · {n}</span>
+                              </span>
+                            ) : <span className="small muted">No votes yet</span>}
+                          </div>
+                        )}
+                      </div>
+                      {play('pcard-play')}
+                    </div>
+                  </div>
                 </article>
               );
             })
@@ -578,31 +574,40 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         </div>
       )}
       <>
-          <section className="topboard card" id="game" aria-label="Scoreboard" data-cm={challenge || duel ? true : undefined}>
+          {/* The scoreboard: one slim board, pinned under the top bar while the cards scroll. */}
+          <section className="topboard card hud-board" id="game" aria-label="Scoreboard" ref={boardRef}>
             {coachBlock}
-            <div className="tb-main">
-              <div className="tb-head">
-                <div className="eyebrow">Campaign {here!.campaign} · final mission · {desk!.difficulty}</div>
-                <StarsPopover stars={ev.stars} checks={ev.checks} extra={efficiencyBlock} />
+            <div className="hb-row hb-progress">
+              <div className="hb-prog" aria-live="polite">
+                <strong className="sb-big">{met ? 'Goal met!' : `${Math.min(99, Math.floor(shownProg * 100))}%`}</strong>
+                <span className="hb-togo">{met ? `FY${lastFY}` : `${money(stillNeeded)} to go`}</span>
+                <span className="sr-only">{met ? `You beat the goal: deficit ${last.deficit <= 0 ? 'balanced' : pct(last.deficit / last.gdp, 1) + ' of GDP'} and debt ${pct(last.debt / last.gdp, 0)} of GDP in FY${lastFY}.` : `of the way there. Still needed: ${neededText}.`}</span>
               </div>
-              {progressBlock}
-              {twist && <div className="tb-twist" data-twist={twist.id}><strong>Twist</strong> {twist.line} <Rated id={twist.id} label="How the twist works" /></div>}
-              {(challenge || duel) && <div className="small muted tb-cm-line">Economy: {econ.rating} · Who pays: {duel ? splitLabel(assessDuel({ ids, lv, gradual })) : revTen + spTen ? `${Math.round(revenueShare * 100)}% taxes, ${Math.round((1 - revenueShare) * 100)}% cuts` : 'no cards yet'}</div>}
-              <div className="sb-actions tb-actions">
-                {hintButton}
-                <button type="button" className="btn" onClick={reset} disabled={!ids.length && !slidersUsed}>Start over</button>
-                {met && duel && <button type="button" className="btn btn-primary bar-dup" onClick={reveal}>Reveal the duel</button>}
-                {met && !duel && <a className="btn bar-dup" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>}
-                {met && <button type="button" className="btn" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my plan'}</button>}
-                {met && !duel && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
+              <GapBar segments={segments} progress={Math.max(0, prog)} />
+              <StarsPopover stars={ev.stars} checks={ev.checks} extra={efficiencyBlock} size="md" />
+            </div>
+            <div className="hb-row hb-gauges">
+              <div className="hb-gauge">
+                <div className="hb-label"><span>Economy</span> <strong>{econLabel(econ.peakStep)}</strong><Rated id="steep" icon label="How the hit to the economy is rated" /></div>
+                <EconMeter peakStep={econ.peakStep} compact />
               </div>
-              {copyBox}
+              <div className="hb-gauge">
+                <div className="hb-label"><span>Who pays</span> <strong>{revTen + spTen ? `${Math.round(revenueShare * 100)}% taxes` : '—'}</strong></div>
+                <SplitBar revenue={revTen} spending={spTen} compact />
+              </div>
             </div>
-            <div className="tb-side">
-              {econBlock(true)}
-              {splitBlock(true)}
+            <div className="hb-row hb-tools sb-actions tb-actions">
+              <label className="switch hb-phase"><input type="checkbox" checked={gradual} onChange={(e) => setGradual(e.target.checked)} /> Phase in</label>
+              {twist && <span className="tb-twist" data-twist={twist.id}><strong>Twist</strong> {twist.short}<Rated id={twist.id} icon label="How the twist works" /></span>}
+              <span className="hb-spacer" />
+              {hintButton}
+              <button type="button" className="btn hb-reset" onClick={reset} disabled={!ids.length && !slidersUsed} aria-label="Start over" title="Start over">↺</button>
+              {met && duel && <button type="button" className="btn btn-primary bar-dup" onClick={reveal}>Reveal the duel</button>}
+              {met && !duel && <a className="btn bar-dup" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>}
+              {met && <button type="button" className="btn" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my plan'}</button>}
+              {met && !duel && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
             </div>
-            <div className="tb-rated"><Rated id="steep" label="How “hit to the economy” is rated" /></div>
+            {copyBox}
           </section>
           {challenge && theirs && mineNow && h2h && (
             <section className="card challenge-live" id="vs" aria-live="polite">
@@ -635,14 +640,11 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         : <ChallengeShare level={desk.id} plan={{ ids, lv, gradual, stars: ev.stars, at: '' }} onShare={returned} />)}
 
       {/* Phones and tablets: where the plan stands, always in view, with this screen's actions. */}
-      <ActionBar className="plan-bar" phoneOnly label="Your plan">
-        <div className="plan-bar-row" aria-hidden="true">
-          <Stars n={ev.stars} size="sm" />
-          <span className="plan-bar-track"><span style={{ width: `${Math.min(1, Math.max(0, prog)) * 100}%` }} /></span>
-          <span className="num">{met ? 'Goal met' : `${Math.min(99, Math.floor(Math.max(0, prog) * 100))}%`}</span>
-        </div>
-        {barButtons && <div className="plan-bar-buttons">{barButtons}</div>}
-      </ActionBar>
+      {barButtons && (met || duel) && (
+        <ActionBar className="plan-bar" phoneOnly label="Your plan">
+          <div className="plan-bar-buttons">{barButtons}</div>
+        </ActionBar>
+      )}
 
 
       <Section id="numbers" title="See the numbers" sub={`Your plan compared with the ${cbo.projShort}, which assumes ${cbo.projAssumes.replace(/^assuming /, '')}.`}>

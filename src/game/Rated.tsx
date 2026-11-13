@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { OPTIONS_DATA } from '../lib/planData';
 import { MULT } from '../lib/plan';
 import { TWISTS } from '../lib/twists';
@@ -14,7 +15,7 @@ const YEARS = 10;
 // out. It opens in place, so the player never leaves the screen to check the fine print.
 
 interface Src { title: string; url: string }
-interface Method { title: string; method: ReactNode; sources: Src[]; leaves: ReactNode }
+interface Method { title: string; lead?: string; method: ReactNode; sources: Src[]; leaves: ReactNode }
 
 const principle = (id: string): Src => {
   const p = OPTIONS_DATA.principles.find((x) => x.id === id)!;
@@ -64,6 +65,7 @@ const methods = () => ({
   },
   ...Object.fromEntries(Object.values(TWISTS).map((t) => [t!.id, {
     title: t!.id === 'rates' ? 'How the rate shock works' : 'How the recession works',
+    lead: t!.line,
     method: <>{t!.method}</>,
     sources: t!.sources.map((id) => SOURCE_BY_ID[id]).filter(Boolean).map((x) => ({ title: `${x.publisher}, ${x.title}`, url: x.url })),
     leaves: <>{t!.leaves} It’s a test of the plan, not a forecast; the goal and the stars are judged with the twist in place for everyone on this desk, friends’ challenges and duels included.</>,
@@ -73,18 +75,67 @@ export type MethodId = keyof ReturnType<typeof methods>;
 let cache: ReturnType<typeof methods> | null = null;
 export const methodOf = (id: MethodId): Method => (cache ??= methods())[id];
 
+function Body({ m }: { m: Method }) {
+  return (
+    <>
+      {m.lead && <p className="rated-lead">{m.lead}</p>}
+      <p><span className="rated-k">Method</span> {m.method}</p>
+      <p><span className="rated-k">Leaves out</span> {m.leaves}</p>
+      <p className="rated-dyn"><span className="rated-k">Estimates</span> {DYNAMIC_NOTE}</p>
+      <p className="rated-src"><span className="rated-k">Sources</span> {m.sources.map((s, i) => <span key={s.url}>{i > 0 && '; '}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></span>)}</p>
+    </>
+  );
+}
+
+/**
+ * The scoreboard's version: a small "i" next to a gauge's name. It opens the same method as a
+ * sheet over the page (Escape, the close button or a tap outside closes it, and focus goes back to
+ * the "i"), so the gauge itself carries no extra words.
+ */
+function RatedIcon({ id, label }: { id: MethodId; label: string }) {
+  const m = methodOf(id);
+  const [open, setOpen] = useState(false);
+  const btn = useRef<HTMLButtonElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  const uid = useId();
+  useEffect(() => {
+    if (!open) return;
+    sheet.current?.focus();
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('keydown', key); btn.current?.focus(); };
+  }, [open]);
+  return (
+    <>
+      <button ref={btn} type="button" className="rated-i" data-rated={id} aria-label={label} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="10" cy="6.2" r="1.15" fill="currentColor" /><path d="M10 9v5.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+      </button>
+      {open && createPortal(
+        <div className="rated-scrim" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+          <div ref={sheet} className="rated-sheet rated" data-rated={id} role="dialog" aria-modal="true" aria-labelledby={uid} tabIndex={-1}>
+            <div className="rated-sheet-head">
+              <strong className="rated-title" id={uid}>{m.title}</strong>
+              <button type="button" className="icon-btn rated-close" aria-label="Close" onClick={() => setOpen(false)}>×</button>
+            </div>
+            <div className="rated-body"><Body m={m} /></div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 /** A "How this is rated" link that opens the method, its sources, and what it leaves out. */
-export function Rated({ id, label = 'How this is rated' }: { id: MethodId; label?: string }) {
+export function Rated({ id, label = 'How this is rated', icon = false }: { id: MethodId; label?: string; icon?: boolean }) {
+  if (icon) return <RatedIcon id={id} label={label} />;
   const m = methodOf(id);
   return (
     <details className="rated" data-rated={id}>
       <summary>{label}</summary>
       <div className="rated-body">
         <strong className="rated-title">{m.title}</strong>
-        <p><span className="rated-k">Method</span> {m.method}</p>
-        <p><span className="rated-k">Leaves out</span> {m.leaves}</p>
-        <p className="rated-dyn"><span className="rated-k">Estimates</span> {DYNAMIC_NOTE}</p>
-        <p className="rated-src"><span className="rated-k">Sources</span> {m.sources.map((s, i) => <span key={s.url}>{i > 0 && '; '}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></span>)}</p>
+        <Body m={m} />
       </div>
     </details>
   );

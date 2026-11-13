@@ -1,7 +1,9 @@
 import { lower } from '../lib/format';
 import { type ReactNode, useState } from 'react';
-import { Stars } from '../components/game';
-import { assess, CTX } from '../lib/assess';
+import { LeverIcon, Stars } from '../components/game';
+import { Carousel } from '../components/Carousel';
+import { money } from '../lib/format';
+import { assess, baselineFor, CTX, LAST_FY } from '../lib/assess';
 import { type Goal } from '../lib/plan';
 import { PRESETS } from '../lib/planData';
 import { LEVERS, type Levers, ZERO } from '../lib/sandbox';
@@ -75,30 +77,72 @@ function reaches(ids: string[], lv: Levers) {
 
 interface Props { goal: Goal; current: { ids: string[]; lv: Levers; gradual: boolean }; canLoad: boolean; onLoad: (p: { ids: string[]; lv: Levers; gradual: boolean }) => void }
 
+const FLIP = <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+const cut = (v: number) => (Math.abs(v) < 0.5e9 ? '$0' : `${v > 0 ? '−' : '+'}${money(Math.abs(v))}`);
+
+/**
+ * A plan idea as a combo card: several policy cards played together. The front shows the hand
+ * (fanned), the score, and what it does to the deficit and to debt held by the public in the
+ * last projection year; the back has the idea, every card in it, and who pays.
+ */
 function IdeaCard({ goal, plan, current, canLoad, onLoad, title, by, children }: Omit<Props, 'goal'> & { goal: Goal; plan: { id: string; ids: string[]; lv: Levers; gradual: boolean }; title: string; by?: ReactNode; children: ReactNode }) {
+  const [back, setBack] = useState(false);
   const a = assess(goal, plan.ids, plan.lv, plan.gradual);
+  const base = baselineFor(goal).at(-1)!;
   const levers = LEVERS.filter((l) => plan.lv[l.id] !== 0);
   const flags = reaches(plan.ids, plan.lv);
   const loaded = same(current, plan);
+  const hand = plan.ids.map((id) => CTX.options.find((x) => x.id === id)!).filter(Boolean);
+  const fan = hand.slice(0, 5);
+  const count = hand.length + levers.length;
+  const load = canLoad
+    ? <button type="button" className={'ccard-load' + (loaded ? ' on' : '')} disabled={loaded} onClick={() => onLoad(plan)}>{loaded ? '✓ On your desk' : 'Play this plan'}</button>
+    : <button type="button" className="ccard-load" disabled>Meet the goal once to play plans</button>;
   return (
-    <article className="idea" data-idea={plan.id} data-met={a.met}>
-      <div className="idea-head">
-        <h3 className="idea-title">{title}</h3>
-        {by}
-      </div>
-      {children}
-      <ul className="idea-chips" aria-label="What it does">
-        {plan.ids.map((id) => { const o = CTX.options.find((x) => x.id === id)!; return <li key={id} data-side={o.side}><span className="rcard-kind" data-side={o.side}>{o.side === 'revenue' ? 'Tax' : 'Cut'}</span>{cardName(id)}</li>; })}
-        {levers.map((l) => <li key={l.id} data-side={l.id === 'revenues' ? 'revenue' : 'spending'} data-lever><span className="rcard-kind" data-side={l.id === 'revenues' ? 'revenue' : 'spending'}>All</span>{l.label} {plan.lv[l.id] > 0 ? '+' : '−'}{Math.abs(plan.lv[l.id])}%</li>)}
-      </ul>
-      <dl className="idea-score">
-        <div><dt>Score</dt><dd><Stars n={a.ev.stars} size="sm" label={`${a.ev.stars} of 3 stars`} /> {a.met ? 'Goal met' : `Closes ${Math.floor(a.progress * 100)}% of the gap`}</dd></div>
-        <div><dt>Economy</dt><dd>{a.econ.rating[0].toUpperCase() + a.econ.rating.slice(1)}</dd></div>
-        <div><dt>Who pays</dt><dd>{splitLabel(a)}</dd></div>
-      </dl>
-      <div className="idea-foot">
-        <span className="idea-flags">{flags.length ? flags.map((f) => <span key={f} className="pill pill-warn">{f}</span>) : <span className="pill pill-ok">Keeps the game’s ground rules</span>}</span>
-        {canLoad && <button type="button" className={'btn' + (loaded ? '' : ' btn-primary')} disabled={loaded} onClick={() => onLoad(plan)}>{loaded ? 'On your desk' : 'Load this plan'}</button>}
+    <article className="ccard idea" data-idea={plan.id} data-met={a.met} data-flipped={back || undefined}>
+      <div className="pcard-inner">
+        <div className="pcard-face pcard-front" inert={back || undefined}>
+          <div className="pcard-top">
+            <span className="pcard-kind">Plan · {count} card{count === 1 ? '' : 's'}</span>
+            <button type="button" className="pcard-flip" onClick={() => setBack(true)} aria-label={`Flip: what’s in ${title}`} title="Flip for details">{FLIP}</button>
+          </div>
+          <div className="pcard-art ccard-fan" aria-hidden="true">
+            {fan.map((o, k) => (
+              <span key={o.id} className="ccard-mini" data-side={o.side} data-cost={o.savings10 < 0 || undefined} style={{ ['--k' as string]: k - (fan.length - 1) / 2 }}><LeverIcon lever={o.lever} size={20} /></span>
+            ))}
+            {hand.length > fan.length && <span className="ccard-more-n">+{hand.length - fan.length}</span>}
+          </div>
+          <h3 className="pcard-title idea-title">{title}</h3>
+          <div className="ccard-score">
+            <Stars n={a.ev.stars} size="sm" label={`${a.ev.stars} of 3 stars`} />
+            <span className="pill">{a.met ? 'Goal met' : `${Math.floor(a.progress * 100)}% of the goal`}</span>
+            <span className="pill">{a.econ.rating[0].toUpperCase() + a.econ.rating.slice(1)}</span>
+          </div>
+          <dl className="ccard-nums" aria-label={`In FY${LAST_FY}, compared with the projection`}>
+            <div><dt>Deficit <span>FY{LAST_FY}</span></dt><dd className="num">{cut(base.deficit - a.last.deficit)}</dd></div>
+            <div><dt title="Debt held by the public">Public debt <span>FY{LAST_FY}</span></dt><dd className="num">{cut(base.debt - a.last.debt)}</dd></div>
+          </dl>
+          {load}
+        </div>
+        <div className="pcard-face pcard-back" inert={!back || undefined}>
+          <div className="pcard-top">
+            <span className="pcard-kind">Plan · {count} card{count === 1 ? '' : 's'}</span>
+            <button type="button" className="pcard-flip" onClick={() => setBack(false)} aria-label={`Flip back: ${title}`} title="Flip back">{FLIP}</button>
+          </div>
+          <div className="ccard-more">
+            <h4 className="pcard-back-title">{title}</h4>
+            {by}
+            {children}
+            <ul className="idea-chips" aria-label="The cards in it">
+              {hand.map((o) => <li key={o.id} data-side={o.side}><span className="rcard-kind" data-side={o.side}>{o.savings10 < 0 ? 'Adds' : o.side === 'revenue' ? 'Tax' : 'Cut'}</span>{cardName(o.id)}</li>)}
+              {levers.map((l) => <li key={l.id} data-side={l.id === 'revenues' ? 'revenue' : 'spending'} data-lever><span className="rcard-kind" data-side={l.id === 'revenues' ? 'revenue' : 'spending'}>All</span>{l.label} {plan.lv[l.id] > 0 ? '+' : '−'}{Math.abs(plan.lv[l.id])}%</li>)}
+            </ul>
+            <p><strong>Who pays:</strong> {splitLabel(a)}.</p>
+            <p className="idea-flags">{flags.length ? flags.map((f) => <span key={f} className="pill pill-warn">{f}</span>) : <span className="pill pill-ok">Keeps the game’s ground rules</span>}</p>
+            <p className="muted">Compared with the projection in FY{LAST_FY}: minus is less borrowing that year and less debt.</p>
+          </div>
+          {load}
+        </div>
       </div>
     </article>
   );
@@ -118,11 +162,12 @@ export function PlanIdeas({ goal, current, canLoad, onLoad }: Props) {
       </div>
       <p className="small muted">
         {tab === 'ideas'
-          ? 'Built for this goal and scored the same way as your plan, each around one idea. They’re ideas, not advice: each says who pays and what it cuts.'
-          : 'Real plans from members of Congress, each with the game’s closest version in cards. The cards only approximate a real plan, and on this desk they may fall short of the goal.'}
-        {' '}{canLoad ? 'Load one, then change any card or slider.' : 'Meet the goal once on your own, and you can load any of these with one tap.'}
+          ? 'Combo cards built for this goal and scored like yours: ideas, not advice. Flip one to see who pays.'
+          : 'Real plans from members of Congress, in the game’s closest cards; they may fall short of this goal.'}
+        {canLoad ? ' Play one, then change any card.' : ''}
       </p>
       <div className="ideas-list" id="ideas-panel" role="tabpanel" aria-labelledby={'ideas-tab-' + tab}>
+        <Carousel label="plan cards" count={tab === 'ideas' ? IDEAS[goal].length : congress.length}>
         {tab === 'ideas'
           ? IDEAS[goal].map((x) => (
             <IdeaCard key={x.id} goal={goal} plan={{ id: x.id, ids: x.ids, lv: full(x.lv), gradual: x.gradual }} current={current} canLoad={canLoad} onLoad={onLoad} title={x.name}>
@@ -139,6 +184,7 @@ export function PlanIdeas({ goal, current, canLoad, onLoad }: Props) {
               </IdeaCard>
             );
           })}
+        </Carousel>
       </div>
     </section>
   );
