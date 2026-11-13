@@ -112,6 +112,15 @@ budget adviser.
   with a link to show all 20; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
   star, never which card to play; when the cards alone can't reach the goal, the across-the-board
   changes sit right under them.
+- **Tap-to-define** (`src/components/Terms.tsx`, `src/data/curated/glossary.json`): `<Terms>` wraps
+  mission text, game explanations, takeaways, vote context, the desk's card details and the feed's
+  bill summaries, and turns the first use of each glossary term in a block (by the phrases in the
+  term's `aka` list) into a tappable `<Term>`. It rewrites only plain text inside ordinary elements,
+  never links, buttons, headings or other components, and plain words like "deficit" are left
+  alone. A term opens as a toggletip: tap to open, tap elsewhere or press Escape to close; keyboard
+  focus alone doesn't open it, and the definition goes into a live region so screen readers read
+  it. Every definition names its source (GAO's budget glossary, Congress.gov's legislative glossary,
+  CRS, Treasury, SSA, IRS or CBO).
 - **How this is rated** (`src/game/Rated.tsx`): every number the game rates on its own opens its
   method in place: the desk's economy gauge and mission 1.7 (gentle, moderate, steep), mission
   1.6's ripple ranking, the interest saved on the player's card, and the rules of thumb in missions

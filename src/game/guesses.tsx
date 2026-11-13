@@ -6,6 +6,7 @@ import type { Done } from './minigame';
 import { useJourney } from './state';
 import { plain, SamSays } from './UncleSam';
 import { QUIZ_LINES } from './script';
+import { Terms } from '../components/Terms';
 
 // Guesses made by hand instead of by picking: drag a slider, split a bar, size the bars, sort
 // the cards. Each is locked in, then the real answer appears beside the guess with how close it
@@ -64,7 +65,7 @@ function GuessFrame({ quiz, kind, locked, grade, canLock = true, lockLabel, onLo
           : (
             <div className="quiz-feedback" data-ok={good} role="status">
               <strong>{grade === 'spot' ? 'Spot on!' : grade === 'close' ? 'Close!' : 'Not this time.'}</strong>{' '}
-              {verdict} {quiz.explain}
+              {verdict} <Terms inline>{quiz.explain}</Terms>
             </div>
           )}
       </div>

@@ -16,6 +16,7 @@ import { PostArt, type ART_GLYPH } from './art';
 import { FollowButton, MovedNote } from './follow';
 import { Seal } from '../Seal';
 import { diffKey, type IconId } from '../levels';
+import { Terms } from '../../components/Terms';
 
 // One card per kind of post. Every card has the same head: what it is, its official source and
 // date, and Save. Then its body, and its own one action: vote, swipe, check, start, or read more.
@@ -242,7 +243,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
       <div className="fc-tabpanel" role="tabpanel" id={`${uid}-p`} aria-labelledby={`${uid}-${tab === 'does' ? 'a' : 'b'}`}>
         {tab === 'does' ? (
           <>
-            <div className={'fc-tldr' + (open ? ' is-open' : '')}>{bill.summary.split('\n').map((p, i) => <p key={i}>{p}</p>)}</div>
+            <div className={'fc-tldr' + (open ? ' is-open' : '')}><Terms>{bill.summary.split('\n').map((p, i) => <p key={i}>{p}</p>)}</Terms></div>
             <button type="button" className="fc-more" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Read summary'}</button>
             {open && <p className="fc-fine">Summary by the Congressional Research Service ({bill.summaryStage.toLowerCase()} version). {bill.summaryCut && <a href={bill.url} target="_blank" rel="noopener noreferrer">The rest is on Congress.gov.</a>}</p>}
           </>
@@ -438,7 +439,7 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
         {POLL_TABS.map(([k, label]) => <button key={k} type="button" role="tab" id={`${uid}-${k}`} aria-selected={tab === k} aria-controls={`${uid}-p`} onClick={() => setTab(k)}>{label}</button>)}
       </div>
       <div className="fc-tabpanel" role="tabpanel" id={`${uid}-p`} aria-labelledby={`${uid}-${tab}`}>
-        {tab === 'does' ? <p>{o.summary}</p>
+        {tab === 'does' ? <p><Terms inline>{o.summary}</Terms></p>
           : tab === 'pays' ? <p>{o.affects}.</p>
           : <p>{o.benefits}. And with less borrowing, less of the budget goes to interest later.</p>}
       </div>
@@ -477,7 +478,7 @@ function CheckCard({ item }: { item: Extract<FeedItem, { kind: 'check' }> }) {
             onClick={() => { setPick(i); buzz(i === q.correct ? 'right' : 'wrong'); j.feedCheck(item.id, i === q.correct); }}>{c}</button>
         ))}
       </div>
-      {pick != null && <div className="fc-explain" role="status"><strong>{pick === q.correct ? 'Right.' : 'Not quite.'}</strong> {q.explain}</div>}
+      {pick != null && <div className="fc-explain" role="status"><strong>{pick === q.correct ? 'Right.' : 'Not quite.'}</strong> <Terms inline>{q.explain}</Terms></div>}
       {pick == null && done && <p className="fc-fine">You’ve answered this one before; try it again.</p>}
       <a className="fc-link" href={'#' + item.stop.id}>Play {missionShort(item.stop)}: {item.stop.title} <Icon d={ICON.chevron} size={14} /></a>
     </>

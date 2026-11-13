@@ -6,6 +6,7 @@ import { EstimateGuess, ROUND, SizesCard, SortCard, SplitCard } from './guesses'
 import { useJourney } from './state';
 import { plain, SamSays } from './UncleSam';
 import type { Mood } from './voice';
+import { Terms } from '../components/Terms';
 
 // Each lesson mission is one scored game: a few short rounds worth up to 100 points each, a
 // running score and stars, and a final tally that sets the mission's stars. Rounds reuse the
@@ -78,7 +79,7 @@ export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: stri
           <div className="game-over-title">{game.title}</div>
           <Stars n={best.stars} size="lg" label={`Best: ${best.stars} of 3 stars`} />
           <strong className="game-over-score num">{best.best} <span className="small muted">of {max} points, your best</span></strong>
-          {takeaways && <><div className="stat-label">What the game showed</div><ul className="takeaways">{takeaways.map((t) => <li key={t}>{t}</li>)}</ul></>}
+          {takeaways && <><div className="stat-label">What the game showed</div><ul className="takeaways"><Terms>{takeaways.map((t) => <li key={t}>{t}</li>)}</Terms></ul></>}
           <div className="sim-actions"><button type="button" className="btn btn-primary game-again" onClick={again}>Play again</button></div>
         </div>
       </div>
@@ -115,7 +116,7 @@ export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: stri
           <div className="game-over-title">Final score</div>
           <Stars n={live} size="lg" />
           <strong className="game-over-score num">{total} <span className="small muted">of {max} points{best && best.best > total ? ` · your best: ${best.best}` : best && best.plays > 1 && best.best === total ? ' · a new best' : ''}</span></strong>
-          {takeaways && <><div className="stat-label">What the game showed</div><ul className="takeaways">{takeaways.map((t) => <li key={t}>{t}</li>)}</ul></>}
+          {takeaways && <><div className="stat-label">What the game showed</div><ul className="takeaways"><Terms>{takeaways.map((t) => <li key={t}>{t}</li>)}</Terms></ul></>}
           <div className="sim-actions"><button type="button" className="btn game-again" onClick={again}>Play again</button></div>
         </div>
       )}
@@ -178,7 +179,7 @@ function ChoiceRound({ quiz, intro, done }: { quiz: Quiz; intro: ReactNode; done
         {(finished || wrong.length > 0) && (
           <div className="quiz-feedback" data-ok={right} role="status">
             <strong>{right ? 'Correct.' : revealed ? `The answer is ${LETTERS[quiz.correct]}.` : 'Not quite.'}</strong>{' '}
-            {finished ? quiz.explain : 'One more try, for half points.'}
+            {finished ? <Terms inline>{quiz.explain}</Terms> : 'One more try, for half points.'}
           </div>
         )}
       </div>

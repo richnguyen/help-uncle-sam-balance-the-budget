@@ -37,6 +37,7 @@ import { load, save } from '../lib/storage';
 import { activeDuel, assessDuel, DUEL_LEVEL, type Duel, rematchFor, resultHash, saveDuel, setActiveDuel, setRematch, splitLabel } from '../game/duel';
 import { DuelStart, useDuelInvite } from '../game/Duel';
 import { DUEL_LINES } from '../game/script';
+import { Terms } from '../components/Terms';
 
 type Desk = DeskLevel;
 
@@ -456,7 +457,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                   <CongressLink id={o.id} topic={o.name} />
                   <details className="pcard-more">
                     <summary>What it does</summary>
-                    <p>{o.summary}</p>
+                    <p><Terms inline>{o.summary}</Terms></p>
                     <p><strong>Who pays:</strong> {o.affects}.</p>
                     <p><strong>Who benefits:</strong> {o.benefits}.</p>
                     <p><strong>Economic effect:</strong> {o.econ.why}</p>

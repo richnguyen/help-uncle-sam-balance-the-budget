@@ -250,6 +250,10 @@ export interface GlossaryTerm {
   id: string;
   term: string;
   def: string;
+  /** Where the definition comes from (an id in the sources lists). */
+  source?: string;
+  /** Phrases that are linked to this term automatically wherever <Terms> wraps text. */
+  aka?: string[];
 }
 
 export interface TaxParams {

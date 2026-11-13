@@ -3387,3 +3387,11 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .rated-body p { margin: 8px 0 0; line-height: 1.45; }
 .rated-title { display: block; color: var(--ink); }
 .rated-k { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); }
+
+/* Glossary terms: a dotted underline that reads as tappable, with room for a thumb. */
+.term-wrap { display: inline; }
+.term { color: inherit; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; cursor: pointer; padding: 2px 0; margin: -2px 0; border-radius: 3px; }
+.term[aria-expanded="true"] { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.term:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.term-pop { max-width: min(320px, calc(100vw - 16px)); }
+.term-src { display: block; margin-top: 6px; color: inherit; opacity: 0.8; font-size: 0.75rem; }
