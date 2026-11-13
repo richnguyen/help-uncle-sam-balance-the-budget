@@ -24,6 +24,8 @@ export interface PolicyOption {
   lever: LeverId;
   savings10: number; // $ billions over ten years
   affects: string;
+  /** Who gains from it, beyond the lower borrowing every saving brings (our summary of CBO's case for it). */
+  benefits: string;
   summary: string;
   obbbaNote?: string;
   source: { title: string; url: string };

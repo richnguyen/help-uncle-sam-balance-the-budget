@@ -10,6 +10,7 @@ import { BridgeSim, Dial, PieSim, Ripple, WaitSim, waitShares } from './sims';
 import type { Done } from './minigame';
 import { OrderRound } from './rounds';
 import type { SortGuess } from './guesses';
+import { Rated } from './Rated';
 
 // The six concept missions that come before each campaign's budget desk: how a policy hits the
 // economy, how fast is too fast, who a change reaches, what grows the economy, why public
@@ -59,6 +60,7 @@ function SameSavings() {
         <span className="sim-scale" aria-hidden="true"><span>CBO’s low estimate</span><span>CBO’s high estimate</span></span>
       </label>
       <p className="small muted">The ripple’s area grows with the effect. The dashed ring is dollar for dollar: inside it, the economy shrinks by less than the money saved.</p>
+      <Rated id="ripple" />
     </div>
   );
 }
@@ -114,6 +116,7 @@ export function PhaseDemo({ game }: { game?: { done: Done } } = {}) {
         <figcaption className="small"><strong>Steepest year: {pct(peak, 1)} of GDP, {r}.</strong> Each bar is how much more the plan saves that year than the year before: the new squeeze the economy feels.</figcaption>
       </figure>
       {game && !locked && <button type="button" className="btn btn-primary estimate-lock sim-lock" onClick={lock}>Lock in this plan</button>}
+      <Rated id="steep" />
     </div>
   );
 }

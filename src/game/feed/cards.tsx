@@ -412,11 +412,13 @@ function LawCard({ item }: { item: Extract<FeedItem, { kind: 'law' }> }) {
 const MAX_OPTION = Math.max(...OPTIONS_DATA.options.map((o) => Math.abs(Number(o.savings10))));
 const MAX_LAW = Math.max(...laws.map((l) => Math.abs(l.deficitEffect)));
 
+const POLL_TABS = [['does', 'What it does'], ['pays', 'Who pays'], ['gains', 'Who benefits']] as const;
+
 function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
   const o = item.option;
   const v = useVotes();
   const buzz = useHaptics();
-  const [tab, setTab] = useState<'for' | 'against'>('for');
+  const [tab, setTab] = useState<'does' | 'pays' | 'gains'>('does');
   const uid = useId();
   const mine = v.mine.options[o.id];
   const t = v.options[o.id] ?? { support: 0, oppose: 0 };
@@ -425,22 +427,22 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
     <>
       <Head item={item} />
       <PostArt tone="polls" icon={o.side === 'revenue' ? 'paycheck' : 'bills'} big={moneyWords(Math.abs(o.savings10) * 1e9, 2)} small={`${saves ? (o.side === 'revenue' ? 'raised' : 'saved') : 'cost'} over 10 years, by CBO’s estimate`} />
-      <p className="fc-ask fc-ask-top">Would you include this in a plan to shrink the deficit?</p>
+      <p className="fc-ask fc-ask-top">Would you include this in your plan?</p>
       <h3 className="fc-title">{o.name}</h3>
+      <p className="fc-fact">Fact: deficits would be about {moneyWords(Math.abs(o.savings10) * 1e9, 2)} {saves ? 'smaller' : 'larger'} over ten years, by CBO’s estimate.</p>
       <div className="fc-size">
         <span className="fc-size-bar" role="img" aria-label={`Size among CBO’s options: ${Math.round((Math.abs(o.savings10) / MAX_OPTION) * 100)}% of the biggest`}><span style={{ width: `${Math.max(3, (Math.abs(o.savings10) / MAX_OPTION) * 100)}%` }} /></span>
         <span className="fc-size-k">compared with the biggest of CBO’s options in the game</span>
       </div>
-      <div className="fc-tabs" role="tablist" aria-label="Arguments">
-        <button type="button" role="tab" id={`${uid}-a`} aria-selected={tab === 'for'} aria-controls={`${uid}-p`} onClick={() => setTab('for')}>Arguments for</button>
-        <button type="button" role="tab" id={`${uid}-b`} aria-selected={tab === 'against'} aria-controls={`${uid}-p`} onClick={() => setTab('against')}>Arguments against</button>
+      <div className="fc-tabs fc-tabs-3" role="tablist" aria-label="About this option">
+        {POLL_TABS.map(([k, label]) => <button key={k} type="button" role="tab" id={`${uid}-${k}`} aria-selected={tab === k} aria-controls={`${uid}-p`} onClick={() => setTab(k)}>{label}</button>)}
       </div>
-      <div className="fc-tabpanel" role="tabpanel" id={`${uid}-p`} aria-labelledby={`${uid}-${tab === 'for' ? 'a' : 'b'}`}>
-        {tab === 'for'
-          ? <p>{saves ? `It would ${o.side === 'revenue' ? 'raise' : 'save'} about ${moneyWords(o.savings10 * 1e9, 2)} over ten years, by CBO’s estimate, toward closing the gap. ` : ''}{o.summary}</p>
-          : <p>Someone bears the cost. Who would feel it, by CBO’s account: {o.affects.charAt(0).toLowerCase() + o.affects.slice(1)}.</p>}
+      <div className="fc-tabpanel" role="tabpanel" id={`${uid}-p`} aria-labelledby={`${uid}-${tab}`}>
+        {tab === 'does' ? <p>{o.summary}</p>
+          : tab === 'pays' ? <p>{o.affects}.</p>
+          : <p>{o.benefits}. And with less borrowing, less of the budget goes to interest later.</p>}
       </div>
-      <div className="fc-vote" role="group" aria-label="Would you include this in a plan?">
+      <div className="fc-vote" role="group" aria-label="Would you include this in your plan?">
         <div className="fc-choices fc-choices-2">
           <button type="button" className="fc-choice" aria-pressed={mine === 1} onClick={() => { buzz('vote'); v.voteOption(o.id, 1); }}>Include it</button>
           <button type="button" className="fc-choice" aria-pressed={mine === -1} onClick={() => { buzz('vote'); v.voteOption(o.id, -1); }}>Leave it out</button>

@@ -28,6 +28,7 @@ import { CHALLENGE_LINES } from '../game/script';
 import { ShareButton } from '../game/ShareButton';
 import { countStep } from '../lib/backend';
 import { encodePlan } from '../game/plans';
+import { Rated } from '../game/Rated';
 import { ballotFrom, compare, useMyName } from '../game/plans';
 import { useShareLink } from '../game/shortlinks';
 import { activeRoom, type RoomRef, setActiveRoom } from '../game/rooms';
@@ -140,6 +141,24 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     for (const o of ctx.options) m[o.id] = short0 > 0 ? (short0 - shortfall(goal, run([o.id], ZERO), ctx.startRatio)) / short0 : 0;
     return m;
   }, [goal, gradual, ctx]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Mission 1.9 opens on a starter deck: the three biggest tax cards and the three biggest
+  // spending cuts, topped up until they can reach the goal together. The full deck is a tap away
+  // (and opens on its own from 2.7). Worked out once, so the cards don't shuffle as the plan changes.
+  const starterRef = useRef<Set<string> | null | undefined>(undefined);
+  if (starterRef.current === undefined) {
+    if (!desk?.hint) starterRef.current = null;
+    else {
+      const big = (side: 'revenue' | 'spending') => ctx.options.filter((o) => o.side === side && (shareOf[o.id] ?? 0) > 0).sort((a, b) => (shareOf[b.id] ?? 0) - (shareOf[a.id] ?? 0));
+      const rev = big('revenue'), sp = big('spending');
+      const pick = [...rev.slice(0, 3), ...sp.slice(0, 3)].map((o) => o.id);
+      const more = [...rev.slice(3), ...sp.slice(3)].sort((a, b) => (shareOf[b.id] ?? 0) - (shareOf[a.id] ?? 0));
+      while (more.length && !goalMet(goal, run(pick, ZERO), ctx.startRatio)) pick.push(more.shift()!.id);
+      starterRef.current = new Set(pick);
+    }
+  }
+  const starter = starterRef.current;
+  const [showAll, setShowAll] = useState(false);
+  const visible = (id: string) => !starter || showAll || starter.has(id) || ids.includes(id);
   const mine = useMemo(() => run(ids, lv), [ids, lv, gradual, ctx]); // eslint-disable-line react-hooks/exhaustive-deps
   const cardsOnly = useMemo(() => run(ids, ZERO), [ids, gradual, ctx]); // eslint-disable-line react-hooks/exhaustive-deps
   const last = mine.at(-1)!;
@@ -295,7 +314,9 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     }
     const remaining = Math.max(0, 1 - prog);
     const crosses = (o: (typeof ctx.options)[number]) => o.econ.tags.some((t) => t === 'retirees' || t === 'lowIncome' || t === 'investment');
-    const left = ctx.options.filter((o) => !ids.includes(o.id) && (shareOf[o.id] ?? 0) > 0);
+    // From the cards on the table (the starter deck on 1.9), or the whole deck once those run out.
+    const open = ctx.options.filter((o) => !ids.includes(o.id) && (shareOf[o.id] ?? 0) > 0);
+    const left = open.some((o) => visible(o.id)) ? open.filter((o) => visible(o.id)) : (setShowAll(true), open);
     const pool = left.some((o) => !crosses(o)) ? left.filter((o) => !crosses(o)) : left;
     const harm = (o: (typeof ctx.options)[number]) => Math.max(0.01, score(o.econ)) * o.savings10;
     const finisher = pool.filter((o) => (shareOf[o.id] ?? 0) >= remaining * 1.02).sort((a, b) => harm(a) - harm(b))[0];
@@ -318,6 +339,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const neededText = goal === 'stabilize' ? `${money(stillNeeded)} less debt by FY${lastFY}` : `${money(stillNeeded)} less borrowing in FY${lastFY}`;
 
   const deck = ctx.options
+    .filter((o) => visible(o.id))
     .filter((o) => filter === 'all' || o.side === filter)
     .sort((a, b) => (sort === 'impact' ? (shareOf[b.id] ?? 0) - (shareOf[a.id] ?? 0) : score(a.econ) - score(b.econ)));
 
@@ -386,6 +408,13 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const deckTools = (
     <div className="deck-head">
       <h2 className="section-title" id="deck-t">Your policy cards</h2>
+      {starter && (
+        <p className="deck-starter small">
+          {showAll
+            ? <>All {ctx.options.length} cards. <button type="button" className="link-btn" onClick={() => setShowAll(false)}>Back to the starter deck</button></>
+            : <><strong>A starter deck:</strong> {starter.size} cards, taxes and cuts, that can reach the goal together. <button type="button" className="link-btn" onClick={() => setShowAll(true)}>Show all {ctx.options.length} cards</button></>}
+        </p>
+      )}
       <div className="deck-tools">
         <Seg<Filter> label="Show" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'All' }, { value: 'revenue', label: 'Taxes' }, { value: 'spending', label: 'Spending cuts' }]} />
         <Seg<Sort> label="Sort" value={sort} onChange={setSort} options={[{ value: 'impact', label: 'Biggest impact' }, { value: 'gentle', label: 'Gentlest first' }]} />
@@ -428,7 +457,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                   <details className="pcard-more">
                     <summary>What it does</summary>
                     <p>{o.summary}</p>
-                    <p><strong>Who it affects:</strong> {o.affects}.</p>
+                    <p><strong>Who pays:</strong> {o.affects}.</p>
+                    <p><strong>Who benefits:</strong> {o.benefits}.</p>
                     <p><strong>Economic effect:</strong> {o.econ.why}</p>
                     {o.obbbaNote && <p className="muted">{o.obbbaNote}</p>}
                     <p><a href={o.source.url} target="_blank" rel="noreferrer">CBO’s estimate: {money(o.savings10 * 1e9)} over 10 years</a></p>
@@ -565,6 +595,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
               {econBlock(true)}
               {splitBlock(true)}
             </div>
+            <div className="tb-rated"><Rated id="steep" label="How “hit to the economy” is rated" /></div>
           </section>
           {challenge && theirs && mineNow && h2h && (
             <section className="card challenge-live" id="vs" aria-live="polite">

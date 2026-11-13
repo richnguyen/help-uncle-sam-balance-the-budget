@@ -14,6 +14,7 @@
    "lever": "revenues",
    "savings10": 1185,
    "affects": "Nearly every household that owes federal income tax",
+   "benefits": "People who rely on federal programs, which keep their funding without cuts",
    "summary": "Each income tax bracket rate would go up by 1 percentage point starting in 2025. Because it reaches every bracket, it raises a large amount of money.",
    "obbbaNote": "CBO assumed the 2017 tax law's lower rates and brackets would expire after 2025. The One Big Beautiful Bill Act made them permanent, so this estimate is likely outdated.",
    "source": {
@@ -30,6 +31,7 @@
    "lever": "revenues",
    "savings10": 136,
    "affects": "Corporate shareholders, and to a lesser degree workers",
+   "benefits": "People who rely on federal programs, which keep their funding without cuts",
    "summary": "The corporate income tax rate would rise from 21 percent to 22 percent starting in 2025.",
    "obbbaNote": "",
    "source": {
@@ -46,6 +48,7 @@
    "lever": "revenues",
    "savings10": 1427,
    "affects": "Workers who earn more than $250,000 a year, and their employers",
+   "benefits": "Social Security's trust fund, and the retirees and workers it pays",
    "summary": "Today, earnings above a yearly cap ($176,100 in 2025) are not subject to the Social Security tax. This option would also tax earnings above $250,000. The untaxed gap would shrink as the cap grows with wages and close around 2036.",
    "obbbaNote": "",
    "source": {
@@ -62,6 +65,7 @@
    "lever": "revenues",
    "savings10": 919,
    "affects": "Energy producers and users; households would pay through higher prices for energy and goods that take a lot of energy to make",
+   "benefits": "People exposed to pollution and climate damage, and makers of low-emission energy",
    "summary": "A tax of $25 per metric ton would apply to U.S. energy-related carbon dioxide emissions and to some other greenhouse gases from large factories, starting in 2025. It would raise money and reduce emissions.",
    "obbbaNote": "",
    "source": {
@@ -78,6 +82,7 @@
    "lever": "revenues",
    "savings10": 3380,
    "affects": "Consumers, through higher prices for most goods and services",
+   "benefits": "People who save and invest, since it taxes spending rather than income",
    "summary": "A 5 percent tax would be collected at each stage of production and sale, much like a national sales tax, starting in 2026. Most goods and services would be taxed.",
    "obbbaNote": "",
    "source": {
@@ -94,6 +99,7 @@
    "lever": "revenues",
    "savings10": 965,
    "affects": "Workers in costly employer health plans",
+   "benefits": "Workers whose employers shift pay from costly health plans into wages",
    "summary": "Health insurance paid through an employer is not taxed today. Starting in 2028, premiums and health account contributions above about $10,000 a year for single coverage or $24,400 for family coverage would be taxed as wages.",
    "obbbaNote": "",
    "source": {
@@ -110,6 +116,7 @@
    "lever": "revenues",
    "savings10": 1910,
    "affects": "Households that itemize, who are mostly higher-income",
+   "benefits": "People who rely on federal programs, without raising anyone's tax rate",
    "summary": "Itemized deductions, such as those for mortgage interest, state and local taxes, and charitable gifts, would cut a filer's tax by no more than 15 cents per dollar deducted. Today, people in higher tax brackets save more per dollar.",
    "obbbaNote": "The One Big Beautiful Bill Act made the 2017 law's deduction rules permanent, raised the state and local tax cap to $40,000 through 2029, and added a new limit for top-bracket filers, so this estimate is likely outdated.",
    "source": {
@@ -126,6 +133,7 @@
    "lever": "revenues",
    "savings10": 212,
    "affects": "Drivers, and businesses that ship goods by truck",
+   "benefits": "The Highway Trust Fund, and the roads and transit it pays for",
    "summary": "Federal taxes on gasoline (18.4 cents a gallon) and diesel (24.4 cents) have not changed since 1993. This option would raise both by 15 cents starting in 2025 and then adjust them for inflation each year.",
    "obbbaNote": "",
    "source": {
@@ -142,6 +150,7 @@
    "lever": "revenues",
    "savings10": 102,
    "affects": "People who buy alcoholic drinks",
+   "benefits": "People hurt by heavy drinking, including victims of drunk driving",
    "summary": "Beer, wine, and spirits would all be taxed at the same rate per unit of alcohol, about 25 cents per ounce, starting in 2025. The rate would then rise with inflation.",
    "obbbaNote": "",
    "source": {
@@ -158,6 +167,7 @@
    "lever": "revenues",
    "savings10": 13,
    "affects": "Investment fund managers, such as private equity and hedge fund partners",
+   "benefits": "Other taxpayers: fund managers' pay would be taxed like other wages",
    "summary": "Fund managers often receive a share of profits, called carried interest, that is taxed at lower capital gains rates. This option would tax it like wages, including self-employment tax, starting in 2025.",
    "obbbaNote": "",
    "source": {
@@ -174,6 +184,7 @@
    "lever": "medicare",
    "savings10": 489,
    "affects": "Private Medicare Advantage plans and, through them, their enrollees",
+   "benefits": "Taxpayers, and people in Medicare, whose Part B premiums follow Medicare's costs",
    "summary": "Medicare pays private Medicare Advantage plans based on county benchmarks tied to spending in traditional Medicare. This option would lower every benchmark by 10 percent starting in 2027.",
    "obbbaNote": "",
    "source": {
@@ -190,6 +201,7 @@
    "lever": "medicare",
    "savings10": 157,
    "affects": "Hospitals that run outpatient departments",
+   "benefits": "People in Medicare, whose copays at hospital clinics would shrink",
    "summary": "Medicare often pays more for the same service at a hospital outpatient department than at a doctor's office. Starting in 2026, Medicare would pay the lower office rate for most of those services.",
    "obbbaNote": "",
    "source": {
@@ -206,6 +218,7 @@
    "lever": "medicare",
    "savings10": 510,
    "affects": "People enrolled in Medicare Part B",
+   "benefits": "Taxpayers, who now cover about three-quarters of Part B's cost",
    "summary": "The basic Part B premium ($185 a month in 2025) covers about a quarter of the program's costs. It would rise by 2 percentage points of costs each year until it covered 35 percent in 2030.",
    "obbbaNote": "",
    "source": {
@@ -222,6 +235,7 @@
    "lever": "medicaid",
    "savings10": 893,
    "affects": "States, Medicaid enrollees, and health care providers",
+   "benefits": "Federal taxpayers, with steadier and more predictable federal costs",
    "summary": "The federal government now pays a set share of each state's Medicaid costs, with no fixed dollar limit. This option would cap federal payments per enrollee and let the cap grow only with inflation.",
    "obbbaNote": "The One Big Beautiful Bill Act cut projected federal Medicaid spending through other changes, such as work requirements and limits on provider taxes, so savings from caps would likely be smaller now.",
    "source": {
@@ -238,6 +252,7 @@
    "lever": "socialSecurity",
    "savings10": 95,
    "affects": "Future retirees born in 1964 or later",
+   "benefits": "Social Security's trust fund, which would last longer for everyone it pays",
    "summary": "The full retirement age is 67 for people born in 1960 or later. Starting in 2026 it would rise slowly to 70. People could still claim at 62, with a larger reduction. Savings are small in the first decade because the change phases in slowly.",
    "obbbaNote": "",
    "source": {
@@ -254,6 +269,7 @@
    "lever": "socialSecurity",
    "savings10": 278,
    "affects": "Social Security recipients, veterans, and others whose benefits rise with inflation",
+   "benefits": "Social Security's trust fund, which would last longer for everyone it pays",
    "summary": "Yearly cost-of-living increases would use the chained CPI, which accounts for shoppers switching between products and usually rises a little more slowly. The small yearly difference adds up over time.",
    "obbbaNote": "",
    "source": {
@@ -270,6 +286,7 @@
    "lever": "socialSecurity",
    "savings10": 48,
    "affects": "Future beneficiaries with high lifetime earnings",
+   "benefits": "Social Security's trust fund; lower earners' benefits stay as scheduled",
    "summary": "Starting in 2026, new beneficiaries in the top 30 percent of lifetime earnings would get lower benefits than currently scheduled. People already eligible for benefits would not be affected.",
    "obbbaNote": "",
    "source": {
@@ -286,6 +303,7 @@
    "lever": "defense",
    "savings10": 959,
    "affects": "Military personnel, defense contractors, and communities near bases",
+   "benefits": "Taxpayers, and whatever else the money would go to",
    "summary": "The Pentagon's budget would be reduced starting in fiscal year 2026. CBO estimates the military could have about 17 percent fewer active-duty troops by 2034.",
    "obbbaNote": "",
    "source": {
@@ -302,6 +320,7 @@
    "lever": "nondefense",
    "savings10": 339,
    "affects": "States and localities, and the roads, transit systems, and schools they fund",
+   "benefits": "Federal taxpayers; states would decide more of their own priorities",
    "summary": "Federal grants for highways, transit, and education would be cut by one-third. The education cuts would fall mostly on aid for schools serving low-income children and children with disabilities.",
    "obbbaNote": "",
    "source": {
@@ -318,6 +337,7 @@
    "lever": "otherMandatory",
    "savings10": 47,
    "affects": "Farmers who buy crop insurance, and the private companies that sell it",
+   "benefits": "Federal taxpayers",
    "summary": "The government pays about 60 percent of farmers' crop insurance premiums on average. This option would cut that to 40 percent and limit what insurers are paid for their costs and returns.",
    "obbbaNote": "The One Big Beautiful Bill Act raised crop insurance premium subsidies and some payments to insurers, so this estimate is likely outdated.",
    "source": {

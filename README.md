@@ -107,9 +107,17 @@ budget adviser.
   top while the player scrolls through policy cards, each linked to the closest real proposal in
   Congress. Only the first desk has a hint, to ease the jump: Uncle Sam marks one card that would
   help (the gentlest one that would finish the job on its own), or, once the goal is met, says
-  what earns the next star; the player still plays it. Elsewhere the star tips say what earns each
+  what earns the next star; the player still plays it. The first desk also opens on a starter
+  deck: the three biggest tax and three biggest spending cards (more if those can't reach the goal),
+  with a link to show all 20; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
   star, never which card to play; when the cards alone can't reach the goal, the across-the-board
   changes sit right under them.
+- **How this is rated** (`src/game/Rated.tsx`): every number the game rates on its own opens its
+  method in place: the desk's economy gauge and mission 1.7 (gentle, moderate, steep), mission
+  1.6's ripple ranking, the interest saved on the player's card, and the rules of thumb in missions
+  2.5 and 2.6. Each says how it's figured, what it leaves out, and its official sources, and notes
+  that CBO's option estimates are conventional: the game shows a dynamic estimate only where CBO or
+  JCT published one, and none of the options in the game has one.
 - **Plan ideas** (`src/game/ideas.tsx`), on every desk, in two tabs kept apart: "Plans that work
   well", built for that desk's goal around one idea each (stop overpaying, make prices tell the
   truth, two big moves, ask the top and pay fairly for care; for the balanced budget, everyone
@@ -320,9 +328,12 @@ like a civic briefing, built for a phone and a thumb.
     cards to swipe, all computed from the Treasury data the game uses (where the money went and
     came from, the deficits, the interest bill, the debt per person, tariffs), plus every law in
     *Laws that moved the needle* with its scored effect on deficits.
-  - *Polls*: each of the CBO's budget options, *Would you include this in a plan to shrink the
-    deficit?*, with *Arguments for* (what it saves, what it does) and *Arguments against* (who
-    bears the cost), from CBO's own text. *Include it / Leave it out* is the same vote as the
+  - *Polls*: each of the CBO's budget options, *Would you include this in your plan?*, with the
+    deficit effect stated as a plain fact (CBO's ten-year number) and three tabs: *What it does*,
+    *Who pays* and *Who benefits* (`affects` and `benefits` in `src/data/curated/options.json`;
+    *who benefits* is our short summary of the case CBO lays out for the option, beyond the lower
+    borrowing every saving brings). The desk's cards and the ballot show *who pays* and *who
+    benefits* side by side too. *Include it / Leave it out* is the same vote as the
     game's policy cards, so the answer counts in both places.
   - *Civic lessons*: every mission as a lesson (steps, minutes, difficulty; *What you'll do* opens
     the steps; *Start the lesson*), quick checks from the missions answered right in the feed with
