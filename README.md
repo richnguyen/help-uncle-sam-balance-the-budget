@@ -673,8 +673,9 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   by the public as a share of GDP in the last projection year, lower wins), **the economy** (the
   steepest single-year tightening, gentler wins), and **the balance** (new taxes against spending
   cuts over the projection, cards and across-the-board changes alike, closer to half and half
-  wins). Even after three rounds, the tie-breaker: the plan with fewer policy cards wins; the
-  same number is a true tie. The reveal shows what each plan does on its own and the cards they share. The friend
+  wins). Even after three rounds, the tie-breakers, in order: the gentler steepest year, then
+  fewer policy cards; even on both is a true tie. The economy comes first so the scoring never
+  rewards a steeper plan just for using fewer cards. The reveal shows what each plan does on its own and the cards they share. The friend
   sends a reply link (`/p/duel-back/?duelr=…`, both plans) back; the host sees the same rounds
   from their side. One invite goes to many friends: each reply is its own head-to-head, and the
   Duels page lists every one next to your plan, with "See the rounds" and "Rematch". Everything

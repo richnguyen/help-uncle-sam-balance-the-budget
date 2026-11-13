@@ -20,9 +20,9 @@ const them = (name?: string) => name || 'your friend';
 const Them = (name?: string) => name || 'Your friend';
 const flip = (score: string) => score.split('–').reverse().join('–');
 type Result = ReturnType<typeof duelRounds>;
-/** "Your plan wins 2–1", "Rich’s plan wins on fewer cards", "Tied 1–1". */
+/** "Your plan wins 2–1", "Rich’s plan wins on a gentler economy", "Tied 1–1". */
 const headline = (r: Result, theirName?: string) => {
-  const how = r.tiebreak && r.tiebreak !== 'tie' ? 'on fewer cards' : null;
+  const how = r.tiebreak && r.tiebreak !== 'tie' ? (r.tiebreakBy === 'economy' ? 'on a gentler economy' : 'on fewer cards') : null;
   return r.outcome === 'tied' ? `Tied ${r.score}` : r.outcome === 'won' ? `Your plan wins ${how ?? r.score}` : `${Them(theirName)}’s plan wins ${how ?? flip(r.score)}`;
 };
 const winnerLabel = (w: 'me' | 'them' | 'tie', theirName?: string) => (w === 'tie' ? 'Even' : w === 'me' ? 'Your plan wins' : `${Them(theirName)}’s plan wins`);
@@ -58,7 +58,7 @@ function Rounds({ mine, theirs, theirName }: { mine: DuelPlan; theirs: DuelPlan;
     <>
       <section className="card duel-score" aria-live="polite">
         <strong className="duel-score-num">{headline(r, theirName)}</strong>
-        <span className="small muted">{r.tiebreak && r.tiebreak !== 'tie' ? `Even at ${r.score} after three rounds, so the tie-breaker decides: fewer cards wins.` : 'Best of three rounds; if they come out even, fewer cards wins.'} Plans are compared, never people.</span>
+        <span className="small muted">{r.tiebreak && r.tiebreak !== 'tie' ? `Even at ${r.score} after three rounds, so the tie-breaker decides: ${r.tiebreakBy === 'economy' ? 'the gentler steepest year wins' : 'the economy is even too, so fewer cards wins'}.` : 'Best of three rounds; if they come out even, the gentler plan wins, then the one with fewer cards.'} Plans are compared, never people.</span>
         <span className="small duel-balanced">
           {r.balanced.mine && r.balanced.theirs ? 'Both plans balance the budget.' : `${r.balanced.mine ? 'Your plan balances the budget' : 'Your plan doesn’t balance the budget yet'}; ${r.balanced.theirs ? `${them(theirName)}’s does` : `${them(theirName)}’s doesn’t yet`}.`}
         </span>
@@ -78,13 +78,27 @@ function Rounds({ mine, theirs, theirName }: { mine: DuelPlan; theirs: DuelPlan;
             <p className="small muted">{x.why}</p>
           </li>
         ))}
-        {r.tiebreak && (
-          <li className="card duel-round duel-tiebreak" data-winner={r.tiebreak}>
+        {r.tiebreak && r.tiebreakBy === 'economy' && (
+          <li className="card duel-round duel-tiebreak" data-winner={r.tiebreak} data-by="economy">
+            <div className="duel-round-head">
+              <span className="stat-label">Tie-breaker · The gentler plan</span>
+              <span className="duel-round-win">{winnerLabel(r.tiebreak, theirName)}</span>
+            </div>
+            <strong className="duel-round-q">The rounds came out even. Whose steepest year is gentler on the economy?</strong>
+            <div className="duel-sides">
+              <div data-win={r.tiebreak === 'me' || undefined}><span className="small muted">You</span><strong className="num">{(r.steep.mine * 100).toFixed(2)}% of GDP</strong></div>
+              <div data-win={r.tiebreak === 'them' || undefined}><span className="small muted">{col}</span><strong className="num">{(r.steep.theirs * 100).toFixed(2)}% of GDP</strong></div>
+            </div>
+            <p className="small muted">The first tie-breaker, so the scoring never rewards a steeper plan just for using fewer cards.</p>
+          </li>
+        )}
+        {r.tiebreak && r.tiebreakBy === 'cards' && (
+          <li className="card duel-round duel-tiebreak" data-winner={r.tiebreak} data-by="cards">
             <div className="duel-round-head">
               <span className="stat-label">Tie-breaker · Fewer cards</span>
               <span className="duel-round-win">{winnerLabel(r.tiebreak, theirName)}</span>
             </div>
-            <strong className="duel-round-q">The rounds came out even. Whose plan does the job with fewer cards?</strong>
+            <strong className="duel-round-q">The rounds and the economy came out even. Whose plan does the job with fewer cards?</strong>
             <div className="duel-sides">
               <div data-win={r.tiebreak === 'me' || undefined}><span className="small muted">You</span><strong className="num">{r.cards.mine} card{r.cards.mine === 1 ? '' : 's'}</strong></div>
               <div data-win={r.tiebreak === 'them' || undefined}><span className="small muted">{col}</span><strong className="num">{r.cards.theirs} card{r.cards.theirs === 1 ? '' : 's'}</strong></div>

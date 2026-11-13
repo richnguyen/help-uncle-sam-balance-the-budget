@@ -49,13 +49,20 @@ export function Seal({ icon, ring, stars, diff, grand = false, size = 132 }: {
 }) {
   const uid = useId().replace(/:/g, '');
   const engraving = useMemo(() => [rosette(46, 4.6, 10.5, 10), rosette(34, 3.4, 8, 8)], []);
-  // The rim text, twice around if it's short, so it closes the ring.
-  const rim = ring.length < 22 ? `${ring} · ${ring} · ` : `${ring} · `;
+  // The rim, the way seals are lettered: the first part along the top arc and the rest along the
+  // bottom arc, both upright and reading left to right ("MISSION 2.4" over, "COMPLETE" under).
+  const [top, ...rest] = ring.split(' · ');
+  const bottom = rest.join(' · ');
+  // Squeeze a long line to fit its half of the ring (about 8.3 units a character at this size).
+  const fit = (text: string, arc: number) => (text.length * 8.3 > arc ? { textLength: arc, lengthAdjust: 'spacingAndGlyphs' as const } : {});
   return (
     <span className={'seal' + (grand ? ' seal-grand' : '')} data-diff={grand ? undefined : diff} aria-hidden="true">
       <svg className="seal-svg" width={size} height={size * 1.18} viewBox="0 0 200 236" focusable="false">
         <defs>
-          <path id={`rim${uid}`} d={`M${C} ${C} m-62 0 a62 62 0 1 1 124 0 a62 62 0 1 1 -124 0`} />
+          {/* the top arc runs left to right over the top; the bottom arc left to right under the
+              bottom, a little wider, so its letters stand upright in the same band */}
+          <path id={`rimt${uid}`} d={`M${C - 62} ${C} A62 62 0 0 1 ${C + 62} ${C}`} />
+          <path id={`rimb${uid}`} d={`M${C - 71} ${C} A71 71 0 0 0 ${C + 71} ${C}`} />
           <linearGradient id={`shine${uid}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0.35" stopColor="#fff" stopOpacity="0" />
             <stop offset="0.5" stopColor="#fff" stopOpacity="0.55" />
@@ -69,7 +76,9 @@ export function Seal({ icon, ring, stars, diff, grand = false, size = 132 }: {
         {/* the rosette */}
         <path className="seal-edge" d={scallop(90, 5)} />
         <circle className="seal-ring" cx={C} cy={C} r="78" />
-        <text className="seal-rim"><textPath href={`#rim${uid}`} startOffset="0" textLength={Math.PI * 124 - 4} lengthAdjust="spacing">{rim}</textPath></text>
+        <text className="seal-rim" textAnchor="middle"><textPath href={`#rimt${uid}`} startOffset="50%" {...fit(top, Math.PI * 62 - 24)}>{top}</textPath></text>
+        {bottom && <text className="seal-rim" textAnchor="middle"><textPath href={`#rimb${uid}`} startOffset="50%" {...fit(bottom, Math.PI * 71 - 30)}>{bottom}</textPath></text>}
+        {bottom && <g className="seal-rim-dots"><circle cx={C - 66} cy={C} r="2.2" /><circle cx={C + 66} cy={C} r="2.2" /></g>}
         <circle className="seal-ring" cx={C} cy={C} r="52" />
         <circle className="seal-disc" cx={C} cy={C} r="50" />
         <g className="seal-engrave">{engraving.map((d, i) => <path key={i} d={d} />)}</g>

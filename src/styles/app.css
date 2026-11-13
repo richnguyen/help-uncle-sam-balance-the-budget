@@ -1699,7 +1699,9 @@ body:has(.page .actionbar) .actionbar-default { display: none; }
 .tcard p { margin: 2px 0 0; }
 .tcard-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 6px; }
 .together-cards.compact .tcard { padding: 14px; }
-.complete-together { margin: 0; }
+.complete-together { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.complete-together-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.complete-together-btns .btn { flex: 1 1 auto; justify-content: center; text-align: center; }
 
 /* ---------- the level 10 duel ---------- */
 .duel-sealed { display: inline-block; padding: 0 8px; border-radius: 999px; background: var(--ink); color: var(--paper); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: 1px; }
@@ -3581,3 +3583,10 @@ a.stb-stars { color: inherit; text-decoration: none; }
   .ccard-nums dd { font-size: 0.95rem; }
   .ccard .pcard-title { font-size: 0.875rem; -webkit-line-clamp: 2; }
 }
+
+/* Star thresholds, shown before a game's first round and on its replay screen. */
+.game-thresholds { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 2px 0 0; color: var(--ink-2); }
+.game-thresholds > span { white-space: nowrap; }
+.game-thresholds > span > span { color: var(--gold); letter-spacing: 1px; }
+.game-thresholds > span[data-got] { color: var(--ink); font-weight: 650; }
+.seal-rim-dots circle { fill: #fff; opacity: 0.85; }

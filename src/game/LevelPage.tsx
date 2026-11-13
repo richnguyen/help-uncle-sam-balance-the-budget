@@ -412,10 +412,17 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
       )}
       {next?.kind === 'desk' && <div className="callout"><div className="callout-title">Up next: the campaign’s final mission, at the budget desk</div><p className="small">{missionShort(next)} asks you to fix the budget yourself, using what this campaign taught you: {next.title.toLowerCase()}. Take your time.</p></div>}
       {next && next.campaign !== STOP_BY_ID[level.id].campaign && <div className="callout"><div className="callout-title">Campaign {next.campaign} starts next</div><p className="small">{campaignOf(next.id).title}. {campaignOf(next.id).blurb}</p></div>}
-      <p className="small complete-together">Play it with others: <a href="#rooms">a room for your class or club</a>, <a href="#daily">the Daily Dollar with your group chat</a>, or <a href="#chain">pass the budget</a>.</p>
+      <div className="complete-together" role="group" aria-labelledby="ct-label">
+        <span className="stat-label" id="ct-label">Play it with others</span>
+        <div className="complete-together-btns">
+          <a className="btn" href="#rooms">A room for your class or club</a>
+          <a className="btn" href="#daily">The Daily Dollar with your group chat</a>
+          <a className="btn" href="#chain">Pass the budget</a>
+        </div>
+      </div>
       <p className="small"><a href="#levels">See your progress on the road map</a></p>
       <ActionBar label="Next">
-        {next ? <a className="btn btn-primary" href={'#' + next.id}>Next: {missionShort(next)}, {next.title}</a> : <a className="btn btn-primary" href="#guide">See your certificate</a>}
+        {next ? <a className="btn btn-primary" href={'#' + next.id} aria-label={`Next: ${missionShort(next)}, ${next.title}`} title={next.title}>Next: {missionShort(next)}</a> : <a className="btn btn-primary" href="#guide">See your certificate</a>}
         <button type="button" className="btn" onClick={onReview}>Replay this mission</button>
       </ActionBar>
     </section>
