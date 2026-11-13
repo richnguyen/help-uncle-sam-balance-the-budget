@@ -178,6 +178,12 @@ budget adviser.
   their points; a check on phones), the points, a meter toward three stars, and the stars. After each round a banner
   shows the points and why; at the end, the final score, stars (three at 85% of the points, two
   at 60%, one for finishing) and what the game showed (the mission's takeaways), with Play again.
+  **Quick play** (for players who skip text): each lesson mission's first screen offers "Quick play
+  · about a minute", which goes straight to the mission's game, then shows its first takeaway in
+  one line and finishes the mission. It earns up to two stars, however well the game went
+  (`QUICK_MAX` in `src/game/LevelPage.tsx`); the whole mission is how to earn the third, so the
+  three-star medals still mean the whole thing. The record marks the mission done, keeps the
+  game's score, and notes `quick:<mission>`; the completion screen says how to earn the third star.
   The points each star takes are shown before the first round and again on the replay screen
   (with the ones already earned marked), so a replay is about mastery, not guessing the rules.
   The best score is kept, sets the mission's stars, and greets the player on a return visit.

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { countPlay } from '../lib/backend';
 import { load, save } from '../lib/storage';
 import { money, pct } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
@@ -57,6 +58,9 @@ function LevelHead({ level }: { level: Level }) {
   );
 }
 
+/** Quick play's cap: the whole mission is how to earn the third star. */
+export const QUICK_MAX = 2;
+
 function LevelRun({ level }: { level: Level }) {
   const j = useJourney();
   const doneSteps = j.steps[level.id] ?? [];
@@ -65,6 +69,24 @@ function LevelRun({ level }: { level: Level }) {
   const top = useRef<HTMLDivElement>(null);
   const [party, setParty] = useState<number | null>(null);
   const [mins, setMins] = useState<number | null>(null);
+  // Quick play: just the mission's game, then its takeaway in one line. It earns up to two stars;
+  // the whole mission is how to earn the third.
+  const gameIdx = level.steps.findIndex((s) => s.kind === 'game');
+  const [quick, setQuick] = useState(false);
+  const [takeaway, setTakeaway] = useState(false);
+  const startQuick = () => { setQuick(true); setTakeaway(false); countPlay('quick_start', level.id, true); buzz('tap'); go(gameIdx); };
+  const finishQuick = () => {
+    const g = gameOf(level);
+    const stars = Math.min(QUICK_MAX, g ? (j.games?.[g.id]?.stars ?? 1) : 1);
+    j.completeLevel(level.id, stars);
+    j.mark('quick:' + level.id);
+    countPlay('quick_done', level.id, true);
+    finishLevelTime(level.id);
+    setMins(levelMinutes(level.id));
+    setQuick(false); setTakeaway(false);
+    setParty(stars);
+    go(level.steps.length);
+  };
   const buzz = useHaptics();
   // Active time on the level, for its certificate.
   useLevelTimer(level.id, i < level.steps.length && party == null);
@@ -95,15 +117,21 @@ function LevelRun({ level }: { level: Level }) {
   // Uncle Sam says each step's line from the top bar, where it runs across the strip; nothing
   // covers the step, so Continue always moves on and Back always goes back.
   const primary = () => {
+    if (takeaway) return finishQuick();
+    if (quick && step && quizOk) { j.completeStep(level.id, i); setTakeaway(true); buzz('step'); return; }
     if (step && quizOk) finishStep();
   };
   const back = () => {
+    if (takeaway) return setTakeaway(false);
+    if (quick) { setQuick(false); return go(0); }
     if (i > 0) go(i - 1);
   };
 
   // Keyboard play, so nothing waits on the mouse: Enter or → continues, ← goes back.
   const keys = useRef({ primary, back, step, party });
   keys.current = { primary, back, step, party };
+  // Opening a mission ahead of the next one in order (free roam), counted once a day.
+  useEffect(() => { const nx = STOPS.find((l) => !j.done.includes(l.id) && isUnlocked(l.id, j.done, false)); if (nx && nx.id !== level.id && !j.done.includes(level.id) && STOPS.indexOf(STOP_BY_ID[level.id]) > STOPS.indexOf(nx)) countPlay('jump_ahead', level.id, true); }, [level.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const c = keys.current;
@@ -124,15 +152,31 @@ function LevelRun({ level }: { level: Level }) {
   return (
     <div className="level" ref={top}>
       <MissionTitle level={level} />
-      <StepTrack level={level} at={i} done={doneSteps} finished={j.done.includes(level.id)} onGo={go} />
-      {step ? (
+      <StepTrack level={level} at={i} done={doneSteps} finished={j.done.includes(level.id)} onGo={(n) => { setQuick(false); setTakeaway(false); go(n); }} />
+      {gameIdx >= 0 && step && i === 0 && !quick && (
+        <div className="quick-offer">
+          <button type="button" className="btn quick-btn" onClick={startQuick}><span aria-hidden="true">⚡</span> Quick play · about a minute</button>
+          <span className="small muted">Just the game and one takeaway, for up to {QUICK_MAX} stars. The whole mission earns the third.</span>
+        </div>
+      )}
+      {takeaway ? (
+        <section className="level-stage quick-takeaway card" aria-live="polite" aria-labelledby="qt-t">
+          <span className="stat-label" id="qt-t">The takeaway</span>
+          <p className="quick-line"><Terms inline>{level.takeaways[0]}</Terms></p>
+          <p className="small muted">Quick play earns up to {QUICK_MAX} stars. Play the whole mission any time for the third, and for the story behind it.</p>
+          <ActionBar className="level-nav" label="Quick play">
+            <button type="button" className="btn" onClick={back}>Back to the game</button>
+            <button type="button" className="btn btn-primary" onClick={finishQuick}>Finish quick play</button>
+          </ActionBar>
+        </section>
+      ) : step ? (
         <section className="level-stage" aria-live="polite" aria-labelledby="step-label">
           <div className="step-count sr-only" id="step-label">Step {i + 1} of {level.steps.length} · {step.label}</div>
           <StepBody key={level.id + step.id} level={level} step={step} />
           <ActionBar className="level-nav" label="Step">
-            <button type="button" className="btn" onClick={back} disabled={i === 0}>Back</button>
+            <button type="button" className="btn" onClick={back} disabled={i === 0 && !quick}>{quick ? 'Leave quick play' : 'Back'}</button>
             <button type="button" className="btn btn-primary" onClick={primary} disabled={!quizOk}>
-              {!quizOk ? (step.kind === 'game' ? 'Finish the game to continue' : step.quiz?.guess ? 'Make a guess to continue' : 'Answer to continue') : step.kind === 'vote' ? (hasVoted(step.vote!, j.choices) ? 'Finish the mission' : 'Skip the vote and finish') : i === level.steps.length - 1 ? 'Finish the mission' : 'Continue'}
+              {quick && quizOk ? 'See the takeaway' : !quizOk ? (step.kind === 'game' ? 'Finish the game to continue' : step.quiz?.guess ? 'Make a guess to continue' : 'Answer to continue') : step.kind === 'vote' ? (hasVoted(step.vote!, j.choices) ? 'Finish the mission' : 'Skip the vote and finish') : i === level.steps.length - 1 ? 'Finish the mission' : 'Continue'}
             </button>
             <span className="keyhint small muted" aria-hidden="true">{step.kind === 'quiz' ? <><kbd>1</kbd>–<kbd>{step.quiz!.choices.length}</kbd> answer · </> : null}<kbd>Enter</kbd> continue · <kbd>←</kbd> back</span>
           </ActionBar>
@@ -397,6 +441,7 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
         <div>
           <div className="eyebrow">{missionShort(STOP_BY_ID[level.id])} complete · <span className="complete-stars" aria-label={`${stars} of 3 stars`}>{'★'.repeat(stars)}<span className="muted">{'★'.repeat(3 - stars)}</span></span></div>
           <h2 className="complete-title" id="complete-t">{level.badge}: explained</h2>
+          {j.marks.includes('quick:' + level.id) && stars < 3 && <p className="small quick-note">Finished with Quick play, which earns up to {QUICK_MAX} stars. <button type="button" className="link-btn" onClick={onReview}>Play the whole mission</button> for the third.</p>}
           <p className="small muted">{game ? `${game.title}: your best is ${score?.best ?? 0} of ${game.rounds.length * 100} points${(score?.stars ?? 0) < 3 ? '; replay for three stars' : ''}. ` : firstTry === quizzes.length ? `${quizzes.length === 1 ? 'The quick check' : 'Every quick check'} right on the first try. ` : `${firstTry} of ${quizzes.length} quick check${quizzes.length === 1 ? '' : 's'} right on the first try; replay for three stars. `}{levelsDone} of {STOPS.length} missions done.</p>
         </div>
       </div>
