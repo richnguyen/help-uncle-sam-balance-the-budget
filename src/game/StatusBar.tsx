@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BADGES, loadProgress } from '../lib/game';
-import { AwardIcon, HubIcon, SpeakerIcon } from './icons';
+import { AwardIcon, SpeakerIcon } from './icons';
 import { MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { balanceOf } from './build/landmarks';
@@ -9,8 +9,8 @@ import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
 
 // The one bar at the top of every page. Uncle Sam stands at the left, across both lines. Line one:
-// the page's title (in a mission, where it sits in its campaign), then stars, accomplishments, and
-// the main menu. Your progress through the missions is in Your record, on the Guide tab. Line two:
+// the page's title (in a mission, where it sits in its campaign), then stars and accomplishments
+// (the way back to the main menu is the tab bar's Feed tab). Your progress through the missions is in Your record, on the Guide tab. Line two:
 // his voice switch, then his words, running beside him.
 
 /** Budget-desk badges are saved by the desk itself; re-read them whenever it saves. */
@@ -100,7 +100,6 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
             </ul>
             <a className="small" href="#guide">Badges and what you learned are in Your record, on the Guide tab</a>
             </Pop>
-            <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
           </div>
         </div>
         </div>

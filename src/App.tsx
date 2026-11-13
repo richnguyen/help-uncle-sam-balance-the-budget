@@ -107,7 +107,7 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['levels', 'The road map'],
   ['record', 'Your record'],
   ['settings', 'Settings'],
-  ['guide', 'Record & guide'],
+  ['guide', 'You'],
   ['mall', 'Build the Mall'],
   ...STOPS.map((l) => [l.id, `${missionShort(l)}: ${l.title}`]),
 ]);

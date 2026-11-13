@@ -127,7 +127,7 @@ export default function Journey() {
   );
 }
 
-type MenuIconId = 'build' | 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock' | 'home' | 'capitol';
+type MenuIconId = 'build' | 'play' | 'story' | 'map' | 'together' | 'daily' | 'book' | 'record' | 'medal' | 'gear' | 'chart' | 'doc' | 'sound' | 'mute' | 'back' | 'music' | 'music-off' | 'wind' | 'clock' | 'home' | 'capitol' | 'you';
 const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
   build: <><path d="M3.5 9 12 4l8.5 5" /><path d="M4.5 9.5h15M6.5 10.5v7M10 10.5v7M14 10.5v7M17.5 10.5v7M3.5 20h17M4.5 17.8h15" /></>,
   play: <><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" /></>,
@@ -149,6 +149,7 @@ const MENU_PATHS: Record<MenuIconId, JSX.Element> = {
   wind: <><path d="M3 9h11a3 3 0 1 0-3-3" /><path d="M3 13h15a3 3 0 1 1-3 3" /><path d="M3 17h6" /></>,
   home: <><path d="M3.5 11 12 4l8.5 7" /><path d="M5.5 9.5V20h13V9.5" /><path d="M10 20v-5.5h4V20" /></>,
   capitol: <><path d="M12 2.5v2" /><path d="M8 10.5a4 4 0 0 1 8 0" /><path d="M7 10.5h10M7.5 10.5v2.5M16.5 10.5v2.5" /><path d="M3 13h18M4 13v6M8 13v6M12 13v6M16 13v6M20 13v6M2.5 20.5h19" /></>,
+  you: <><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5c.8-4 3.8-6.5 7.5-6.5s6.7 2.5 7.5 6.5" /></>,
   clock: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 2" /></>,
 };
 export function MenuIcon({ id, size = 22 }: { id: MenuIconId; size?: number }) {

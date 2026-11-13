@@ -27,10 +27,10 @@ budget adviser.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
   like an app's, five tabs alike: Mission (the next mission to play, or the road map once every
   mission is done), Daily (the Daily Dollar), Feed in the middle (the main menu and its feed),
-  Together (Play together) and Guide (the field guide). Each is the main menu's own icon with a short
+  Together (Play together) and You (your record, then the field guide; a person icon). Each is the main menu's own icon with a short
   name. The tab for the screen you're on is lit, with a bar above it: the road map counts as
   Mission's, Rooms, chains and duels as Together's, every field-guide chapter, the glossary and
-  Sources & methods as the Guide's. It stays in missions and at the budget desk too, with the
+  Sources & methods as You's. It stays in missions and at the budget desk too, with the
   step's own Back / Continue bar right on top of it, as is a screen's own action bar (Build,
   Higher / Lower). The Feed tab is the way back to the main menu.
 - **Official news** (`scripts/fetch-news.mjs` → `src/data/generated/news.json`, `src/game/news.ts`):
@@ -68,8 +68,8 @@ budget adviser.
   wind and birdsong, or crickets at night, off until switched on. Both play only on the menu,
   are remembered, and have switches in Settings too. On phones the scene is a banner with the
   title in its sky, and the choices follow. The road map and Settings are pages of their own
-  (`#levels`, `#settings`); Your record is on top of the Guide tab (`#record` goes there).
-- **Your record, on top of the Guide tab** (`RecordTop` in `src/game/Journey.tsx`): one card with
+  (`#levels`, `#settings`); Your record is on top of the You tab (`#record` goes there).
+- **Your record, on top of the You tab** (`RecordTop` in `src/game/Journey.tsx`): one card with
   your name and title, your missions by campaign (a bar each, filled as you finish), Continue and
   the road map, and six numbers (stars won, stars to spend, medals, polls, bills, quick checks).
   Then every mission as a badge, its seal once finished (a dashed outline until then); tap one
@@ -279,10 +279,11 @@ budget adviser.
   - Adviser titles and a copyable "budget ballot".
 - **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): Uncle Sam stands at the
   left, always there, across the bar's two lines: half his body showing, right on its bottom edge.
-  Line one, in larger text: the page's title ("The Daily Dollar", "Record & guide"; in a mission,
+  Line one, in larger text: the page's title ("The Daily Dollar", "You"; in a mission,
   its number, "Mission 2.4", since the mission's name heads the page). Each page's own heading is
   kept for screen readers only, so the title isn't said twice, and there is no small title above
-  it. Then stars, accomplishments (medals and budget-desk badges), and Main menu. Progress
+  it. Then stars and accomplishments (medals and budget-desk badges); there's no Main menu button, as
+  the tab bar's Feed tab is the way back. Progress
   through the missions is in Your record, not the top bar. Line two: Sound on/off (his voice; an icon on phones) at the start of his strip, then
   his words, running right to left beside him, the word he's saying at the left end next to him. The glossary and Sources & methods are in the
   field guide and the footer; Settings is the gear on the main menu.
@@ -296,7 +297,7 @@ budget adviser.
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
   are gathered on Sources & methods ("By mission"), one link from every mission. The field guide
-  (all earlier pages) is on the Guide tab, under Your record.
+  (all earlier pages) is on the You tab, under Your record.
 
 ### The feed: every post the game has, official ones first
 
@@ -498,7 +499,7 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   and the note about the figures in Sources & methods; on the desk, the scoreboard and cards come straight after the title. Medal and badge
   messages share one stack under the top bar. The project note ("Independent civic education
   project. Not affiliated with any government agency.") appears only, quietly, at the foot of the
-  Guide tab (Your record and the field guide): never on the main menu or during play.
+  You tab (Your record and the field guide): never on the main menu or during play.
 - **Interruptions.** A call, a locked screen, or a closed tab loses nothing: level steps,
   answers, and the plan in progress on the desk (for each level, and for each friend's challenge)
   are saved as they happen, and Uncle Sam stops talking when the app goes to the background.

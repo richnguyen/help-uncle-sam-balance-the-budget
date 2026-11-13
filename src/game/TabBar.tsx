@@ -7,7 +7,7 @@ import { useJourney } from './state';
 
 // The tab bar, along the bottom of every screen: Mission (the next mission to
 // play, or the road map once all are done), the Daily Dollar, the feed (the main menu) in the middle, Play
-// together, and the Guide (your record and the field guide), all alike. The tab for the screen
+// together, and You (your record, then the field guide), all alike. The tab for the screen
 // you're on is lit. (Build the Mall is the button at the main menu's top right, and the top
 // bar's stars.) It stays in missions too, under the step's own Back / Continue bar.
 
@@ -42,7 +42,7 @@ export function TabBar({ route }: { route: Route }) {
     { id: 'daily', href: '#daily', label: 'Daily', icon: 'daily', title: 'The Daily Dollar' },
     { id: 'menu', href: '#journey', label: 'Feed', icon: 'home', title: 'The feed, on the main menu' },
     { id: 'together', href: '#together', label: 'Together', icon: 'together', title: 'Play together' },
-    { id: 'guide', href: '#guide', label: 'Guide', icon: 'book', title: 'The field guide' },
+    { id: 'guide', href: '#guide', label: 'You', icon: 'you', title: 'You: your record, and the field guide' },
   ];
   return (
     <nav className="tabbar" aria-label="Main">
