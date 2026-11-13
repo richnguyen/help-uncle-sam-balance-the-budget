@@ -68,10 +68,23 @@ export function GapBar({ segments, progress }: { segments: GapSegment[]; progres
 }
 
 /** Economy gauge: the steepest single-year tightening, against gentle / moderate / steep zones. */
-export function EconMeter({ peakStep, vertical = false }: { peakStep: number; vertical?: boolean }) {
+export const econLabel = (peakStep: number) => (peakStep <= 0.005 ? 'Gentle' : peakStep <= 0.01 ? 'Moderate' : 'Steep');
+
+export function EconMeter({ peakStep, vertical = false, compact = false }: { peakStep: number; vertical?: boolean; compact?: boolean }) {
   const max = 0.015;
   const at = Math.min(peakStep, max) / max;
-  const label = peakStep <= 0.005 ? 'Gentle' : peakStep <= 0.01 ? 'Moderate' : 'Steep';
+  const label = econLabel(peakStep);
+  // The scoreboard's slim version: just the zones and the needle (the label sits in its title).
+  if (compact) return (
+    <div className="econmeter econmeter-compact" role="meter" aria-label="How hard the plan hits the economy in its steepest year" aria-valuemin={0} aria-valuemax={1.5} aria-valuenow={+(peakStep * 100).toFixed(2)} aria-valuetext={`${label}: ${pct(peakStep, 1)} of GDP in the steepest year`}>
+      <div className="econmeter-track">
+        <span className="z z1" style={{ width: '33.333%' }} />
+        <span className="z z2" style={{ width: '33.333%' }} />
+        <span className="z z3" style={{ width: '33.334%' }} />
+        <span className="econmeter-needle" style={{ left: `${at * 100}%` }} />
+      </div>
+    </div>
+  );
   if (vertical) return (
     <div className="vmeter" role="meter" aria-label="How hard the plan hits the economy in its steepest year" aria-valuemin={0} aria-valuemax={1.5} aria-valuenow={+(peakStep * 100).toFixed(2)} aria-valuetext={`${label}: ${pct(peakStep, 1)} of GDP in the steepest year`}>
       <div className="vmeter-col">
@@ -98,9 +111,22 @@ export function EconMeter({ peakStep, vertical = false }: { peakStep: number; ve
 }
 
 /** Taxes vs. spending cuts, with the balanced band (a third to two-thirds) marked. */
-export function SplitBar({ revenue, spending, vertical = false }: { revenue: number; spending: number; vertical?: boolean }) {
+export function SplitBar({ revenue, spending, vertical = false, compact = false }: { revenue: number; spending: number; vertical?: boolean; compact?: boolean }) {
   const tot = revenue + spending;
   const r = tot ? revenue / tot : 0;
+  if (compact) return (
+    <div className="splitbar splitbar-compact">
+      <div className="splitbar-track" role="img" aria-label={tot ? `${pct(r, 0)} from taxes, ${pct(1 - r, 0)} from spending cuts; a third to two-thirds from each is balanced` : 'No savings yet'}>
+        {tot ? (
+          <>
+            <span style={{ flex: `${revenue} 0 0`, background: SIDE_COLOR.revenue }} />
+            <span style={{ flex: `${spending} 0 0`, background: SIDE_COLOR.spending }} />
+          </>
+        ) : <span style={{ flex: 1, background: 'var(--surface-2)' }} />}
+        <span className="splitbar-band" aria-hidden="true" />
+      </div>
+    </div>
+  );
   if (vertical) return (
     <div className="vmeter" role="img" aria-label={tot ? `${pct(r, 0)} from taxes, ${pct(1 - r, 0)} from spending cuts` : 'No savings yet'}>
       <div className="vmeter-col">

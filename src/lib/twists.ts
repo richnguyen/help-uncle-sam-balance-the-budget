@@ -12,8 +12,10 @@ import type { Shock } from './sandbox';
 
 export interface Twist {
   id: 'rates' | 'recession';
-  /** The one line the desk shows under its scoreboard. */
+  /** The one line that states the twist (opening its info sheet on the scoreboard). */
   line: string;
+  /** A few words for the scoreboard's twist chip. */
+  short: string;
   /** What Uncle Sam adds to his opening line. */
   say: string;
   /** What the twist does to the model, for "How this is rated". */
@@ -43,6 +45,7 @@ const pct1 = (v: number) => `${+(v * 100).toFixed(1)}%`;
 export const TWISTS: Partial<Record<Goal, Twist>> = {
   deficit3: {
     id: 'rates',
+    short: `Rates +${RATE_SHOCK.points.toFixed(1)} pts`,
     line: `Interest rates jump: the rate on the debt rises ${RATE_SHOCK.points.toFixed(1)} points, as it did from ${RATE_SHOCK.from.y} to ${RATE_SHOCK.to.y}, and stays there. Savings that start early count for more.`,
     say: `And a twist: interest rates are jumping, the way they did from ${RATE_SHOCK.from.y} to ${RATE_SHOCK.to.y}. Savings that start early count for more.`,
     method: `On top of the rates in the projection the desk uses (${cbo.projShort}), the average rate on the debt is ${RATE_SHOCK.points.toFixed(2)} percentage points higher from the first year on. That’s the largest one-year rise in the Treasury’s average rate on its debt since 2001 (${RATE_SHOCK.from.v.toFixed(2)}% in September ${RATE_SHOCK.from.y} to ${RATE_SHOCK.to.v.toFixed(2)}% in September ${RATE_SHOCK.to.y}).`,
@@ -52,6 +55,7 @@ export const TWISTS: Partial<Record<Goal, Twist>> = {
   },
   balance: {
     id: 'recession',
+    short: `Recession FY${String(first).slice(2)}`,
     line: `A recession hits in FY${first}: revenue falls ${pct1(RECESSION.dip)}, as it did in FY2002, and tightening that year hits the economy twice as hard. Phasing in pays.`,
     say: `And a twist: a recession hits in FY${first}, like the one in 2001. Squeeze hard that year and it hurts twice as much, so phase your changes in.`,
     method: `In FY${first}, revenue is ${pct1(RECESSION.dip)} below the projection (${cbo.projShort}), the fall from FY2001 to FY2002 in the historical tables, and half that the next year. On the economy gauge, the tightening in that year counts double, because CBO finds that changes in taxes and spending move the economy more when it’s weak.`,

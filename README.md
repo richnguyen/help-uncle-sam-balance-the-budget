@@ -148,6 +148,19 @@ budget adviser.
   2.5 and 2.6. Each says how it's figured, what it leaves out, and its official sources, and notes
   that CBO's option estimates are conventional: the game shows a dynamic estimate only where CBO or
   JCT published one, and none of the options in the game has one.
+- **The desk on a phone**: the scoreboard is one slim band, full width like the top bar, pinned
+  under it while the cards scroll: progress and stars, then horizontal economy and who-pays gauges
+  (an "i" beside the economy gauge opens how it's rated as a sheet), then phase-in, the desk's
+  twist as a chip (its "i" opens the full line and method), Hint and start over. The bottom bar
+  only appears once there's a next step, so progress isn't shown twice. Policy cards are made like
+  a card game's: the front shows the kind of card, its art, its name and traits (drag, growth,
+  who it reaches); flip it (↻) for the back, the same size, with what it does, who pays, who
+  benefits, the official estimate and the bill in Congress. What a card does to the gap shows only
+  once it's played. A card's height is worked out from the space between the pinned scoreboard and
+  the bottom bars, so a whole card fits on screen, down to an iPhone SE. Plan ideas are combo cards
+  in the same format: a fanned hand of the cards in the plan, its stars, and what it does to the
+  deficit and to debt held by the public in the last projection year; flip one for the idea, every
+  card in it and who pays.
 - **Plan ideas** (`src/game/ideas.tsx`), on every desk, in two tabs kept apart: "Plans that work
   well", built for that desk's goal around one idea each (stop overpaying, make prices tell the
   truth, two big moves, ask the top and pay fairly for care; for the balanced budget, everyone
