@@ -68,12 +68,14 @@ budget adviser.
   first tap or key, ducking under Uncle Sam's voice. **Sounds of the Mall** (`ambience.ts`):
   wind and birdsong, or crickets at night, off until switched on. Both play only on the menu,
   are remembered, and have switches in Settings too. On phones the scene is a banner with the
-  title in its sky, and the choices follow. The road map and Settings are pages of their own
-  (`#levels`, `#settings`); Your record is on top of the You tab (`#record` goes there).
+  title in its sky, and the choices follow. The road map is a page of its own (`#levels`); Your record and Settings are on the You tab
+  (`#record` and `#settings` go there).
 - **Your record, on top of the You tab** (`RecordTop` in `src/game/Journey.tsx`): one card with
   your name and title, your missions by campaign (a bar each, filled as you finish), Continue and
   the road map, and six numbers (stars won, stars to spend, medals, polls, bills, quick checks).
-  Then every mission as a badge, its seal once finished (a dashed outline until then); tap one
+  Then Settings (your first name, text size, theme, Uncle Sam's voice, vibration, free roam,
+  install, and the main menu's music and sounds; the main menu's gear and `#settings` scroll
+  here). Then every mission as a badge, its seal once finished (a dashed outline until then); tap one
   for a sheet with what it taught, Share and Play again. Your ballot, briefly: a bar of the
   questions answered, then one line per vote with your answer as a mark and how many players
   agreed. *How everyone played*: players, those who finished, votes on budget ideas, and a link
@@ -294,7 +296,7 @@ budget adviser.
   and checked, the current one ringed; tap one to go back). On phones only the current step keeps
   its name. "Step 2 of 4" is kept for screen readers. The intro step shows the mission's one-line
   brief while Uncle Sam tells the story in the top bar. Then comes the step itself.
-- **Settings** (the gear on the main menu, `#settings`): text size, light/dark theme, voice choice, vibration, and
+- **Settings** (on the You tab, under Your record; the gear on the main menu goes there): text size, light/dark theme, voice choice, vibration, and
   free roam to unlock everything.
 - **The fine print:** each level's full field-guide chapter and original government documents
   are gathered on Sources & methods ("By mission"), one link from every mission. The field guide

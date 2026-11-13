@@ -3303,3 +3303,7 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .fc-size-bar { display: block; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .fc-size-bar > span { display: block; height: 100%; border-radius: 4px; background: var(--fc-budget); }
 .fc-size-k { font-size: 0.75rem; color: var(--muted); }
+/* Settings, on the You tab. */
+.settings-block { display: flex; flex-direction: column; gap: 12px; }
+.settings-block > .card { margin: 0; }
+.record > .section { scroll-margin-top: 104px; }

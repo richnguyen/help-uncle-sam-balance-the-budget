@@ -14,7 +14,7 @@ import { useMyName } from './plans';
 
 type TabId = 'mission' | 'daily' | 'menu' | 'together' | 'guide';
 
-const GUIDE = new Set<string>(['guide', 'record', 'sources', 'glossary', ...FIELD_GUIDE.map((g) => g.route), ...REFERENCE.map((g) => g.route)]);
+const GUIDE = new Set<string>(['guide', 'record', 'settings', 'sources', 'glossary', ...FIELD_GUIDE.map((g) => g.route), ...REFERENCE.map((g) => g.route)]);
 const TOGETHER = new Set<string>(['together', 'rooms', 'room', 'chain', 'duel', 'duels', 'peoples', 'teach']);
 
 /** The tab a screen belongs to, if any. */

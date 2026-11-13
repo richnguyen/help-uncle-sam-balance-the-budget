@@ -238,6 +238,18 @@ export function RecordTop() {
   const polls = Object.keys(votes.mine.options).length + Object.keys(votes.mine.issues).length;
   const bills = Object.keys(j.feedVotes ?? {}).filter((k) => k.startsWith('bill:')).length;
   const checks = Object.keys(j.feedChecks ?? {}).length;
+  // Sent here for Settings (the main menu's gear, or #settings): scroll to them once the page is up.
+  useEffect(() => {
+    let go = false;
+    try { go = sessionStorage.getItem('ftd:goto') === 'settings'; } catch { /* private mode */ }
+    if (!go) return;
+    // The flag is cleared only once the scroll happens (effects can run twice in development).
+    const t = setTimeout(() => {
+      try { sessionStorage.removeItem('ftd:goto'); } catch { /* private mode */ }
+      document.getElementById('settings')?.scrollIntoView({ block: 'start' });
+    }, 80);
+    return () => clearTimeout(t);
+  }, []);
   const right = Object.values(j.feedChecks ?? {}).filter(Boolean).length;
   return (
     <div className="record">
@@ -277,6 +289,8 @@ export function RecordTop() {
         </dl>
         <p className="small muted rc-note">Saved in this browser only. Stars spent on the Mall: ★ {starsSpent(j.built ?? [])}.</p>
       </section>
+
+      <SettingsBlock />
 
       <Section id="missions" title="Your missions" sub="A badge for every mission you finish. Tap one to see what you learned.">
         <MissionBadges />
@@ -443,29 +457,25 @@ function MenuSoundSettings() {
   );
 }
 
-/** Settings, as a page of their own (also in the top bar). */
-/** Settings opens with who you are: your title and stars, a tap from your record. */
-function ProfileCard() {
-  const { j, done, stars, rank } = useProgress();
-  const name = useMyName();
-  const left = balanceOf(j.stars, j.built ?? []);
-  return (
-    <a className="card settings-profile" href="#guide">
-      <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
-      <span className="settings-profile-text"><strong>{name || 'Your record'}</strong><span className="small muted">{rank.name} · ★ {left} to spend ({stars} won) · {done.length} of {STOPS.length} missions · {j.medals.length} medals</span></span>
-      <span aria-hidden="true">›</span>
-    </a>
-  );
+/** Settings live on the You tab now, under your record; the old address (and the main menu's
+ * gear) goes there and scrolls to them. */
+export function SettingsPage() {
+  useEffect(() => {
+    try { sessionStorage.setItem('ftd:goto', 'settings'); } catch { /* private mode */ }
+    location.replace('#guide');
+  }, []);
+  return null;
 }
 
-export function SettingsPage() {
+/** Settings, on the You tab: install, reading and sound, voice, and the main menu's music. */
+function SettingsBlock() {
   return (
-    <>
-      <PageHead eyebrow="Settings" title="Settings" lede="Make the game comfortable to read and hear. These are saved in this browser." />
-      <ProfileCard />
-      <div className="card"><InstallButton /><ReadingSettings /></div>
-      <MenuSoundSettings />
-    </>
+    <Section id="settings" title="Settings" sub="Make the game comfortable to read and hear. Saved in this browser.">
+      <div className="settings-block">
+        <div className="card"><InstallButton /><ReadingSettings /></div>
+        <MenuSoundSettings />
+      </div>
+    </Section>
   );
 }
 
