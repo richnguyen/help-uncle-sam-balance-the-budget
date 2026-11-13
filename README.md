@@ -107,7 +107,9 @@ budget adviser.
   top while the player scrolls through policy cards, each linked to the closest real proposal in
   Congress. Only the first desk has a hint, to ease the jump: Uncle Sam marks one card that would
   help (the gentlest one that would finish the job on its own), or, once the goal is met, says
-  what earns the next star; the player still plays it. Elsewhere the star tips say what earns each
+  what earns the next star; the player still plays it. The first desk also opens on a starter
+  deck: the three biggest tax and three biggest spending cards (more if those can't reach the goal),
+  with a link to show all 20; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
   star, never which card to play; when the cards alone can't reach the goal, the across-the-board
   changes sit right under them.
 - **Plan ideas** (`src/game/ideas.tsx`), on every desk, in two tabs kept apart: "Plans that work
