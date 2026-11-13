@@ -348,6 +348,14 @@ like a civic briefing, built for a phone and a thumb.
   dome for Congress, a portico for the White House, a columned building for the Treasury, a 1¢
   for the Mint; Uncle Sam's hat for the game's own posts). They are deliberately not the
   offices' logos or seals, which would suggest an office stands behind the game.
+- **A picture on every post** (`src/game/feed/art.tsx`): a band in the topic's color with a fine
+  engraved pattern, as on a banknote, a large icon on a white disc and the post's one big figure.
+  A bill shows its number and policy area; a poll, its ten-year savings; a law, what it added to or
+  cut from deficits; a fun fact, its year or number with a fitting picture (a penny, a Social
+  Security check, a Medicare card, an hourglass for the 1976 transition quarter); a mission, its
+  seal (grey until earned) with steps and minutes; a deadline, the days left; the Daily Dollar,
+  its number and five rounds. A quick check's "?" turns into "Right!" with a burst of stars, or
+  "Not quite"; a word to know gets its first letter, large. All drawn for the game; no photos.
 - **Visual aids.** A bill shows its road to law as six dots (introduced, committee, one chamber,
   both, the President, law) with where it stands and what's next; a poll shows the option's
   ten-year savings as a bar against the biggest of the CBO's options in the game; a law, its

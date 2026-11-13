@@ -11,6 +11,9 @@ import { missionShort } from '../levels';
 import { when } from '../news';
 import { useJourney } from '../state';
 import type { Bill, FeedItem, FeedRow, Slice, Stat, Topic } from './items';
+import { PostArt, type ART_GLYPH } from './art';
+import { Seal } from '../Seal';
+import { diffKey, type IconId } from '../levels';
 
 // One card per kind of post. Every card has the same head: what it is, its official source and
 // date, and Save. Then its body, and its own one action: vote, swipe, check, start, or read more.
@@ -128,6 +131,29 @@ function Bars({ rows, total, mine }: { rows: { value: string; label: string; n: 
   );
 }
 
+// ---- Pictures for the posts (art.tsx): which icon goes with which post.
+
+type Pic = { icon?: IconId; glyph?: keyof typeof ART_GLYPH };
+/** A bill's picture, from its policy area and title. */
+function billPic(b: Bill): Pic {
+  const t = `${b.area} ${b.title}`;
+  if (/social security/i.test(t)) return { icon: 'people' };
+  if (/medicare|medicaid|health/i.test(t)) return { icon: 'shield' };
+  if (/tax|credit|deduction/i.test(t)) return { icon: 'paycheck' };
+  if (/appropriation|spending|fund/i.test(t)) return { icon: 'bills' };
+  if (/debt|borrow/i.test(t)) return { icon: 'card' };
+  return { icon: 'capitol' };
+}
+const LAW_PIC: Record<string, Pic> = { tax: { icon: 'paycheck' }, emergency: { icon: 'shield' }, spending: { icon: 'bills' }, reduction: { icon: 'scale' }, mixed: { icon: 'flow' } };
+const FACT_PIC: Record<string, Pic> = {
+  'treasury-founded': { icon: 'capitol' }, 'income-tax-1861': { icon: 'paycheck' }, 'sixteenth-amendment': { glyph: 'scroll' }, 'debt-limit-1917': { icon: 'gauge' },
+  'budget-accounting-1921': { icon: 'scale' }, 'social-security-act': { icon: 'people' }, 'ida-may-fuller': { glyph: 'check' }, 'medicare-signed': { icon: 'card' },
+  'budget-act-1974': { icon: 'capitol' }, 'cbo-opens': { icon: 'ruler' }, 'transition-quarter': { icon: 'hourglass' }, 'shutdown-2025': { icon: 'brake' },
+  'last-penny': { glyph: 'coin' }, 'penny-cost': { glyph: 'coin' }, 'medicaid-1966': { icon: 'shield' },
+  'per-second': { icon: 'flow' }, 'interest-day': { icon: 'wave' }, 'debt-1790': { icon: 'bridge' }, 'debt-1835': { icon: 'target' }, 'last-surplus': { icon: 'scale' }, 'defense-1962': { icon: 'shield' },
+};
+const CHAPTER_PIC: Record<string, IconId> = { overview: 'gauge', spending: 'bills', revenue: 'paycheck', receipt: 'paycheck', state: 'home', gap: 'gap', debt: 'card', process: 'capitol', laws: 'scale', 'social-security': 'people' };
+
 // ---- Bills
 
 const STAGES = ['Introduced', 'In committee', 'Reported by committee', 'Passed House', 'Passed Senate', 'Passed both chambers', 'Sent to President', 'Became law'];
@@ -189,9 +215,10 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
   return (
     <>
       <Head item={item} />
+      <PostArt tone="bills" {...billPic(bill)} big={bill.label} small={bill.area || 'Bill in Congress'} />
       <div className="fc-bill-top">
         <span className="fc-status" data-stage={stage} title={bill.latestAction.text}>{bill.status}</span>
-        <span className="fc-billno">{bill.label}{bill.companion ? <span className="muted"> · twin bill {bill.companion}</span> : null}</span>
+        {bill.companion && <span className="fc-billno muted">Twin bill: {bill.companion}</span>}
       </div>
       <h3 className="fc-title">{bill.title}</h3>
       <StageTrack status={bill.status} />
@@ -238,6 +265,7 @@ function NewsCard({ item }: { item: Extract<FeedItem, { kind: 'news' }> }) {
   return (
     <>
       <Head item={item} badge={item.news.source} />
+      <PostArt tone="news" glyph="megaphone" big={item.news.source} small={when(item.news.time, item.news.dateOnly)} compact />
       <h3 className="fc-title fc-title-sm">{item.news.title}</h3>
       <a className="fc-link" href={item.news.url} target="_blank" rel="noopener noreferrer">Learn more <Icon d={ICON.ext} size={14} /></a>
     </>
@@ -264,10 +292,8 @@ function DeadlineCard({ item }: { item: Extract<FeedItem, { kind: 'deadline' }> 
   return (
     <>
       <Head item={item} />
-      <div className="fc-deadline">
-        <span className="fc-deadline-date"><strong>{fmtDate(d.date)}</strong><span>{days <= 0 ? 'today' : `in ${days} day${days === 1 ? '' : 's'}`}</span></span>
-        <h3 className="fc-title fc-title-sm">{item.title}</h3>
-      </div>
+      <PostArt tone="news" glyph="calendar" big={days <= 0 ? 'Today' : `${days} day${days === 1 ? '' : 's'}`} small={`left · ${fmtDate(d.date)}`} />
+      <h3 className="fc-title fc-title-sm">{item.title}</h3>
       <p>{d.what}</p>
       <div className="fc-actions">
         {/* The claude.ai viewer can't hand over files, so the artifact copy leaves this out. */}
@@ -283,6 +309,7 @@ function DailyCard({ item }: { item: FeedItem }) {
   return (
     <>
       <Head item={item} badge={`Daily Dollar #${p.n}`} />
+      <PostArt tone="news" icon="target" big={`#${p.n}`} small={<span className="fc-art-dots">{[0, 1, 2, 3, 4].map((k) => <span key={k} />)}<span>five rounds</span></span>} />
       <h3 className="fc-title">{p.theme ? `${p.theme.name}: ` : ''}{p.pool.title}</h3>
       <p className="muted">Higher or lower? Five rounds, about a minute, and a new one every day.</p>
       <a className="btn btn-primary fc-cta" href="#daily">Play today’s</a>
@@ -362,8 +389,9 @@ function LawCard({ item }: { item: Extract<FeedItem, { kind: 'law' }> }) {
   return (
     <>
       <Head item={item} />
+      <PostArt tone="budget" {...(LAW_PIC[l.kind] ?? { icon: 'scale' })} big={`${up ? '+' : '−'}${moneyWords(Math.abs(l.deficitEffect) * 1e9, 2)}`} small={`${up ? 'added to' : 'cut from'} deficits, ${l.window}`} />
       <h3 className="fc-title fc-title-sm">{l.name} <span className="muted">({l.signed.slice(0, 4)})</span></h3>
-      <p className="fc-law-num"><strong>{up ? '+' : '−'}{moneyWords(Math.abs(l.deficitEffect) * 1e9, 2)}</strong> <span className="muted">{up ? 'added to' : 'cut from'} deficits over {l.window}, as scored when it passed</span></p>
+      <p className="fc-law-num muted">As scored when it passed; signed {fmtDate(l.signed)}.</p>
       <span className="fc-size-bar" data-dir={up ? 'up' : 'down'} role="img" aria-label={`${Math.round((Math.abs(l.deficitEffect) / MAX_LAW) * 100)}% of the biggest effect among the laws in the game`}><span style={{ width: `${Math.max(3, (Math.abs(l.deficitEffect) / MAX_LAW) * 100)}%` }} /></span>
       <p className="fc-clamp">{l.summary}</p>
       <a className="fc-link" href="#laws">All the laws that moved the needle <Icon d={ICON.chevron} size={14} /></a>
@@ -388,10 +416,10 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
   return (
     <>
       <Head item={item} />
+      <PostArt tone="polls" icon={o.side === 'revenue' ? 'paycheck' : 'bills'} big={moneyWords(Math.abs(o.savings10) * 1e9, 2)} small={`${saves ? (o.side === 'revenue' ? 'raised' : 'saved') : 'cost'} over 10 years, by CBO’s estimate`} />
       <p className="fc-ask fc-ask-top">Would you include this in a plan to shrink the deficit?</p>
       <h3 className="fc-title">{o.name}</h3>
       <div className="fc-size">
-        <p className="fc-chip">{saves ? 'Saves' : 'Costs'} {moneyWords(Math.abs(o.savings10) * 1e9, 2)} over 10 years <span className="muted">(CBO)</span></p>
         <span className="fc-size-bar" role="img" aria-label={`Size among CBO’s options: ${Math.round((Math.abs(o.savings10) / MAX_OPTION) * 100)}% of the biggest`}><span style={{ width: `${Math.max(3, (Math.abs(o.savings10) / MAX_OPTION) * 100)}%` }} /></span>
         <span className="fc-size-k">compared with the biggest of CBO’s options in the game</span>
       </div>
@@ -428,6 +456,10 @@ function CheckCard({ item }: { item: Extract<FeedItem, { kind: 'check' }> }) {
   return (
     <>
       <Head item={item} />
+      <div className="fc-check-art" data-state={pick == null ? 'ask' : pick === q.correct ? 'right' : 'wrong'}>
+        <PostArt tone="lessons" glyph="question" big={pick == null ? 'Quick check' : pick === q.correct ? 'Right!' : 'Not quite'} small={`from ${missionShort(item.stop)}`} />
+        {pick === q.correct && <span className="fc-burst" aria-hidden="true">{[0, 1, 2, 3, 4, 5, 6, 7].map((k) => <span key={k} style={{ ['--k' as string]: k }}>★</span>)}</span>}
+      </div>
       <h3 className="fc-title">{q.question}</h3>
       <div className="fc-choices fc-choices-col" role="group" aria-label="Choices">
         {q.choices.map((c, i) => (
@@ -451,14 +483,10 @@ function TutorialCard({ item }: { item: Extract<FeedItem, { kind: 'tutorial' }> 
   return (
     <>
       <Head item={item} />
-      <div className="fc-tut">
-        <span className="fc-tut-icon" aria-hidden="true"><LevelIcon id={s.icon} size={30} /></span>
-        <div>
-          <span className="fc-progress">{stepCount ? `${stepCount} steps · ` : ''}{s.minutes} min · {s.difficulty}{finished ? ' · Done ✓' : ''}</span>
-          <h3 className="fc-title">{s.title}</h3>
-          <p className="muted fc-tut-topic">{s.topic}</p>
-        </div>
-      </div>
+      <PostArt tone="lessons" figure={<span className="fc-art-seal" data-got={finished || undefined}><Seal icon={s.icon} ring={`MISSION ${s.campaign}.${s.mission} · ${finished ? 'COMPLETE' : s.difficulty.toUpperCase()}`} stars={finished ? j.stars[s.id] ?? 0 : undefined} diff={diffKey(s.difficulty)} size={66} /></span>}
+        big={missionShort(s)} small={`${stepCount ? `${stepCount} steps · ` : ''}${s.minutes} min · ${s.difficulty}${finished ? ' · done' : ''}`} />
+      <h3 className="fc-title">{s.title}</h3>
+      <p className="muted fc-tut-topic">{s.topic}</p>
       {stepCount > 0 && (
         <>
           <button type="button" className="fc-more" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Hide the steps' : 'What you’ll do'}</button>
@@ -479,6 +507,7 @@ function ChapterCard({ item }: { item: Extract<FeedItem, { kind: 'chapter' }> })
   return (
     <>
       <Head item={item} />
+      <PostArt tone="lessons" icon={CHAPTER_PIC[item.route] ?? 'capitol'} big="Field guide" small="a chapter to read, every number sourced" />
       <h3 className="fc-title">{item.label}</h3>
       <p>{item.blurb}</p>
       <a className="fc-link" href={'#' + item.route}>Read the chapter <Icon d={ICON.chevron} size={14} /></a>
@@ -490,7 +519,10 @@ function TermCard({ item }: { item: Extract<FeedItem, { kind: 'term' }> }) {
   return (
     <>
       <Head item={item} />
-      <h3 className="fc-title fc-title-sm">{item.term.term}</h3>
+      <div className="fc-term">
+        <span className="fc-term-letter" aria-hidden="true">{item.term.term.replace(/^[^A-Za-z]+/, '').charAt(0).toUpperCase()}</span>
+        <h3 className="fc-title fc-title-sm">{item.term.term}</h3>
+      </div>
       <p className="fc-clamp">{item.term.def}</p>
       <a className="fc-link" href="#glossary">The glossary <Icon d={ICON.chevron} size={14} /></a>
     </>
@@ -506,11 +538,9 @@ function FactCard({ item }: { item: Extract<FeedItem, { kind: 'fact' }> }) {
   return (
     <>
       <Head item={item} badge={badge} />
-      <div className="fc-fact">
-        <span className="fc-fact-big" aria-hidden="true">{f.big ?? f.year}</span>
-        <h3 className="fc-title">{f.title}</h3>
-      </div>
-      {f.date && <p className="fc-fact-date">{LONG.format(new Date(f.date + 'T12:00:00Z'))}{f.near === 'today' ? ` · ${new Date().getUTCFullYear() - +f.date.slice(0, 4)} years ago today` : ''}</p>}
+      <PostArt tone="facts" {...(FACT_PIC[item.id.replace(/^fact:/, '')] ?? { glyph: 'book' })} big={f.big ?? f.year ?? 'Fun fact'} small={f.date ? LONG.format(new Date(f.date + 'T12:00:00Z')) : 'Did you know?'} />
+      <h3 className="fc-title">{f.title}</h3>
+      {f.date && f.near === 'today' && <p className="fc-fact-date">{new Date().getUTCFullYear() - +f.date.slice(0, 4)} years ago today</p>}
       <p>{f.body}</p>
     </>
   );

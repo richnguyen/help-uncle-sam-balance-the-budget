@@ -3312,3 +3312,38 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .hud-title-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent); }
 .hud-title-btn svg { flex: none; width: 16px; height: 16px; }
 .hud-left .ab-pop { position: relative; min-width: 0; }
+
+/* ===== Post pictures (src/game/feed/art.tsx): a band in the topic's color, an engraved pattern,
+   an icon on a white disc (or a mission's seal), and the post's one big figure. ===== */
+.fc-art { --t: var(--accent); position: relative; display: flex; align-items: center; gap: 14px; min-height: 104px; margin: 0 -16px; padding: 14px 18px; overflow: hidden; color: var(--t);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--t) 20%, var(--surface)) 0%, color-mix(in srgb, var(--t) 7%, var(--surface)) 70%); border-block: 1px solid color-mix(in srgb, var(--t) 18%, transparent); }
+.fc-art[data-tone="bills"] { --t: var(--fc-bills); } .fc-art[data-tone="budget"] { --t: var(--fc-budget); } .fc-art[data-tone="polls"] { --t: var(--fc-polls); }
+.fc-art[data-tone="lessons"] { --t: var(--fc-lessons); } .fc-art[data-tone="facts"] { --t: var(--fc-facts); } .fc-art[data-tone="news"] { --t: var(--fc-news); }
+.fc-art-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.22; pointer-events: none; }
+.fc-art-disc { position: relative; flex: none; display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 3px color-mix(in srgb, var(--t) 35%, transparent), 0 6px 16px color-mix(in srgb, var(--t) 25%, transparent); }
+.fc-art-figure { position: relative; flex: none; display: grid; place-items: center; width: 72px; }
+.fc-art-text { position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fc-art-big { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.7rem, 1.3rem + 1.4vw, 2.2rem); line-height: 1; letter-spacing: -0.005em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.fc-art-small { font-size: 0.8125rem; font-weight: 650; color: var(--ink-2); }
+.fc-art-compact { min-height: 72px; padding-block: 10px; }
+.fc-art-compact .fc-art-disc { width: 50px; height: 50px; }
+.fc-art-compact .fc-art-disc svg { width: 26px; height: 26px; }
+.fc-art-compact .fc-art-big { font-size: 1.25rem; }
+.fc-art-seal:not([data-got]) .seal { filter: grayscale(1); opacity: 0.55; }
+.fc-art-dots { display: inline-flex; align-items: center; gap: 4px; }
+.fc-art-dots > span:not(:last-child) { width: 10px; height: 10px; border-radius: 3px; background: currentColor; opacity: 0.55; }
+.fc-art-dots > span:last-child { margin-left: 4px; }
+/* Pictures come first after the head, edge to edge in the card. */
+.fc > .fc-head + .fc-art, .fc > .fc-head + .fc-check-art { margin-top: 2px; }
+/* A quick check: the "?" turns into "Right!" with a burst of stars. */
+.fc-check-art { position: relative; margin-inline: -16px; }
+.fc-check-art .fc-art { margin: 0; }
+.fc-check-art[data-state="right"] .fc-art { --t: var(--good-text); }
+.fc-check-art[data-state="wrong"] .fc-art { --t: var(--critical); }
+.fc-burst { position: absolute; left: 52px; top: 50%; width: 0; height: 0; pointer-events: none; }
+.fc-burst span { position: absolute; left: 0; top: 0; color: var(--gold); font-size: 18px; transform: translate(-50%, -50%); animation: fc-burst 0.8s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--k) * 15ms); }
+@keyframes fc-burst { from { opacity: 1; transform: translate(-50%, -50%) rotate(calc(var(--k) * 45deg)) translateY(0) scale(0.6); } to { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--k) * 45deg)) translateY(-62px) scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .fc-burst { display: none; } }
+/* A word to know: its first letter, large. */
+.fc-term { display: flex; align-items: center; gap: 14px; }
+.fc-term-letter { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; font-family: var(--font-display); font-size: 2.4rem; line-height: 1; color: var(--fc-lessons); background: color-mix(in srgb, var(--fc-lessons) 14%, var(--surface)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fc-lessons) 35%, transparent); }
