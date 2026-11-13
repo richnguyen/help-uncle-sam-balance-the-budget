@@ -291,3 +291,18 @@ const marked = (await asService('select public.mark_bills_alerted($1::jsonb) as 
 ok(marked === 3 && (await asService('select * from public.bill_alerts_due($1::jsonb)', [nowStages])).rows.length === 0, `follows: after the alerts, every follower is up to date (${marked} rows), so nothing goes twice`);
 await as(G[1], `delete from public.bill_follows where bill = 's1176-119'`);
 ok((await as(G[1], 'select * from public.bill_follows')).rows.length === 0, 'follows: a player can stop following');
+
+// Play counts (the playtest): anonymous daily totals only, from a fixed list of metrics.
+for (const [m, k] of [['desk_open', 'level-5'], ['desk_open', 'level-5'], ['desk_play', 'level-5'], ['desk_done', 'level-5'], ['ripple_time', '30-60'], ['poll_view', 'feed'], ['poll_vote', 'feed'], ['free_roam', 'on'], ['jump_ahead', 'level-7'], ['quick_start', 'level-2'], ['quick_done', 'level-2']]) await as(null, 'select public.count_play($1, $2)', [m, k]);
+await as(G[0], `select public.count_play('desk_open', 'level-8')`);
+await as(null, `select public.count_play('desk_open', 'level-99')`);
+await as(null, `select public.count_play('who_played', 'rich@example.com')`);
+await as(null, `select public.count_play('ripple_time', '12.34')`);
+const ps = (await as(null, 'select public.play_stats(30) as s')).rows[0].s;
+console.log('  play_stats:', JSON.stringify(ps.totals));
+ok(ps.totals.desk_open['level-5'] === 2 && ps.totals.desk_open['level-8'] === 1 && ps.totals.desk_play['level-5'] === 1 && ps.totals.desk_done['level-5'] === 1, 'play counts: desks opened, started and finished, as daily totals');
+ok(ps.totals.ripple_time['30-60'] === 1 && ps.totals.poll_vote.feed === 1 && ps.totals.quick_done['level-2'] === 1 && ps.totals.jump_ahead['level-7'] === 1, 'play counts: ripple time in buckets, polls, quick play, jump-ahead');
+ok(!ps.totals.who_played && !ps.totals.desk_open['level-99'] && !ps.totals.ripple_time['12.34'], 'play counts: unknown metrics and keys are ignored (nothing personal can be stored)');
+ok(Array.isArray(ps.daily) && ps.daily.every((r) => Object.keys(r).sort().join() === 'day,key,metric,n'), 'play counts: the daily rows hold only a day, a metric, a key and a count');
+ok(await fails(() => as(null, `insert into public.play_counts (day, metric, key, n) values (current_date, 'desk_open', 'level-5', 999)`)), 'play counts: nobody writes the counts directly');
+ok((await as(null, 'select * from public.play_counts')).rows.length === 0 && (await as(G[0], 'select * from public.play_counts')).rows.length === 0, 'play counts: nobody reads the table directly');
