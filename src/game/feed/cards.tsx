@@ -203,7 +203,8 @@ function DeadlineCard({ item }: { item: Extract<FeedItem, { kind: 'deadline' }> 
       </div>
       <p>{d.what}</p>
       <div className="fc-actions">
-        <button type="button" className="btn btn-sm" onClick={save}><Icon d={ICON.calendar} size={16} /> Save to calendar</button>
+        {/* The claude.ai viewer can't hand over files, so the artifact copy leaves this out. */}
+        {!__ARTIFACT__ && <button type="button" className="btn btn-sm" onClick={save}><Icon d={ICON.calendar} size={16} /> Save to calendar</button>}
         <a className="fc-link" href={d.source.url} target="_blank" rel="noopener noreferrer">Learn more <Icon d={ICON.ext} size={14} /></a>
       </div>
     </>

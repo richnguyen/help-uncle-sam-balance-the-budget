@@ -315,7 +315,7 @@ like a civic briefing, built for a phone and a thumb.
   - *Announcements*: the official news the main menu has always carried (White House actions on
     taxes and spending, CBO, the House and Senate floors, bills sent to the President) in compact
     cards with an amber edge, and deadlines within two months (the funding deadline) with *Save to
-    calendar* (a .ics file).
+    calendar* (a .ics file; left out of the claude.ai copy, whose viewer can't hand over files).
   - *Fun facts*: budget history and surprising numbers, each with its official source
     (`src/data/curated/facts.json`): the Treasury's founding, the first income tax, the 16th
     Amendment, where the debt limit came from, the first monthly Social Security check ($22.54),
