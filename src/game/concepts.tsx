@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 import { Seg } from '../components/ui';
 import { cbo, POP } from '../data';
 import { CTX } from '../lib/assess';
+import { countPlay } from '../lib/backend';
 import { dollars, money, moneyWords, pct } from '../lib/format';
 import { MULT, mid, optionPath } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
@@ -63,6 +64,17 @@ function SameSavings() {
       <Rated id="ripple" />
     </div>
   );
+}
+
+/** Times a round for the playtest's counts: how long players spend on it, in buckets, nothing else. */
+function TimedRound({ done, children }: { done: Done; children: (done: Done) => ReactNode }) {
+  const t0 = useRef(Date.now());
+  const timed: Done = (p, v) => {
+    const sec = (Date.now() - t0.current) / 1000;
+    countPlay('ripple_time', sec < 15 ? 'lt15' : sec < 30 ? '15-30' : sec < 60 ? '30-60' : sec < 120 ? '60-120' : 'gt120');
+    done(p, v);
+  };
+  return <>{children(timed)}</>;
 }
 
 // ---------- Speed: each year's tightening, all at once or phased in ----------
@@ -199,7 +211,7 @@ export const CONCEPT_LEVELS: Level[] = [
         id: 'ceq1', question: 'For each dollar saved, which change slows the economy the least at first?',
         choices: ['Cutting what the government buys', 'Raising taxes on higher-income people', 'Cutting payments to people'], correct: 1,
         explain: <>CBO estimates a dollar raised from higher-income people shrinks output by {fmtMult(high.lo)} to {fmtMult(high.hi)} at first, because they’d have saved part of it anyway. A dollar less of government purchases: {fmtMult(purchases.lo)} to {fmtMult(purchases.hi)}. Payments to people: {fmtMult(people.lo)} to {fmtMult(people.hi)}.</> } },
-          { kind: 'custom', id: 'rank', label: 'Ripple ranking', sam: <>Round two. Here are four ways to save a hundred billion dollars. Rank them from the smallest ripple through the economy to the biggest.</>, play: ({ done, intro }) => <OrderRound items={[...SAME].sort((a, b) => mid(opt(a.id).econ.cls) - mid(opt(b.id).econ.cls)).map((x) => ({ id: x.id, label: x.label, detail: `the economy shrinks about $${Math.round(100 * mid(opt(x.id).econ.cls))} billion at first` }))} start={['cut-defense-budget', 'limit-itemized-15pct', 'medicare-advantage-benchmarks', 'income-tax-rates-1pt']} intro={intro} done={done} prompt="Smallest ripple first: rank the four ways to save $100 billion." /> },
+          { kind: 'custom', id: 'rank', label: 'Ripple ranking', sam: <>Round two. Here are four ways to save a hundred billion dollars. Rank them from the smallest ripple through the economy to the biggest.</>, play: ({ done, intro }) => <TimedRound done={done}>{(d) => <OrderRound items={[...SAME].sort((a, b) => mid(opt(a.id).econ.cls) - mid(opt(b.id).econ.cls)).map((x) => ({ id: x.id, label: x.label, detail: `the economy shrinks about $${Math.round(100 * mid(opt(x.id).econ.cls))} billion at first` }))} start={['cut-defense-budget', 'limit-itemized-15pct', 'medicare-advantage-benchmarks', 'income-tax-rates-1pt']} intro={intro} done={d} prompt="Smallest ripple first: rank the four ways to save $100 billion." />}</TimedRound> },
           { kind: 'choice', id: 'why', label: 'Bonus round', sam: <>Bonus round.</>, quiz: {
         id: 'ceq2', question: 'Why does cutting what the government buys hit the economy hardest at first?',
         choices: ['Every dollar not spent is a dollar less of goods and services bought right away', 'Government purchases are taxed twice', 'The Federal Reserve can never respond to it'], correct: 0,

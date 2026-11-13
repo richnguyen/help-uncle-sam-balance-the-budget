@@ -14,6 +14,7 @@
 // Nothing here takes a side: the summary is CRS's, the status and sponsor are Congress.gov's.
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { parseRollCall } from './rollcall.mjs';
 
 const OUT = new URL('../src/data/generated/bills.json', import.meta.url);
 const PUBLIC = new URL('../public/bills.json', import.meta.url);
@@ -43,6 +44,29 @@ async function get(path, params = {}) {
   const r = await fetch(u, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
   if (!r.ok) throw new Error(`${r.status} ${path}`);
   return r.json();
+}
+
+/**
+ * A bill's floor votes, from the official records the Congress.gov actions point to (the House
+ * Clerk's and the Senate's XML). Newest first, at most four per bill; a record that can't be read
+ * is left out rather than guessed at.
+ */
+const VOTE_HOSTS = /^https:\/\/(clerk\.house\.gov|www\.senate\.gov)\//;
+let voteRecords = 0;
+async function floorVotes(congress, type, number) {
+  let actions = [];
+  try { actions = (await get(`/bill/${congress}/${type}/${number}/actions`, { limit: 250 })).actions ?? []; } catch (e) { console.warn(`no actions for ${type}${number}: ${e.message}`); return []; }
+  const urls = [...new Set(actions.flatMap((a) => (a.recordedVotes ?? []).map((v) => v.url)).filter((u) => VOTE_HOSTS.test(u ?? '')))].slice(0, 4);
+  const votes = [];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(25000) });
+      if (!r.ok) throw new Error(String(r.status));
+      const v = parseRollCall(await r.text(), url);
+      if (v.roll && v.members.length && v.totals.yea + v.totals.nay > 0) { votes.push(v); voteRecords++; }
+    } catch (e) { console.warn(`roll call ${url} unreadable: ${e.message}`); }
+  }
+  return votes.sort((a, b) => b.date.localeCompare(a.date));
 }
 
 /** The summary's opening paragraphs, up to about 1,400 characters; the rest is on Congress.gov. */
@@ -127,7 +151,8 @@ async function main() {
       status: statusOf(latest.text, c.s.actionDesc, d.laws ?? []),
       latestAction: { date: latest.actionDate ?? c.s.actionDate ?? '', text: (latest.text ?? c.s.actionDesc ?? '').replace(/\s+/g, ' ').trim() },
       introduced: d.introducedDate ?? '',
-      sponsor: sp ? { name: sp.fullName?.replace(/\s*\[[^\]]+\]\s*$/, '') ?? '', party: sp.party ?? '', state: sp.state ?? '' } : null,
+      // The sponsor exactly as Congress.gov lists them, e.g. "Sen. Crapo, Mike [R-ID]", plus its parts.
+      sponsor: sp ? { name: sp.fullName?.replace(/\s*\[[^\]]+\]\s*$/, '') ?? '', display: sp.fullName ?? '', party: sp.party ?? '', state: sp.state ?? '', district: sp.district ?? null } : null,
       cosponsors: d.cosponsors?.count ?? 0,
       summary: opening(c.text).text,
       summaryCut: opening(c.text).cut,
@@ -136,6 +161,9 @@ async function main() {
       cbo: cbo ? { title: cbo.title ?? '', url: cbo.url, date: (cbo.pubDate ?? '').slice(0, 10) } : null,
       url: `https://www.congress.gov/bill/${c.b.congress}th-congress/${TYPE_PATH[c.b.type] ?? 'house-bill'}/${c.b.number}`,
       updated: (d.updateDateIncludingText ?? d.updateDate ?? c.s.updateDate ?? '').slice(0, 10),
+      // Floor votes, only for bills past introduction (and only when the detail call worked).
+      votes: d.sponsors && !/^introduced/i.test(statusOf(latest.text, c.s.actionDesc, d.laws ?? [])) && !limited && calls < DETAIL_BUDGET + 20
+        ? await floorVotes(c.b.congress, c.b.type.toLowerCase(), c.b.number) : [],
     });
   }
   // A House bill and its Senate twin share a title: keep the one summarized last, and name the other.
@@ -165,4 +193,4 @@ writeFileSync(OUT, text);
 // A small public copy next to the site (dist/bills.json), for the alert sender: which stage each
 // bill is at. The sender compares it with what players follow (supabase/functions/daily-reminders).
 writeFileSync(PUBLIC, JSON.stringify({ fetchedAt: out.fetchedAt, bills: bills.map((b) => ({ id: b.id, label: b.label, title: b.title, status: b.status, url: b.url })) }) + '\n');
-console.log(`${bills.length} bills (${calls} calls${DEMO ? ', DEMO_KEY' : ''}) → src/data/generated/bills.json${before === text ? ' (unchanged)' : ''}`);
+console.log(`${bills.length} bills (${calls} calls${DEMO ? ', DEMO_KEY' : ''}, ${voteRecords} roll-call records) → src/data/generated/bills.json${before === text ? ' (unchanged)' : ''}`);

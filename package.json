@@ -19,7 +19,10 @@
     "previews": "node scripts/make-previews.mjs http://localhost:5173/",
     "news": "node scripts/fetch-news.mjs",
     "dts": "node scripts/fetch-dts.mjs",
-    "test:alerts": "node --experimental-strip-types --no-warnings supabase/tests/bill-alerts.test.mts"
+    "test:rollcall": "node scripts/rollcall.test.mjs",
+    "test:alerts": "node --experimental-strip-types --no-warnings supabase/tests/bill-alerts.test.mts",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "test:e2e:full": "node tests/e2e/run.mjs --tier full"
   },
   "dependencies": {
     "d3": "7.9.0",

@@ -33,6 +33,17 @@ export const ROUND_LINES = {
 export const GRADE_POINTS = { spot: 100, close: 60, far: 20 } as const;
 /** Three stars at 85% of the possible points, two at 60%, and one for finishing. */
 export const starsFor = (score: number, max: number) => (score >= 0.85 * max ? 3 : score >= 0.6 * max ? 2 : 1);
+/** The points each star takes, said up front so a replay is about mastery, not luck. */
+export const starPoints = (max: number) => ({ two: Math.ceil(0.6 * max), three: Math.ceil(0.85 * max) });
+function Thresholds({ max, best }: { max: number; best?: number }) {
+  const t = starPoints(max);
+  const row = [{ n: 1, label: 'finish' }, { n: 2, label: `${t.two} points` }, { n: 3, label: `${t.three} points` }];
+  return (
+    <p className="game-thresholds small" aria-label={`Stars: one for finishing, two at ${t.two} points, three at ${t.three} points, out of ${max}.`}>
+      {row.map((x) => <span key={x.n} data-got={best != null && (x.n === 1 || best >= (x.n === 2 ? t.two : t.three)) || undefined}><span aria-hidden="true">{'★'.repeat(x.n)}</span> {x.label}</span>)}
+    </p>
+  );
+}
 
 export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: string[] }) {
   const j = useJourney();
@@ -79,6 +90,7 @@ export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: stri
           <div className="game-over-title">{game.title}</div>
           <Stars n={best.stars} size="lg" label={`Best: ${best.stars} of 3 stars`} />
           <strong className="game-over-score num">{best.best} <span className="small muted">of {max} points, your best</span></strong>
+          <Thresholds max={max} best={best.best} />
           {takeaways && <><div className="stat-label">What the game showed</div><ul className="takeaways"><Terms>{takeaways.map((t) => <li key={t}>{t}</li>)}</Terms></ul></>}
           <div className="sim-actions"><button type="button" className="btn btn-primary game-again" onClick={again}>Play again</button></div>
         </div>
@@ -103,6 +115,8 @@ export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: stri
       <section className="game-round" key={`${run}-${r}`} aria-labelledby={`round-${round.id}`}>
         <RoundView round={round} done={done} />
       </section>
+      {/* What each star takes, under the first round (not above it, so the round starts high). */}
+      {r === 0 && pts[0] == null && <Thresholds max={max} best={best?.best} />}
       {pts[r] != null && (
         <div className="game-banner" role="status" data-good={(pts[r] ?? 0) >= 60 || undefined}>
           <strong className="game-plus num">+{pts[r]}</strong>

@@ -1,5 +1,5 @@
 // Mission 1.4, "Your county": who paid the federal income tax where the player lives, by income,
-// next to the whole country. The county comes from the ZIP typed a step earlier (or picked here);
+// next to the whole country. The county comes from the ZIP typed just above it (or picked here);
 // the figures are the IRS's county data, one small file per state, loaded only when needed.
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { SegBar } from '../components/charts';
@@ -10,9 +10,10 @@ import { load } from '../lib/storage';
 import { useVotes } from '../lib/votes';
 import { areaForZip, isZip } from '../lib/zip';
 
-// The ZIP typed in "Your state", kept only for this visit: saving it is a separate choice there.
+// The ZIP typed in "Your county", kept only for this visit: saving it is a separate choice there.
 let visitZip = '';
 export const rememberZip = (z: string) => { visitZip = z; };
+export const visitedZip = () => visitZip;
 
 /** [county FIPS, name, state, returns by group, income tax by group ($ thousands)]; null when the IRS leaves a tiny county out. */
 type CountyRow = [string, string, string, number[] | null, number[] | null];
@@ -104,15 +105,15 @@ const zipParts = (file: CountyFile | null | undefined, zip: string) => {
   return zc === undefined ? [] : typeof zc === 'number' ? [{ i: zc, share: 100 }] : zc.map(([i, share]) => ({ i, share }));
 };
 
-export function CountyTry() {
-  const saved = useSavedZip();
-  const [zip, setZip] = useState(visitZip || saved);
-  const [typed, setTyped] = useState(zip);
+/**
+ * The county under the ZIP form in mission 1.4: where the ZIP is (county, then state, then the
+ * country), and that county's figures. A ZIP that crosses county lines offers each county; any
+ * county in the state, or the whole state, can be picked instead.
+ */
+export function CountyTry({ zip, st }: { zip: string; st: string }) {
   const [pick, setPick] = useState<string | null>(null); // a county FIPS, or 'state'
-  useEffect(() => { if (!zip && saved) { setZip(saved); setTyped(saved); } }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  useEffect(() => setPick(null), [zip, st]);
   const area = isZip(zip) ? areaForZip(zip) : null;
-  const st = area?.kind === 'state' ? area.abbr : load<string>('state', 'TX');
   const stName = geo.states.find((x) => x.abbr === st)?.name ?? st;
   const territory = TERRITORIES.has(st);
   const [file, retry] = useCountyFile(st, territory);
@@ -124,31 +125,25 @@ export function CountyTry() {
     return list.sort((a, b) => a.c[1].localeCompare(b.c[1]));
   }, [file, st, zc]); // eslint-disable-line react-hooks/exhaustive-deps
   const chosen = !file ? -1 : pick === 'state' ? -1 : pick ? file.counties.findIndex((c) => c[0] === pick) : zipCounties[0]?.i ?? -1;
-
-  const find = (e: React.FormEvent) => { e.preventDefault(); if (isZip(typed)) { setZip(typed); rememberZip(typed); setPick(null); } };
+  // Where the ZIP is: its county (the one picked, if the ZIP spans several), then its state, then the country.
+  const home = file && zipCounties.length ? file.counties[zipCounties.some((z) => z.i === chosen) ? chosen : zipCounties[0].i] : null;
   const zipMsg = !isZip(zip) ? null
     : area?.kind === 'military' ? 'A military ZIP has no county. Pick one below.'
     : file && zc === undefined ? `ZIP ${zip} is a post office box or single-address ZIP with no area of its own, so it has no county here. Pick yours below.`
     : null;
 
   return (
-    <div className="try county">
-      <form className="zip-form" onSubmit={find} aria-label="Find your county from your ZIP code">
-        <div className="field"><label htmlFor="cty-zip">Your ZIP code</label>
-          <input id="cty-zip" className="input zip-input num" inputMode="numeric" autoComplete="postal-code" maxLength={5} placeholder="e.g. 22301" value={typed}
-            onChange={(e) => setTyped(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-describedby="cty-note" />
+    <div className="cty-under">
+      {isZip(zip) && (territory || home) && (
+        <div className="zip-place" role="status">
+          <span className="small muted">ZIP {zip} is in</span>
+          <ol aria-label={`Where ZIP ${zip} is`}>
+            {home && <li><strong>{home[1]}</strong>{home[2] !== st ? `, ${home[2]}` : ''}</li>}
+            <li>{stName}</li>
+            <li>United States</li>
+          </ol>
         </div>
-        <button type="submit" className="btn zip-find" disabled={!isZip(typed) || typed === zip}>Find my county</button>
-        {file && options.length > 0 && (
-          <div className="field cty-pick"><label htmlFor="cty-select">County</label>
-            <select id="cty-select" className="select" value={chosen >= 0 ? file.counties[chosen][0] : 'state'} onChange={(e) => setPick(e.target.value)}>
-              <option value="state">All of {stName}</option>
-              {options.map(({ c }) => <option key={c[0]} value={c[0]}>{c[1]}{c[2] !== st ? `, ${c[2]}` : ''}</option>)}
-            </select>
-          </div>
-        )}
-      </form>
-      <p className="small muted" id="cty-note">Your ZIP is used here only to find your county; this step doesn’t save it.</p>
+      )}
       {zipMsg && <p className="small zip-msg" role="status">{zipMsg}</p>}
       {file && zipCounties.length > 1 && (
         <div className="cty-chips" role="group" aria-label={`ZIP ${zip} crosses county lines`}>
@@ -161,6 +156,14 @@ export function CountyTry() {
         </div>
       )}
       <CountyResult file={file} territory={territory} chosen={chosen} st={st} stName={stName} retry={retry} />
+      {file && options.length > 0 && (
+        <div className="field cty-pick"><label htmlFor="cty-select">{isZip(zip) ? 'Not your county? Pick another' : 'County'}</label>
+          <select id="cty-select" className="select" value={chosen >= 0 ? file.counties[chosen][0] : 'state'} onChange={(e) => setPick(e.target.value)}>
+            <option value="state">All of {stName}</option>
+            {options.map(({ c }) => <option key={c[0]} value={c[0]}>{c[1]}{c[2] !== st ? `, ${c[2]}` : ''}</option>)}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

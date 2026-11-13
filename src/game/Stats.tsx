@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PageHead, Section, Seg, Stat } from '../components/ui';
-import { backendOn, CHANNELS, LINK_KINDS, type LinkKind, rpc } from '../lib/backend';
+import { backendOn, CHANNELS, LINK_KINDS, type LinkKind, playStats, type PlayStats, rpc } from '../lib/backend';
+import { STOP_BY_ID, missionShort } from './levels';
 import { pct } from '../lib/format';
 import { PUBLIC_SITE } from './share';
 
@@ -168,11 +169,79 @@ export default function StatsPage() {
             </Section>
           )}
 
+          <PlaySection win={Number(win)} />
+
           <p className="small muted">
             How these are counted: a share is a press of a share button or a social network link (whether or not the post was sent). An opened link is counted once per browser per day for each kind and channel. A new player is someone whose record (a finished level or an answered quick check) was first saved in this period; their channel is the shared link that first brought them, kept in their browser. Links copied by hand, or forwarded without their tag, count as “No shared link”. Share and open counts are anonymous tallies that any browser can add to, so treat small numbers loosely. {s.players_all} players in all.
           </p>
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * How people play (the playtest's counts): desk abandonment, time on the 1.6 ripple round, poll
+ * participation, free roam and jump-ahead, and Quick play. Daily totals only, with a CSV of them.
+ */
+function PlaySection({ win }: { win: number }) {
+  const [p, setP] = useState<PlayStats | null>(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    let alive = true; setErr(false);
+    playStats(win).then((r) => { if (alive) setP({ window_days: r?.window_days ?? win, since: r?.since ?? '', totals: r?.totals && typeof r.totals === 'object' ? r.totals : {}, daily: Array.isArray(r?.daily) ? r.daily : [] }); }).catch(() => { if (alive) setErr(true); });
+    return () => { alive = false; };
+  }, [win]);
+  const t = p?.totals ?? {};
+  const n = (m: string, k: string) => t[m]?.[k] ?? 0;
+  const sum = (m: string) => Object.values(t[m] ?? {}).reduce((a, x) => a + x, 0);
+  const desks = ['level-5', 'level-8', 'level-10'];
+  const BUCKETS: [string, string][] = [['lt15', 'under 15 s'], ['15-30', '15–30 s'], ['30-60', '30–60 s'], ['60-120', '1–2 min'], ['gt120', 'over 2 min']];
+  const rippleTotal = BUCKETS.reduce((a, [k]) => a + n('ripple_time', k), 0);
+  const name = (id: string) => (STOP_BY_ID[id] ? `${missionShort(STOP_BY_ID[id])}` : id);
+  const csv = p ? 'day,metric,key,count\n' + p.daily.map((r) => `${r.day},${r.metric},${r.key},${r.n}`).join('\n') + '\n' : '';
+  const missions = (m: string) => Object.entries(t[m] ?? {}).sort((a, b) => b[1] - a[1]);
+  return (
+    <Section id="play" title="How people play" sub="Anonymous daily totals for the playtest: where people stop at the budget desks, how long the ripple round takes, how many answer polls, and who skips ahead. Nothing here says who did what.">
+      {err && <div className="callout small" role="status">Play counts can’t be loaded right now. If the play-counts SQL (supabase/migrations/20261115000000_play_counts.sql) hasn’t been run yet, run it in Supabase first.</div>}
+      {!p && !err && <p className="small muted" role="status">Loading…</p>}
+      {p && (
+        <>
+          <div className="table-wrap">
+            <table className="data stats-table" aria-label="The budget desks: opened, started, finished">
+              <thead><tr><th scope="col">Desk</th><th scope="col" className="r">Opened</th><th scope="col" className="r" title="Played at least one card">Started</th><th scope="col" className="r" title="Met the goal">Met goal</th><th scope="col" className="r" title="Started but stopped before the goal">Stopped</th></tr></thead>
+              <tbody>{desks.map((d) => {
+                const play = n('desk_play', d), done = n('desk_done', d);
+                return <tr key={d}><th scope="row" aria-label={name(d)}>{name(d).replace(/^Mission /, '')}</th><td className="r num">{n('desk_open', d)}</td><td className="r num">{play}</td><td className="r num">{done}</td><td className="r num">{play ? `${Math.round((Math.max(0, play - done) / play) * 100)}%` : '–'}</td></tr>;
+              })}</tbody>
+            </table>
+          </div>
+          <div className="grid-4" style={{ marginTop: 12 }}>
+            <Stat label="Polls seen" value={`${n('poll_view', 'feed')}`} note="once per browser per day" />
+            <Stat label="Poll answers" value={`${n('poll_vote', 'feed')}`} note={n('poll_view', 'feed') ? `${fmt(n('poll_vote', 'feed') / n('poll_view', 'feed'), 1)} per view` : 'first answers to each poll'} />
+            <Stat label="Free roam turned on" value={`${n('free_roam', 'on')}`} note="every mission unlocked" />
+            <Stat label="Missions opened ahead" value={`${sum('jump_ahead')}`} note="before the next one in order" />
+          </div>
+          <div className="table-wrap" style={{ marginTop: 12 }}>
+            <table className="data stats-table" aria-label="Time on mission 1.6's ripple ranking round">
+              <thead><tr><th scope="col">Time on the 1.6 ripple round</th><th scope="col" className="r">Plays</th><th scope="col" className="r">Share</th></tr></thead>
+              <tbody>{BUCKETS.map(([k, label]) => <tr key={k}><th scope="row">{label}</th><td className="r num">{n('ripple_time', k)}</td><td className="r num">{rippleTotal ? `${Math.round((n('ripple_time', k) / rippleTotal) * 100)}%` : '–'}</td></tr>)}</tbody>
+            </table>
+          </div>
+          {(sum('quick_start') > 0 || sum('jump_ahead') > 0) && (
+            <div className="table-wrap" style={{ marginTop: 12 }}>
+              <table className="data stats-table" aria-label="Quick play and missions opened ahead, by mission">
+                <thead><tr><th scope="col">Mission</th><th scope="col" className="r" title="Quick play started">Quick</th><th scope="col" className="r" title="Quick play finished">Finished</th><th scope="col" className="r" title="Opened ahead of the next mission in order">Ahead</th></tr></thead>
+                <tbody>{[...new Set([...missions('quick_start'), ...missions('jump_ahead')].map(([k]) => k))].map((k) => <tr key={k}><th scope="row" aria-label={name(k)}>{name(k).replace(/^Mission /, '')}</th><td className="r num">{n('quick_start', k)}</td><td className="r num">{n('quick_done', k)}</td><td className="r num">{n('jump_ahead', k)}</td></tr>)}</tbody>
+              </table>
+            </div>
+          )}
+          <p className="small" style={{ marginTop: 10 }}>
+            <a className="btn btn-sm" href={'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)} download={`play-counts-${p.since}.csv`}>Download the daily counts (CSV)</a>{' '}
+            <span className="muted">“Stopped” is the share of players who played a card but didn’t meet the goal that day. One CSV row per day, metric and key; the session guide for moderated playtests is docs/playtest-sessions.md.</span>
+          </p>
+        </>
+      )}
+    </Section>
   );
 }

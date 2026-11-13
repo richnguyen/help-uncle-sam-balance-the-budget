@@ -165,6 +165,28 @@ export function countArrival(kind: LinkKind, channel: string) {
   rpc('count_arrival', { p_kind: kind, p_channel: channel }).catch(() => {});
 }
 
+// ---------- play counts (the playtest): anonymous daily totals, nothing about who ----------
+export type PlayMetric = 'desk_open' | 'desk_play' | 'desk_done' | 'ripple_time' | 'poll_view' | 'poll_vote' | 'free_roam' | 'jump_ahead' | 'quick_start' | 'quick_done';
+/**
+ * Counts one event toward today's total (supabase/migrations/…_play_counts.sql). With `daily`, at
+ * most once per browser per day for that metric and key. Only the metric and key are sent. Each
+ * count is also added to window.__plays when a test has set that up (nothing else reads it).
+ */
+export function countPlay(metric: PlayMetric, key: string, daily = false) {
+  if (daily) {
+    const seen = load<Record<string, string>>('play-day', {});
+    const day = new Date().toISOString().slice(0, 10), id = `${metric}:${key}`;
+    if (seen[id] === day) return;
+    save('play-day', { ...Object.fromEntries(Object.entries(seen).filter(([, d]) => d === day)), [id]: day });
+  }
+  (globalThis as { __plays?: [string, string][] }).__plays?.push([metric, key]);
+  if (!backendOn()) return;
+  rpc('count_play', { p_metric: metric, p_key: key }).catch(() => {});
+}
+/** The play counts for the last `days` days, for the stats page. */
+export interface PlayStats { window_days: number; since: string; totals: Record<string, Record<string, number>>; daily: { day: string; metric: string; key: string; n: number }[] }
+export const playStats = (days = 30) => rpc<PlayStats>('play_stats', { window_days: days });
+
 // ---------- challenge funnel: taken → goal met → sent back ----------
 export type ChallengeStep = 'taken' | 'met' | 'returned';
 /** Counts one step of a friend's challenge, once per challenge per browser (no identity is sent). */

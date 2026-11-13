@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useId, useState, type ReactNode } from 'react';
-import { backendOn, feedTallies, saveFeedVote } from '../../lib/backend';
+import { backendOn, countPlay, feedTallies, saveFeedVote } from '../../lib/backend';
+import { Flag, FloorVotes, sponsorLine } from './votes';
 import { moneyWords } from '../../lib/format';
 import { useVotes } from '../../lib/votes';
 import { OPTIONS_DATA } from '../../lib/planData';
@@ -167,11 +168,6 @@ const STAGES = ['Introduced', 'In committee', 'Reported by committee', 'Passed H
 const BILL_CHOICES = [{ value: 'support', label: 'Support' }, { value: 'oppose', label: 'Oppose' }, { value: 'unsure', label: 'Not sure' }];
 const tallyCache = new Map<string, Record<string, number>>();
 
-function initials(name: string) {
-  const parts = name.replace(/^(Rep|Sen|Del|Resident Commissioner)\.?\s+/i, '').split(/\s+/).filter((w) => /^[A-Z]/.test(w) && !/^[A-Z]\.$/.test(w));
-  return ((parts[0]?.[0] ?? '') + (parts.at(-1)?.[0] ?? '')).toUpperCase();
-}
-
 /** How a bill becomes law, as six stops; the ones it has passed are filled. */
 const TRACK = ['Introduced', 'Committee', 'Passed one chamber', 'Passed both chambers', 'To the President', 'Law'];
 function trackAt(status: string) {
@@ -232,8 +228,8 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
       <StageTrack status={bill.status} />
       {bill.sponsor && (
         <p className="fc-sponsor">
-          <span className="fc-avatar" aria-hidden="true">{initials(bill.sponsor.name)}</span>
-          <span><span className="muted">Sponsor:</span> {bill.sponsor.name}{bill.cosponsors ? <span className="muted"> · {bill.cosponsors} cosponsor{bill.cosponsors === 1 ? '' : 's'}</span> : null}</span>
+          <Flag st={bill.sponsor.state} />
+          <span><span className="muted">Sponsor:</span> {(() => { const l = sponsorLine(bill.sponsor); const k = l.lastIndexOf(' ['); return k < 0 ? l : <>{l.slice(0, k)} <span style={{ whiteSpace: 'nowrap' }}>{l.slice(k + 1)}</span></>; })()}{bill.cosponsors ? <span className="muted"> · {bill.cosponsors} cosponsor{bill.cosponsors === 1 ? '' : 's'}</span> : null}</span>
         </p>
       )}
       <div className="fc-tabs" role="tablist" aria-label="About this bill">
@@ -253,6 +249,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
           <p>The Congressional Budget Office hasn’t published a cost estimate for this bill yet. CBO usually scores a bill once a committee reports it.</p>
         )}
       </div>
+      <FloorVotes bill={bill} />
       <p className="fc-latest"><span className="muted">Latest action{bill.latestAction.date ? `, ${fmtDate(bill.latestAction.date)}` : ''}:</span> {bill.latestAction.text}</p>
       <div className="fc-vote" role="group" aria-label="Would you support this bill?">
         <p className="fc-ask">Would you support this bill?</p>
@@ -416,6 +413,8 @@ const MAX_LAW = Math.max(...laws.map((l) => Math.abs(l.deficitEffect)));
 const POLL_TABS = [['does', 'What it does'], ['pays', 'Who pays'], ['gains', 'Who benefits']] as const;
 
 function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
+  // The playtest's counts: the feed's polls were seen (once a day), and each first answer.
+  useEffect(() => { countPlay('poll_view', 'feed', true); }, []);
   const o = item.option;
   const v = useVotes();
   const buzz = useHaptics();
@@ -445,8 +444,8 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
       </div>
       <div className="fc-vote" role="group" aria-label="Would you include this in your plan?">
         <div className="fc-choices fc-choices-2">
-          <button type="button" className="fc-choice" aria-pressed={mine === 1} onClick={() => { buzz('vote'); v.voteOption(o.id, 1); }}>Include it</button>
-          <button type="button" className="fc-choice" aria-pressed={mine === -1} onClick={() => { buzz('vote'); v.voteOption(o.id, -1); }}>Leave it out</button>
+          <button type="button" className="fc-choice" aria-pressed={mine === 1} onClick={() => { buzz('vote'); if (mine == null) countPlay('poll_vote', 'feed'); v.voteOption(o.id, 1); }}>Include it</button>
+          <button type="button" className="fc-choice" aria-pressed={mine === -1} onClick={() => { buzz('vote'); if (mine == null) countPlay('poll_vote', 'feed'); v.voteOption(o.id, -1); }}>Leave it out</button>
         </div>
         {mine != null && (v.available && t.support + t.oppose > 0
           ? <Bars rows={[{ value: '1', label: 'Include it', n: t.support }, { value: '-1', label: 'Leave it out', n: t.oppose }]} total={t.support + t.oppose} mine={String(mine)} />

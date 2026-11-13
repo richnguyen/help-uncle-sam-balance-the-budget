@@ -26,7 +26,7 @@ import { activeChallenge, type Challenge, dropChallenge } from '../game/challeng
 import { AgreementCard, assessShared, ChallengeShare, challengeText, GOAL_DONE, HeadToHead, headToHead } from '../game/ChallengeParts';
 import { CHALLENGE_LINES } from '../game/script';
 import { ShareButton } from '../game/ShareButton';
-import { countStep } from '../lib/backend';
+import { countPlay, countStep } from '../lib/backend';
 import { encodePlan } from '../game/plans';
 import { Rated } from '../game/Rated';
 import { twistFor } from '../lib/twists';
@@ -237,8 +237,12 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     // A friend's challenge shows its result on the page instead (see "You vs …" below).
     // So does a duel: the player reveals both plans when they're ready.
     if (met && desk && !wasMet.current && !challenge && !duel) setParty(ev.stars);
+    if (met && desk && !wasMet.current) countPlay('desk_done', desk.id, true);
     wasMet.current = met;
   }, [met, ev.stars, deskStop.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The playtest's counts (anonymous daily totals): this desk opened, its first card played.
+  useEffect(() => { if (desk) countPlay('desk_open', desk.id, true); }, [desk?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (desk && ids.length) countPlay('desk_play', desk.id, true); }, [desk?.id, ids.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
   const nextStop = desk ? nextOf(desk.id) : undefined;
   const here = desk ? STOP_BY_ID[desk.id] : undefined;
 

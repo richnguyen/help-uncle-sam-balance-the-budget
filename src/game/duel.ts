@@ -120,8 +120,9 @@ const pct1 = (x: number) => `${(x * 100).toFixed(1)}%`;
  * Round 1, the debt: whose plan leaves it lower by the last projection year (debt held by the
  * public, next to the economy). Round 2, the economy: whose steepest year is gentler. Round 3,
  * the balance: whose split between new taxes and spending cuts is closer to even. Best of three.
- * Even after three rounds, the tie-breaker: the plan that does the job with fewer policy cards
- * wins. The same number of cards is a true tie.
+ * Even after three rounds, the tie-breakers, in order: the gentler steepest year (so the scoring
+ * never pushes anyone toward a steeper plan just to save a card), then fewer policy cards. Even
+ * on both is a true tie.
  */
 export function duelRounds(mine: DuelPlan, theirs: DuelPlan) {
   const a = assessDuel(mine), b = assessDuel(theirs);
@@ -134,8 +135,13 @@ export function duelRounds(mine: DuelPlan, theirs: DuelPlan) {
   ];
   const won = rounds.filter((r) => r.winner === 'me').length, lost = rounds.filter((r) => r.winner === 'them').length;
   const cards = { mine: mine.ids.length, theirs: theirs.ids.length };
-  // The tie-breaker decides only when the rounds come out even.
-  const tiebreak: RoundWinner | null = won !== lost ? null : cards.mine === cards.theirs ? 'tie' : cards.mine < cards.theirs ? 'me' : 'them';
+  // The tie-breakers decide only when the rounds come out even: the gentler economy first, then fewer cards.
+  const steep = { mine: a.econ.peakStep, theirs: b.econ.peakStep };
+  const byEconomy = Math.abs(steep.mine - steep.theirs) > 0.00005;
+  const tiebreakBy: 'economy' | 'cards' | null = won !== lost ? null : byEconomy ? 'economy' : 'cards';
+  const tiebreak: RoundWinner | null = !tiebreakBy ? null
+    : tiebreakBy === 'economy' ? (steep.mine < steep.theirs ? 'me' : 'them')
+    : cards.mine === cards.theirs ? 'tie' : cards.mine < cards.theirs ? 'me' : 'them';
   const outcome: 'won' | 'tied' | 'lost' = won > lost || tiebreak === 'me' ? 'won' : won < lost || tiebreak === 'them' ? 'lost' : 'tied';
-  return { rounds, outcome, score: `${won}–${lost}`, tiebreak, cards, mine: a, theirs: b, balanced: { mine: a.met, theirs: b.met } };
+  return { rounds, outcome, score: `${won}–${lost}`, tiebreak, tiebreakBy, steep, cards, mine: a, theirs: b, balanced: { mine: a.met, theirs: b.met } };
 }

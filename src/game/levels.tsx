@@ -10,7 +10,7 @@ import { OPTIONS_DATA } from '../lib/planData';
 import { backendOn, rpc } from '../lib/backend';
 import { useVotes } from '../lib/votes';
 import { areaForZip, isZip } from '../lib/zip';
-import { CountyTry, rememberZip } from './county';
+import { CountyTry, rememberZip, visitedZip } from './county';
 import { ReceiptTeaser, useWages, WageControls } from '../components/TaxReceipt';
 import type { Mood } from './voice';
 import { LawExplorer } from './LawExplorer';
@@ -201,24 +201,34 @@ function AgeTry() {
 interface AreaTally { voters: number; options: Record<string, { support: number; oppose: number }>; issues: Record<string, Record<string, number>> }
 const AREA_MIN = 10;
 
-function StateTry() {
-  const states = [...geo.states].sort((a, b) => a.name.localeCompare(b.name));
+/** The ZIP the player gave: typed this visit, or saved with their votes. */
+function useHomeZip() {
   const votes = useVotes();
+  const saved = (votes.zipHome === 'database' ? votes.mine.zip : load<string>('zip', '')) || '';
+  return { votes, saved, inDb: votes.zipHome === 'database', zip: visitedZip() || saved };
+}
+
+/**
+ * "Your county": the ZIP code comes first, and the first thing it shows is the most local, the
+ * county (then the state, a step later, and the whole country beside each), so the ZIP the player
+ * typed visibly lands somewhere they know. Saving it with their votes is a separate, opt-in choice.
+ */
+function HomeTry() {
+  const states = [...geo.states].sort((a, b) => a.name.localeCompare(b.name));
+  const { votes, saved: savedZip, inDb, zip: knownZip } = useHomeZip();
   // The state is remembered (and, on the public site, counts toward the state rankings).
   const [abbr, setAbbrState] = useState(() => load<string>('state', 'TX'));
-  const setAbbr = (a: string) => { setAbbrState(a); save('state', a); save('state-picked', true); };
-  // A saved ZIP lives with the ballot on the public site; elsewhere it stays in this browser.
-  const inDb = votes.zipHome === 'database';
-  const savedZip = (inDb ? votes.mine.zip : load<string>('zip', '')) || '';
-  const [zip, setZip] = useState(savedZip);
+  const [picked, setPicked] = useState(() => load<boolean>('state-picked', false));
+  const setAbbr = (a: string) => { setAbbrState(a); save('state', a); save('state-picked', true); setPicked(true); };
+  const [zip, setZip] = useState(knownZip);
+  const [found, setFound] = useState(isZip(knownZip) ? knownZip : '');
   const [keep, setKeep] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
   const [area, setArea] = useState<AreaTally | null | undefined>(undefined);
-  useEffect(() => { if (savedZip && !zip) setZip(savedZip); }, [savedZip]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (savedZip && !zip) { setZip(savedZip); setFound(savedZip); } }, [savedZip]); // eslint-disable-line react-hooks/exhaustive-deps
   const saved = !!savedZip && savedZip === zip;
   const s = states.find((x) => x.abbr === abbr) ?? states[0];
-  const nat = geo.national;
   useEffect(() => {
     if (!saved || !inDb || !backendOn()) return;
     let alive = true;
@@ -230,28 +240,40 @@ function StateTry() {
     const z = zip.trim();
     const a = areaForZip(z);
     if (!a) { setMsg('A ZIP code is five digits.'); return; }
-    if (a.kind === 'military') { setMsg('That’s a military ZIP, which has no state. Pick a state instead.'); setPicker(true); return; }
-    if (a.kind === 'unknown' || !states.some((x) => x.abbr === a.abbr)) { setMsg('That ZIP doesn’t match a state. Check it, or pick a state instead.'); return; }
-    setMsg(null); setAbbr(a.abbr); rememberZip(z);
+    if (a.kind === 'military') { setMsg('That’s a military ZIP, which has no state or county. Pick a state instead.'); setPicker(true); setFound(''); return; }
+    if (a.kind === 'unknown' || !states.some((x) => x.abbr === a.abbr)) { setMsg('That ZIP doesn’t match a state. Check it, or pick a state instead.'); setFound(''); return; }
+    setMsg(null); setAbbr(a.abbr); rememberZip(z); setFound(z);
     if (keep) { votes.setZip(z, a.abbr); save('zip', inDb ? '' : z); }
   };
   const saveNow = () => { const a = areaForZip(zip.trim()); if (a?.kind === 'state') { votes.setZip(zip.trim(), a.abbr); save('zip', inDb ? '' : zip.trim()); } };
-  const remove = () => { votes.setZip(null, null); save('zip', ''); setZip(''); setKeep(false); setArea(undefined); rememberZip(''); };
+  const remove = () => { votes.setZip(null, null); save('zip', ''); setZip(''); setFound(''); setKeep(false); setArea(undefined); rememberZip(''); };
   const top = area ? Object.entries(area.options).filter(([, t]) => t.support + t.oppose >= AREA_MIN).sort((x, y) => y[1].support / (y[1].support + y[1].oppose) - x[1].support / (x[1].support + x[1].oppose))[0] : undefined;
   const topName = top ? OPTIONS_DATA.options.find((o) => o.id === top[0])?.name : undefined;
   return (
-    <div className="try">
-      <form className="zip-form" onSubmit={find} aria-label="Find your state from your ZIP code">
+    <div className="try county">
+      <form className="zip-form" onSubmit={find} aria-label="Find your county and state from your ZIP code">
         <div className="field"><label htmlFor="try-zip">Your ZIP code</label>
           <input id="try-zip" className="input zip-input num" inputMode="numeric" autoComplete="postal-code" maxLength={5} placeholder="e.g. 22301" value={zip}
             onChange={(e) => { setZip(e.target.value.replace(/\D/g, '').slice(0, 5)); setMsg(null); }} aria-describedby="zip-note" />
         </div>
-        <button type="submit" className="btn btn-primary zip-find" disabled={!isZip(zip)}>Find my state</button>
+        <button type="submit" className="btn btn-primary zip-find" disabled={!isZip(zip) || (zip === found && !(keep && !saved))}>{zip === found && keep && !saved ? 'Save my ZIP' : 'Find my county'}</button>
         {!saved && (
           <label className="switch zip-keep"><input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} /> Also save my ZIP with my budget votes</label>
         )}
       </form>
       {msg && <p className="small zip-msg" role="alert">{msg}</p>}
+      {/* Where the ZIP is comes right under it; saving it (and the note on privacy) after. */}
+      {(picker || !found) && (
+        <details className="zip-picker" open={picker || undefined}>
+          <summary className="small">Rather not use a ZIP? Pick a state instead</summary>
+          <div className="field" style={{ maxWidth: 320 }}><label htmlFor="try-st">Your state</label>
+            <select id="try-st" className="select" value={s.abbr} onChange={(e) => setAbbr(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}</select>
+          </div>
+        </details>
+      )}
+      {found || picked
+        ? <CountyTry zip={found} st={found ? (areaForZip(found) as { abbr: string }).abbr : abbr} />
+        : <p className="small muted cty-wait">Type your ZIP code, or pick a state, to see your county’s numbers.</p>}
       <p className="small muted" id="zip-note">
         Optional. {inDb
           ? 'If you save it, your ZIP is stored with your budget votes in the game’s database, where only you can see it.'
@@ -264,7 +286,7 @@ function StateTry() {
           <span><strong>Saved with your votes.</strong> <span className="small muted">{inDb ? 'Only you can see your ZIP.' : 'Kept in this browser only.'}</span></span>
           <button type="button" className="btn btn-sm zip-remove" onClick={remove}>Remove my ZIP</button>
         </div>
-      ) : isZip(zip) && areaForZip(zip)?.kind === 'state' && abbr === (areaForZip(zip) as { abbr: string }).abbr && !keep ? (
+      ) : found && found === zip && !keep ? (
         <button type="button" className="btn btn-sm zip-save" onClick={saveNow}>Save my ZIP with my votes</button>
       ) : null}
       {saved && inDb && area !== undefined && (
@@ -272,14 +294,34 @@ function StateTry() {
           ? <>{area.voters.toLocaleString('en-US')} players in {s.name} have saved a ZIP with their votes.{top && topName ? <> Their most-supported card: {topName} ({Math.round((top[1].support / (top[1].support + top[1].oppose)) * 100)}% support).</> : null}</>
           : <>Once {AREA_MIN} or more players in {s.name} save a ZIP, how they voted shows up here.</>}</p>
       )}
-      {(picker || !isZip(zip)) && (
-        <details className="zip-picker" open={picker || undefined}>
-          <summary className="small">Rather not use a ZIP? Pick a state instead</summary>
-          <div className="field" style={{ maxWidth: 320 }}><label htmlFor="try-st">Your state</label>
-            <select id="try-st" className="select" value={s.abbr} onChange={(e) => setAbbr(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}</select>
+    </div>
+  );
+}
+
+/** "Your state": federal money to the state the ZIP found (or the one picked), per person, next to the whole country. */
+function StateTry() {
+  const states = [...geo.states].sort((a, b) => a.name.localeCompare(b.name));
+  const { zip } = useHomeZip();
+  const zipArea = isZip(zip) ? areaForZip(zip) : null;
+  const zipState = zipArea?.kind === 'state' && states.some((x) => x.abbr === zipArea.abbr) ? zipArea.abbr : null;
+  const [abbr, setAbbrState] = useState(() => zipState ?? load<string>('state', 'TX'));
+  const setAbbr = (a: string) => { setAbbrState(a); save('state', a); save('state-picked', true); };
+  const s = states.find((x) => x.abbr === abbr) ?? states[0];
+  const nat = geo.national;
+  const fromZip = zipState === s.abbr;
+  return (
+    <div className="try">
+      <div className="zip-from">
+        {fromZip
+          ? <p className="small"><span className="muted">From your ZIP code {zip}:</span> <strong>{s.name}</strong></p>
+          : <p className="small"><strong>{s.name}</strong></p>}
+        <details className="zip-picker">
+          <summary className="small">{fromZip ? 'Look at another state' : 'Pick a state'}</summary>
+          <div className="field" style={{ maxWidth: 320 }}><label htmlFor="try-st2">State</label>
+            <select id="try-st2" className="select" value={s.abbr} onChange={(e) => setAbbr(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr}>{x.name}</option>)}</select>
           </div>
         </details>
-      )}
+      </div>
       <div className="sim-gauge-row">
         <Dial value={(s.perCapita / nat.perCapita) * 100} max={250} label={`Federal awards per person in ${s.name}, compared with the national average`} readout={`${dollars(s.perCapita)} a person`}
           zones={[{ to: 85, label: 'below average', short: 'below', tone: 's1' }, { to: 115, label: 'near average', short: 'near', tone: 's2' }, { to: 250, label: 'above average', short: 'above', tone: 's3' }]} note={`${Math.round((s.perCapita / nat.perCapita) * 100)}% of the national ${dollars(nat.perCapita)}`} />
@@ -376,8 +418,8 @@ const CHAPTERS: Level[] = [
         choices: [topProgram === 'Grants to States for Medicaid' ? 'Highway Planning and Construction' : 'Grants to States for Medicaid', topProgram, 'Federal Pell Grant Program'], correct: 1,
         explain: <>{topProgram} is the biggest federal program in {topProgramCounts[0]?.[1] ?? 'most'} of {geo.states.length} states and territories in FY{geo.fy} (not counting Medicare).</> } },
         ] } },
-      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Type your ZIP code and I’ll find your state. These are federal grants, contracts, and payments recorded for FY{geo.fy}; the needle shows how your state compares, per person, with the whole country. Saving your ZIP with your votes is up to you.</>, body: () => <StateTry /> },
-      { id: 'county', label: 'Your county', kind: 'try', mood: 'thinking', sam: <>Now the other side of the ledger: taxes. Here’s who paid federal income tax in your county, by income, on 2023 tax returns, next to the whole country.</>, body: () => <CountyTry /> },
+      { id: 'county', label: 'Your county', kind: 'try', mood: 'thinking', sam: <>Type your ZIP code and I’ll find your county first, then your state. Start close to home, with taxes: here’s who paid federal income tax in your county, by income, on 2023 tax returns, next to the whole country. Saving your ZIP with your votes is up to you.</>, body: () => <HomeTry /> },
+      { id: 'state', label: 'Your state', kind: 'try', mood: 'proud', sam: <>Now zoom out to your state, and the money coming back: federal grants, contracts, and payments recorded for FY{geo.fy}. The needle shows how your state compares, per person, with the whole country.</>, body: () => <StateTry /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>States count on federal grants for roads, transit, and schools. Here’s a cut CBO has priced.</>, vote: { kind: 'option', optionId: 'cut-transport-education-grants' } },
 
     ],

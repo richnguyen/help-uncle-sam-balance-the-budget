@@ -122,6 +122,31 @@ budget adviser.
   (`u`, `v`), so older links keep their meaning. Caveats are on each card: both were scored against
   CBO's baseline at the time, and the desk's projection is OMB's, which assumes the President's
   proposals; if those already make the tax breaks permanent, that card counts them twice.
+- **State flags beside lawmakers** (`scripts/fetch-flags.mjs` → `public/flags/XX.png`,
+  `src/data/generated/flags.json`): every lawmaker the game names (a bill's sponsor, each member in a
+  floor vote) gets the same marker, the flag of the state or territory they represent, as plain
+  geography. 56 flags (50 states, DC, five territories) from Wikimedia Commons at 72 px wide (about
+  250 KB in all); each file's license and author are listed on the Sources page (55 public domain,
+  Mississippi's "copyrighted free use"). Rerun the script when a state adopts a new flag.
+- **Sponsors and floor votes** (`scripts/rollcall.mjs`, `src/game/feed/votes.tsx`): a bill's sponsor
+  reads exactly as Congress.gov lists them ("Rep. Arrington, Jodey C. [R-TX-19]"), with no colors
+  or scores. For bills past introduction, `fetch-bills.mjs` follows the recorded votes Congress.gov
+  lists for the bill to the official records (the House Clerk's and the Senate's roll-call XML) and
+  keeps, for each, the question, the result, the yeas and nays, a link to the record, and every
+  member's vote with party and state as the record lists them. Bill cards in the feed and followed
+  bills in Your record show them, and if the player saved a ZIP code in mission 1.4, how that
+  state's members voted. Facts only: no ratings of members. `npm run test:rollcall` checks the
+  parser on records in each chamber's format.
+- **Play counts for the playtest** (`supabase/migrations/20261115000000_play_counts.sql`,
+  `countPlay` in `src/lib/backend.ts`): anonymous daily totals, never who did what: each budget desk
+  opened, started (a first card) and finished (desk abandonment is started minus finished), the
+  time spent on mission 1.6's ripple round (in buckets), the feed's polls seen and answered, free
+  roam switched on, missions opened ahead of order, and Quick play started and finished. Only a
+  metric and a key are sent, from a fixed list the database enforces; most are counted once per
+  browser per day. The stats page (`#stats`) has a "How people play" section with the totals and a
+  CSV of the daily counts. `docs/playtest-sessions.md` is the guide for moderated sessions: who to
+  recruit for each of the five personas, the consent note to read aloud, a 40-minute script, the
+  questions afterwards, and how to read the results next to these counts.
 - **Desk twists** (`src/lib/twists.ts`): each later desk differs in kind. Mission 2.7 adds a rate
   shock: the average rate on the debt is higher by the largest one-year rise in the Treasury's
   average rate since 2001 (0.90 points, September 2022 to 2023), on top of the projection, so
@@ -178,6 +203,14 @@ budget adviser.
   their points; a check on phones), the points, a meter toward three stars, and the stars. After each round a banner
   shows the points and why; at the end, the final score, stars (three at 85% of the points, two
   at 60%, one for finishing) and what the game showed (the mission's takeaways), with Play again.
+  **Quick play** (for players who skip text): each lesson mission's first screen offers "Quick play
+  · about a minute", which goes straight to the mission's game, then shows its first takeaway in
+  one line and finishes the mission. It earns up to two stars, however well the game went
+  (`QUICK_MAX` in `src/game/LevelPage.tsx`); the whole mission is how to earn the third, so the
+  three-star medals still mean the whole thing. The record marks the mission done, keeps the
+  game's score, and notes `quick:<mission>`; the completion screen says how to earn the third star.
+  The points each star takes are shown under the first round and again on the replay screen
+  (with the ones already earned marked), so a replay is about mastery, not guessing the rules.
   The best score is kept, sets the mission's stars, and greets the player on a return visit.
   Continue waits until the game has been played once.
   - The games: 1.1 Fill the piggy bank (the total, split the $100, your pay stub); 1.2 Size the
@@ -285,10 +318,11 @@ budget adviser.
   player; public results group ballots only by state or by 3-digit ZIP area, for groups of 10 or
   more (`ballot_area_totals()`, in `supabase/migrations/20261112000000_ballot_zip.sql`). In the
   claude.ai copy, where every viewer can read every ballot, a saved ZIP stays in the browser.
-- **Your county** (mission 1.4's next step; `src/game/county.tsx`): who paid the federal income
-  tax in the player's county, by income, next to the whole country. The county comes from the ZIP
-  typed a step earlier (kept for that visit only; this step saves nothing) or from this step's own
-  ZIP box, and a picker lists every county in the state, plus "All of" the state. A ZIP that
+- **Your county** (mission 1.4's first look at home, before "Your state"; `src/game/county.tsx`):
+  the ZIP box is here, and what it finds is shown most local first ("ZIP 22301 is in Alexandria
+  city › Virginia › United States"), then who paid the federal income tax in that county, by
+  income, next to the whole country; the next step zooms out to the state's federal money. The ZIP
+  is kept for that visit only unless the player opts to save it with their votes, and a picker lists every county in the state, plus "All of" the state. A ZIP that
   crosses county lines starts with the county holding most of its land and offers the others as
   chips. It shows the county's federal income tax and its average per return against the U.S.
   average, a sentence on the $200,000-and-up group's share of returns and of the tax (here and
@@ -673,8 +707,9 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   by the public as a share of GDP in the last projection year, lower wins), **the economy** (the
   steepest single-year tightening, gentler wins), and **the balance** (new taxes against spending
   cuts over the projection, cards and across-the-board changes alike, closer to half and half
-  wins). Even after three rounds, the tie-breaker: the plan with fewer policy cards wins; the
-  same number is a true tie. The reveal shows what each plan does on its own and the cards they share. The friend
+  wins). Even after three rounds, the tie-breakers, in order: the gentler steepest year, then
+  fewer policy cards; even on both is a true tie. The economy comes first so the scoring never
+  rewards a steeper plan just for using fewer cards. The reveal shows what each plan does on its own and the cards they share. The friend
   sends a reply link (`/p/duel-back/?duelr=…`, both plans) back; the host sees the same rounds
   from their side. One invite goes to many friends: each reply is its own head-to-head, and the
   Duels page lists every one next to your plan, with "See the rounds" and "Rematch". Everything
@@ -797,6 +832,30 @@ CNAME file. To update the data, run `npm run data` locally, commit `src/data/gen
 Shared voting totals and "How everyone played" need a shared database, so they work on the
 claude.ai copy of the site; on the public site the game shows each player's own results. Badges,
 stars and progress are saved in each visitor's browser.
+
+## Test it
+
+The browser tests live in `tests/e2e/`: 42 Playwright scripts, one per area of the game, each
+driving an emulated phone (or desktop) against the dev server. Every request to Supabase is
+intercepted, so nothing reaches the live database. `tests/e2e/run.mjs` starts the dev server on
+port 5173 and runs them on three workers, longest first, re-running anything that fails under
+load once on its own (reported as "flaky" if it then passes).
+
+```bash
+npm run test:e2e        # quick tier: eight smoke tests, about 1.5 minutes
+npm run test:e2e:full   # everything, about 8-11 minutes
+node tests/e2e/run.mjs --only zip,county   # named tests
+node tests/e2e/run.mjs --tier full --plan  # what would run, and what is skipped and why
+```
+
+The quick tier (check, cardfit, deskui, feed, zip, quick, seal, voicecheck) is for every change;
+the full tier is for before a merge. In a full run, the three slowest tests that guard
+slow-changing areas run only if files in their area changed since the last full run that passed
+on that machine: `launch` (launch screens), `mgames` (the mission games) and `nohint` (the budget
+desks). `--all` runs them anyway. Logs go to `tests/e2e/.runs/` and screenshots to
+`tests/e2e/out/` (both git-ignored). The tests need Playwright with Chromium installed
+(`require('playwright')` must resolve). The database tests are separate: `npm run test:db`,
+`npm run test:rollcall` and `npm run test:alerts`.
 
 ## Re-record Uncle Sam's voice
 
