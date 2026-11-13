@@ -4,7 +4,7 @@ import congress from '../data/curated/congress.json';
 import { Carousel } from '../components/Carousel';
 import { PageHead, Section } from '../components/ui';
 import { budget } from '../data';
-import { assess, BASELINE, CTX, LAST_FY } from '../lib/assess';
+import { assess, baselineFor, CTX, LAST_FY } from '../lib/assess';
 import { dollars, moneyWords, pct } from '../lib/format';
 import { partOfTheFix, personalEffect, savedWages } from '../lib/personal';
 import { GOAL_DONE, whoPays } from './ChallengeParts';
@@ -101,7 +101,7 @@ function buildCards(level: string, plan: SavedPlan, o: { name: string; stars: nu
     note: pe.benefits.length ? `My plan also changes ${pe.benefits.length} spending program${pe.benefits.length === 1 ? '' : 's'}, which reach people through benefits and services rather than taxes.` : 'A wage earner taking the standard deduction, under current tax rules.',
     alt: `What my plan means for me: ${Math.abs(pe.direct) < 1 ? 'no change' : signed(pe.direct) + ' a year'} in my own federal taxes.`,
   });
-  const baseDebt = [start, ...BASELINE.map((r) => r.debt / r.gdp)];
+  const baseDebt = [start, ...baselineFor(d.goal).map((r) => r.debt / r.gdp)];
   const planDebt = [start, ...a.sim.map((r) => r.debt / r.gdp)];
   cards.push({
     id: 'result', color: COLORS.violet,

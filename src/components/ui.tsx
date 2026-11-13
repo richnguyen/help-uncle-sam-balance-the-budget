@@ -206,40 +206,62 @@ export function Stat({ label, value, note, color }: { label: ReactNode; value: R
   );
 }
 
-// ---------- glossary term popover ----------
+// ---------- glossary term (a toggletip) ----------
+// Tap or click the term to open its definition; tap again, tap elsewhere, or press Escape to close.
+// Keyboard focus alone doesn't open it. The definition is also written into one shared live region
+// (kept outside the text, so copying a sentence doesn't pick up stray line breaks), so a screen
+// reader reads it out when it opens; the floating box is for the eyes.
+function termLive() {
+  let el = document.getElementById('term-live');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'term-live'; el.className = 'sr-only'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
 export function Term({ id, children }: { id: string; children?: ReactNode }) {
   const g = GLOSSARY_BY_ID[id];
-  const [open, setOpen] = useState<{ x: number; y: number } | null>(null);
+  const [open, setOpen] = useState<{ x: number; y: number; up: boolean } | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open || !g) return;
+    const live = termLive();
+    const src = g.source ? SOURCE_BY_ID[g.source] : undefined;
+    live.textContent = `${g.term}: ${g.def}${src ? ` Source: ${src.publisher}.` : ''}`;
+    const away = (e: Event) => { const t = e.target as Node; if (!btn.current?.contains(t) && !pop.current?.contains(t)) setOpen(null); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(null); btn.current?.focus(); } };
+    const off = () => setOpen(null);
+    document.addEventListener('pointerdown', away, true);
+    document.addEventListener('keydown', key);
+    window.addEventListener('scroll', off, { passive: true, capture: true });
+    return () => { live.textContent = ''; document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', key); window.removeEventListener('scroll', off, { capture: true }); };
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!g) return <>{children}</>;
-  const place = () => {
+  const src = g.source ? SOURCE_BY_ID[g.source] : undefined;
+  const toggle = () => {
+    if (open) return setOpen(null);
     const r = btn.current!.getBoundingClientRect();
-    setOpen({ x: Math.min(r.left, window.innerWidth - 336), y: r.bottom + 6 });
+    const up = r.bottom > window.innerHeight * 0.6;
+    setOpen({ x: Math.min(r.left, window.innerWidth - 328), y: up ? window.innerHeight - r.top + 6 : r.bottom + 6, up });
   };
   return (
-    <>
-      <button
-        ref={btn}
-        type="button"
-        className="term"
-        aria-describedby={open ? `term-${id}` : undefined}
-        onMouseEnter={place}
-        onMouseLeave={() => setOpen(null)}
-        onFocus={place}
-        onBlur={() => setOpen(null)}
-        onClick={() => (open ? setOpen(null) : place())}
-      >
+    <span className="term-wrap">
+      <button ref={btn} type="button" className="term" aria-expanded={!!open} onClick={toggle} data-term={id}>
         {children ?? g.term}
       </button>
       {open &&
         createPortal(
-          <div id={`term-${id}`} role="tooltip" className="term-pop" style={{ left: Math.max(8, open.x), top: open.y }}>
+          <div ref={pop} className="term-pop" aria-hidden="true" style={{ left: Math.max(8, open.x), ...(open.up ? { bottom: open.y } : { top: open.y }) }}>
             <b>{g.term}</b>
             {g.def}
+            {src && <a className="term-src" href={src.url} target="_blank" rel="noopener noreferrer" tabIndex={-1}>Source: {src.publisher}</a>}
           </div>,
           document.body,
         )}
-    </>
+    </span>
   );
 }
 

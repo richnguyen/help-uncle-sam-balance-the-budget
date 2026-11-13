@@ -19,6 +19,8 @@ export const CARD_CODE: Record<string, string> = {
   'carried-interest': 'j', 'medicare-advantage-benchmarks': 'k', 'site-neutral-hospital-outpatient': 'l',
   'part-b-premium-35pct': 'm', 'medicaid-per-enrollee-caps': 'n', 'raise-full-retirement-age-70': 'o', 'chained-cpi': 'p',
   'ss-benefits-high-earners': 'q', 'cut-defense-budget': 'r', 'cut-transport-education-grants': 's', 'crop-insurance-subsidies': 't',
+  // Two-way cards (they add to deficits): new codes only, so older links keep their meaning.
+  'extend-aca-credits': 'u', 'extend-obbba-temp-tax': 'v',
 };
 const CODE_CARD = Object.fromEntries(Object.entries(CARD_CODE).map(([k, v]) => [v, k]));
 const LEVER_CODE: Record<LeverId, string> = { revenues: 'r', socialSecurity: 's', medicare: 'm', medicaid: 'c', otherMandatory: 'o', defense: 'd', nondefense: 'n' };

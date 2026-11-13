@@ -344,6 +344,39 @@
     "title": "CBO, Reduce Subsidies in the Crop Insurance Program (Dec 2024)",
     "url": "https://www.cbo.gov/budget-options/60893"
    }
+  },
+  {
+   "id": "extend-aca-credits",
+   "name": "Bring back the larger ACA premium tax credits, permanently",
+   "cboTitle": "Permanently extending the expanded premium tax credit",
+   "side": "spending",
+   "lever": "otherMandatory",
+   "savings10": -349.8,
+   "affects": "Taxpayers now and later: it adds to deficits unless it is paid for",
+   "benefits": "People who buy health plans on the ACA marketplaces, through lower premiums; CBO estimated 3.8 million more people would be insured by 2035",
+   "summary": "The larger premium tax credits for marketplace health plans, first passed in 2021, expired at the end of 2025. This would bring them back for good. CBO estimated it would add $349.8 billion to deficits over 2026 to 2035.",
+   "obbbaNote": "Scored by CBO in September 2025 against its baseline then; the desk spreads it over the desk's ten years. The House passed a three-year extension in January 2026; as of November 2026 none had become law.",
+   "source": {
+    "title": "CBO, Estimated Budgetary Effects and Coverage Effects of Permanently Extending the Expanded Premium Tax Credit (Sept 2025)",
+    "url": "https://www.cbo.gov/publication/61734"
+   }
+  },
+  {
+   "id": "extend-obbba-temp-tax",
+   "name": "Make the 2025 law's temporary tax breaks permanent",
+   "cboTitle": "Making certain tax policies in Public Law 119-21 permanent",
+   "side": "revenue",
+   "lever": "revenues",
+   "savings10": -800,
+   "affects": "Taxpayers now and later: it adds to deficits unless it is paid for",
+   "benefits": "People who claim the law's temporary breaks, such as the deductions for tips, overtime pay, and people 65 and older",
+   "summary": "Ten tax provisions in the 2025 law (Public Law 119-21) are set to expire, among them the deductions for tips, overtime pay, and people 65 and older. Making them permanent would cost about $0.8 trillion in revenue over 2025 to 2034, by the Joint Committee on Taxation's estimate in CBO's letter, before added interest.",
+   "obbbaNote": "About $0.8 trillion is JCT's rounded estimate, as CBO reported it in August 2025. The desk's projection is OMB's, which assumes the President's proposals are enacted; if those already include making these breaks permanent, this card counts them twice.",
+   "source": {
+    "title": "CBO, Effects on Deficits and the Debt of Public Law 119-21 and of Making Certain Tax Policies in the Act Permanent (Aug 2025)",
+    "url": "https://www.cbo.gov/publication/61466"
+   },
+   "by": "JCT, as reported by CBO"
   }
  ],
  "principles": [

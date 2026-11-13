@@ -40,7 +40,13 @@ export interface SimYear {
   policyRevenue: number;
 }
 
-export function simulate(baseline: CBOYear[], startDebt: number, lv: Levers, opts: { phaseIn?: boolean; extra?: Extra } = {}): SimYear[] {
+/**
+ * A desk's twist (see twists.ts): rates on the debt above CBO's projection (percentage points, by
+ * year), and revenue below it in a recession (a share of the projection, by year).
+ */
+export interface Shock { rateUp?: number[]; revenueDip?: number[]; slump?: number }
+
+export function simulate(baseline: CBOYear[], startDebt: number, lv: Levers, opts: { phaseIn?: boolean; extra?: Extra; shock?: Shock } = {}): SimYear[] {
   const out: SimYear[] = [];
   let debt = startDebt;
   let baseDebtPrev = startDebt;
@@ -48,20 +54,22 @@ export function simulate(baseline: CBOYear[], startDebt: number, lv: Levers, opt
     const r = ramp(i, !!opts.phaseIn);
     const f = (k: LeverId) => 1 + (lv[k] / 100) * r;
     const ex = (k: LeverId) => opts.extra?.[k]?.[i] ?? 0;
-    const revenues = b.revenues * f('revenues') + ex('revenues');
+    const dip = opts.shock?.revenueDip?.[i] ?? 0;
+    const revenues = b.revenues * (f('revenues') - dip) + ex('revenues');
     const programs =
       b.socialSecurity * f('socialSecurity') + b.medicare * f('medicare') + b.medicaid * f('medicaid') +
       b.otherMandatory * f('otherMandatory') + b.defense * f('defense') + b.nondefense * f('nondefense') -
       SPENDING_LEVERS.reduce((s, k) => s + ex(k), 0);
     const baseProgramsTotal = b.socialSecurity + b.medicare + b.medicaid + b.otherMandatory + b.defense + b.nondefense;
-    const interest = b.netInterest * (baseDebtPrev > 0 ? debt / baseDebtPrev : 1);
+    // Higher rates apply to the whole debt at the start of the year, on top of CBO's projected rates.
+    const interest = b.netInterest * (baseDebtPrev > 0 ? debt / baseDebtPrev : 1) + debt * ((opts.shock?.rateUp?.[i] ?? 0) / 100);
     const deficit = programs + interest - revenues;
     // The projection's debt changes by slightly more or less than its deficit (student loans,
     // cash balance); carry that "other means of financing" through so the baseline reproduces.
     const otherFinancing = b.debtPublic - baseDebtPrev - b.deficit;
     debt = debt + deficit + otherFinancing;
     baseDebtPrev = b.debtPublic;
-    const policyRevenue = revenues - b.revenues;
+    const policyRevenue = revenues - b.revenues * (1 - dip); // what the plan raises, not the recession
     out.push({ fy: b.fy, revenues, programs, interest, deficit, debt, gdp: b.gdp, policy: policyRevenue + (baseProgramsTotal - programs), policyRevenue });
   });
   return out;

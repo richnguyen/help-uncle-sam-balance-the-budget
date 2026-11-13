@@ -1,5 +1,5 @@
 import type { CBOYear } from '../data/types';
-import { type Extra, type Levers, type LeverId, ramp, simulate, type SimYear, SPENDING_LEVERS } from './sandbox';
+import { type Shock, type Extra, type Levers, type LeverId, ramp, simulate, type SimYear, SPENDING_LEVERS } from './sandbox';
 
 // ---------------------------------------------------------------------------------------------
 // Policy options (CBO, Options for Reducing the Deficit) and the "economists' plan" optimizer.
@@ -22,7 +22,9 @@ export interface PolicyOption {
   variant?: string;
   side: 'revenue' | 'spending';
   lever: LeverId;
-  savings10: number; // $ billions over ten years
+  savings10: number; // $ billions over ten years (negative: the card adds to deficits)
+  /** Who made the estimate, when it isn't CBO's own (e.g. "JCT, as reported by CBO"). */
+  by?: string;
   affects: string;
   /** Who gains from it, beyond the lower borrowing every saving brings (our summary of CBO's case for it). */
   benefits: string;
@@ -89,6 +91,8 @@ export interface PlanContext {
   startDebt: number;
   startRatio: number; // debt / GDP at the start
   options: (PolicyOption & { econ: Econ })[];
+  /** The desk's twist, if it has one (twists.ts). */
+  shock?: Shock;
 }
 
 /** Ten-year GDP path from the first projection year (extends past the projection at its last growth rate). */
@@ -173,7 +177,8 @@ export function economics(ctx: PlanContext, ids: string[], lv: Levers, gradual: 
   const peak = { lo: 0, mid: 0, hi: 0 };
   ctx.baseline.forEach((b, i) => {
     const t = tight[i] / b.gdp;
-    peakStep = Math.max(peakStep, t - prev);
+    // In a recession year (a desk's twist), tightening hits the economy twice as hard.
+    peakStep = Math.max(peakStep, (t - prev) * (ctx.shock?.slump === i ? 2 : 1));
     prev = t;
     peak.lo = Math.max(peak.lo, dLo[i] / b.gdp);
     peak.mid = Math.max(peak.mid, dMid[i] / b.gdp);
@@ -214,7 +219,7 @@ export function shortfall(goal: Goal, sim: SimYear[], startRatio: number) {
  */
 export function optimize(ctx: PlanContext, goal: Goal, protect: Protect, gradual: boolean, minShare = 1 / 3, lv?: Levers): OptimizeResult {
   const levers = lv ?? ({ revenues: 0, socialSecurity: 0, medicare: 0, medicaid: 0, otherMandatory: 0, defense: 0, nondefense: 0 } as Levers);
-  const run = (ids: string[]) => simulate(ctx.baseline, ctx.startDebt, levers, { phaseIn: gradual, extra: extraFor(ids, ctx, gradual) });
+  const run = (ids: string[]) => simulate(ctx.baseline, ctx.startDebt, levers, { phaseIn: gradual, extra: extraFor(ids, ctx, gradual), shock: ctx.shock });
   const pool = ctx.options.filter((o) => allowed(o, protect));
   const short0 = shortfall(goal, run([]), ctx.startRatio);
   const shares = (ids: string[]) => {
@@ -274,5 +279,17 @@ export function optimize(ctx: PlanContext, goal: Goal, protect: Protect, gradual
 
 /** Total economic cost of a set of options: harm per dollar times ten-year dollars (as in optimize). */
 export function planCost(ctx: PlanContext, ids: string[]) {
-  return ctx.options.filter((o) => ids.includes(o.id)).reduce((s, o) => s + Math.max(0.01, score(o.econ)) * o.savings10, 0);
+  // Cards that add to deficits aren't a cost to weigh here: the savings that make up for them are.
+  return ctx.options.filter((o) => ids.includes(o.id) && o.savings10 > 0).reduce((s, o) => s + Math.max(0.01, score(o.econ)) * o.savings10, 0);
+}
+
+/**
+ * Who pays: the ten-year savings from tax cards and from spending cuts. Cards that add to deficits
+ * (tax cuts, new spending) are counted apart, as what the plan adds, so the split stays a split.
+ */
+export function savingsSplit(sel: { side: 'revenue' | 'spending'; savings10: number }[]) {
+  const rev = sel.filter((o) => o.side === 'revenue' && o.savings10 > 0).reduce((s, o) => s + o.savings10, 0);
+  const sp = sel.filter((o) => o.side === 'spending' && o.savings10 > 0).reduce((s, o) => s + o.savings10, 0);
+  const adds = -sel.filter((o) => o.savings10 < 0).reduce((s, o) => s + o.savings10, 0);
+  return { rev, sp, adds };
 }

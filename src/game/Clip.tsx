@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Section } from '../components/ui';
 import { budget } from '../data';
-import { assess, BASELINE, CTX, LAST_FY } from '../lib/assess';
+import { assess, baselineFor, CTX, LAST_FY } from '../lib/assess';
 import { pct } from '../lib/format';
 import { DESK } from './levels';
 import { myName, type SavedPlan } from './plans';
@@ -97,7 +97,7 @@ export function ClipMaker({ level, plan, samSvg }: { level: string; plan: SavedP
   const a = assess(d.goal, plan.ids, plan.lv, plan.gradual);
   const name = myName();
   const frame: Frame = {
-    base: [CTX.startRatio, ...BASELINE.map((r) => r.debt / r.gdp)],
+    base: [CTX.startRatio, ...baselineFor(d.goal).map((r) => r.debt / r.gdp)],
     plan: [CTX.startRatio, ...a.sim.map((r) => r.debt / r.gdp)],
     years: [budget.latestFY, ...a.sim.map((r) => r.fy)],
     title: `${name ? `${name}’s` : 'My'} plan\nfor Uncle Sam`,

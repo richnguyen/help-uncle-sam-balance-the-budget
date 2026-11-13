@@ -17,6 +17,7 @@ import { Seal } from './Seal';
 import { lockedLine, QUIZ_LINES } from './script';
 import { EstimateGuess, SizesCard, SortCard, SplitCard } from './guesses';
 import { GameStep } from './minigame';
+import { Terms } from '../components/Terms';
 
 const CHOICE_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -196,7 +197,7 @@ function StepBody({ step, level }: { step: Step; level: Level }) {
   if (step.kind === 'story') return (
     <>
       <SamSays mood={step.mood} size={150} auto>{step.sam}</SamSays>
-      <p className="level-brief"><span className="stat-label">In this mission</span> {level.topic}</p>
+      <p className="level-brief"><span className="stat-label">In this mission</span> <Terms inline>{level.topic}</Terms></p>
     </>
   );
   if (step.kind === 'game') return <GameStep game={step.game!} takeaways={level.takeaways} />;
@@ -210,7 +211,7 @@ function StepBody({ step, level }: { step: Step; level: Level }) {
   return (
     <>
       {step.sam && <SamSays mood={step.mood} compact auto>{step.sam}</SamSays>}
-      <div className="card level-card">{step.body?.()}</div>
+      <div className="card level-card"><Terms>{step.body?.()}</Terms></div>
     </>
   );
 }
@@ -286,7 +287,7 @@ function ChoiceCard({ quiz }: { quiz: Quiz }) {
         {(solved || revealed || picked != null) && (
           <div className="quiz-feedback" data-ok={solved} role="status">
             <strong>{solved ? (guess ? 'Good guess.' : 'Correct.') : revealed ? `The answer is ${CHOICE_LETTERS[quiz.correct]}.` : 'Not quite.'}</strong>{' '}
-            {solved || revealed ? quiz.explain : 'Give it another try.'}
+            {solved || revealed ? <Terms inline>{quiz.explain}</Terms> : 'Give it another try.'}
           </div>
         )}
       </div>
@@ -317,7 +318,7 @@ function VoteCard({ vote }: { vote: VoteSpec }) {
         <h2 className="ballot-title">{o.name}</h2>
         <p>{o.summary}</p>
         <dl className="ballot-facts">
-          <div><dt>Ten-year savings</dt><dd className="num">{money(o.savings10 * 1e9)}</dd></div>
+          <div><dt>{o.savings10 < 0 ? 'Adds to deficits, ten years' : 'Ten-year savings'}</dt><dd className="num">{money(Math.abs(o.savings10) * 1e9)}</dd></div>
           <div><dt>Who pays</dt><dd>{o.affects}</dd></div>
           <div><dt>Who benefits</dt><dd>{o.benefits}</dd></div>
         </dl>
@@ -351,7 +352,7 @@ function VoteCard({ vote }: { vote: VoteSpec }) {
     <article className="card ballot">
       <div className="eyebrow">Your vote</div>
       <h2 className="ballot-title">{vote.question}</h2>
-      <p className="small" style={{ color: 'var(--ink-2)' }}>{vote.context}</p>
+      <p className="small" style={{ color: 'var(--ink-2)' }}><Terms inline>{vote.context}</Terms></p>
       <div className="ballot-choices" role="radiogroup" aria-label={vote.question}>
         {vote.choices.map((c) => (
           <button key={c.value} type="button" role="radio" aria-checked={cur === c.value} className="ballot-choice" onClick={() => cast(c.value)}>

@@ -56,7 +56,7 @@ const stateItems = (): Item[] => geo.states.filter((s) => !TERRITORIES.has(s.abb
   source: { name: `USAspending.gov, federal awards by state, FY${geo.fy} (not counting Medicare)`, id: 'usaspending-geo' },
 }));
 
-const cboItems = (): Item[] => OPTIONS_DATA.options.map((o) => ({
+const cboItems = (): Item[] => OPTIONS_DATA.options.filter((o) => o.savings10 > 0).map((o) => ({
   id: 'c:' + o.id, label: o.name, value: o.savings10, shown: `${money(o.savings10 * 1e9)} over ten years`,
   source: { name: 'CBO, Options for Reducing the Deficit', url: o.source.url },
 }));
@@ -96,7 +96,7 @@ const paycheckItems = (): Item[] => [25000, 40000, 60000, 80000, 100000, 150000,
   const r = estimateTaxes(w, st, tax);
   return { id: `p:${st}:${w}`, label: st === 'single' ? `A single worker earning ${dollars(w)}` : `A married couple earning ${dollars(w)} (one paycheck)`, value: r.total, shown: `${dollars(r.total)} a year`, source: { name: `IRS, tax year ${tax.year} brackets and standard deduction; Social Security and Medicare tax rates`, url: tax.sources[0]?.url } };
 }));
-const cboTaxItems = (): Item[] => OPTIONS_DATA.options.filter((o) => o.side === 'revenue').map((o) => ({
+const cboTaxItems = (): Item[] => OPTIONS_DATA.options.filter((o) => o.side === 'revenue' && o.savings10 > 0).map((o) => ({
   id: 'ct:' + o.id, label: o.name, value: o.savings10, shown: `${money(o.savings10 * 1e9)} over ten years`,
   source: { name: 'CBO, Options for Reducing the Deficit', url: o.source.url },
 }));

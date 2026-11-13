@@ -141,8 +141,10 @@ export const DAILY_LINES = {
 // Uncle Sam's reaction the first time a card is played: one true, surprising fact about it.
 // Ten-year amounts come from the same CBO data as the cards.
 const TEN = Object.fromEntries((optionsJson as { options: { id: string; savings10: number }[] }).options.map((o) => [o.id, o.savings10]));
-const ten = (id: string) => { const b = TEN[id] ?? 0; return b >= 1000 ? `$${(b / 1000).toFixed(1)} trillion` : `$${Math.round(b)} billion`; };
+const ten = (id: string) => { const b = Math.abs(TEN[id] ?? 0); return b >= 1000 ? `$${(b / 1000).toFixed(1)} trillion` : `$${Math.round(b)} billion`; };
 export const REACT: Record<string, string> = {
+  'extend-aca-credits': `This one goes the other way: it adds about ${ten('extend-aca-credits')} to my deficits over ten years. In exchange, CBO says 3.8 million more people would have health insurance by 2035.`,
+  'extend-obbba-temp-tax': `This one goes the other way too: about ${ten('extend-obbba-temp-tax')} less coming in over ten years, before interest. People with tips or overtime pay, and people 65 and older, keep their breaks.`,
   'income-tax-rates-1pt': `One point on every income tax rate sounds small. CBO says it brings in about ${ten('income-tax-rates-1pt')} over ten years.`,
   'corp-rate-1pt': `Each point on the corporate tax rate is worth about ${ten('corp-rate-1pt')} over ten years. The rate is 21% today.`,
   'ss-tax-earnings-over-250k': `Right now, Social Security tax stops at a cap on each worker’s earnings. Taxing earnings above $250,000 too raises about ${ten('ss-tax-earnings-over-250k')} over ten years.`,
