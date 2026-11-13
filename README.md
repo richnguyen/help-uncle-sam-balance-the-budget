@@ -833,6 +833,30 @@ Shared voting totals and "How everyone played" need a shared database, so they w
 claude.ai copy of the site; on the public site the game shows each player's own results. Badges,
 stars and progress are saved in each visitor's browser.
 
+## Test it
+
+The browser tests live in `tests/e2e/`: 42 Playwright scripts, one per area of the game, each
+driving an emulated phone (or desktop) against the dev server. Every request to Supabase is
+intercepted, so nothing reaches the live database. `tests/e2e/run.mjs` starts the dev server on
+port 5173 and runs them on three workers, longest first, re-running anything that fails under
+load once on its own (reported as "flaky" if it then passes).
+
+```bash
+npm run test:e2e        # quick tier: eight smoke tests, about 1.5 minutes
+npm run test:e2e:full   # everything, about 8-11 minutes
+node tests/e2e/run.mjs --only zip,county   # named tests
+node tests/e2e/run.mjs --tier full --plan  # what would run, and what is skipped and why
+```
+
+The quick tier (check, cardfit, deskui, feed, zip, quick, seal, voicecheck) is for every change;
+the full tier is for before a merge. In a full run, the three slowest tests that guard
+slow-changing areas run only if files in their area changed since the last full run that passed
+on that machine: `launch` (launch screens), `mgames` (the mission games) and `nohint` (the budget
+desks). `--all` runs them anyway. Logs go to `tests/e2e/.runs/` and screenshots to
+`tests/e2e/out/` (both git-ignored). The tests need Playwright with Chromium installed
+(`require('playwright')` must resolve). The database tests are separate: `npm run test:db`,
+`npm run test:rollcall` and `npm run test:alerts`.
+
 ## Re-record Uncle Sam's voice
 
 Uncle Sam's lines are recorded ahead of time with [Kokoro](https://github.com/hexgrad/kokoro)
