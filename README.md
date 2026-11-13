@@ -322,9 +322,12 @@ like a civic briefing, built for a phone and a thumb.
     cards to swipe, all computed from the Treasury data the game uses (where the money went and
     came from, the deficits, the interest bill, the debt per person, tariffs), plus every law in
     *Laws that moved the needle* with its scored effect on deficits.
-  - *Polls*: each of the CBO's budget options, *Would you include this in a plan to shrink the
-    deficit?*, with *Arguments for* (what it saves, what it does) and *Arguments against* (who
-    bears the cost), from CBO's own text. *Include it / Leave it out* is the same vote as the
+  - *Polls*: each of the CBO's budget options, *Would you include this in your plan?*, with the
+    deficit effect stated as a plain fact (CBO's ten-year number) and three tabs: *What it does*,
+    *Who pays* and *Who benefits* (`affects` and `benefits` in `src/data/curated/options.json`;
+    *who benefits* is our short summary of the case CBO lays out for the option, beyond the lower
+    borrowing every saving brings). The desk's cards and the ballot show *who pays* and *who
+    benefits* side by side too. *Include it / Leave it out* is the same vote as the
     game's policy cards, so the answer counts in both places.
   - *Civic lessons*: every mission as a lesson (steps, minutes, difficulty; *What you'll do* opens
     the steps; *Start the lesson*), quick checks from the missions answered right in the feed with

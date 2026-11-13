@@ -456,7 +456,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                   <details className="pcard-more">
                     <summary>What it does</summary>
                     <p>{o.summary}</p>
-                    <p><strong>Who it affects:</strong> {o.affects}.</p>
+                    <p><strong>Who pays:</strong> {o.affects}.</p>
+                    <p><strong>Who benefits:</strong> {o.benefits}.</p>
                     <p><strong>Economic effect:</strong> {o.econ.why}</p>
                     {o.obbbaNote && <p className="muted">{o.obbbaNote}</p>}
                     <p><a href={o.source.url} target="_blank" rel="noreferrer">CBO’s estimate: {money(o.savings10 * 1e9)} over 10 years</a></p>

@@ -3084,6 +3084,8 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .fc-tabs { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--surface-2, var(--paper)); box-shadow: inset 0 0 0 1px var(--line); }
 .fc-tabs button { flex: 1; min-height: 38px; border: 0; border-radius: 8px; background: none; color: var(--ink-2); font: inherit; font-size: 0.875rem; font-weight: 650; cursor: pointer; }
 .fc-tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--ring); }
+.fc-tabs-3 button { font-size: 0.8125rem; padding: 0 4px; }
+.fc-fact { margin: 0; font-size: 0.9375rem; color: var(--ink-2); }
 .fc-tabpanel > p { margin: 0; }
 .fc-vote { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
 .fc-ask { font-weight: 700; font-size: 0.9375rem; }
