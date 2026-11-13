@@ -13,7 +13,7 @@ import type { Bill, FeedItem, FeedRow, Slice, Stat, Topic } from './items';
 // One card per kind of post. Every card has the same head: what it is, its official source and
 // date, and Save. Then its body, and its own one action: vote, swipe, check, start, or read more.
 
-const TOPIC_LABEL: Record<Topic, string> = { bills: 'Bill in Congress', budget: 'Budget lesson', polls: 'Poll', lessons: 'Civic lesson', news: 'Announcement' };
+const TOPIC_LABEL: Record<Topic, string> = { bills: 'Bill in Congress', budget: 'Budget lesson', polls: 'Poll', lessons: 'Civic lesson', facts: 'Fun fact', news: 'Announcement' };
 const KIND_LABEL: Partial<Record<FeedItem['kind'], string>> = { check: 'Quick check', tutorial: 'Mission', chapter: 'Field guide', term: 'Word to know', law: 'Law that moved the deficit', deadline: 'Deadline', daily: 'Daily Dollar' };
 const DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const fmtDate = (d?: string) => (d && /^\d{4}-\d{2}-\d{2}/.test(d) ? DATE.format(new Date(d.slice(0, 10) + 'T12:00:00Z')) : d ?? '');
@@ -34,8 +34,9 @@ export const ICON = {
   up: <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />,
   ext: <><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></>,
   chevron: <path d="m9 6 6 6-6 6" />,
+  bulb: <><path d="M9 17.5h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2v1.5h5V16c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z" /></>,
 };
-const TOPIC_ICON: Record<Topic, ReactNode> = { bills: ICON.bill, budget: ICON.chart, polls: ICON.poll, lessons: ICON.lesson, news: ICON.news };
+const TOPIC_ICON: Record<Topic, ReactNode> = { bills: ICON.bill, budget: ICON.chart, polls: ICON.poll, lessons: ICON.lesson, facts: ICON.bulb, news: ICON.news };
 
 function SaveButton({ item }: { item: FeedItem }) {
   const j = useJourney();
@@ -420,6 +421,25 @@ function TermCard({ item }: { item: Extract<FeedItem, { kind: 'term' }> }) {
   );
 }
 
+// ---- Fun facts and budget history
+
+const LONG = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+function FactCard({ item }: { item: Extract<FeedItem, { kind: 'fact' }> }) {
+  const f = item.fact;
+  const badge = f.near === 'today' ? 'On this day' : f.near === 'week' ? 'This week in budget history' : f.date ? 'Budget history' : 'Fun fact';
+  return (
+    <>
+      <Head item={item} badge={badge} />
+      <div className="fc-fact">
+        <span className="fc-fact-big" aria-hidden="true">{f.big ?? f.year}</span>
+        <h3 className="fc-title">{f.title}</h3>
+      </div>
+      {f.date && <p className="fc-fact-date">{LONG.format(new Date(f.date + 'T12:00:00Z'))}{f.near === 'today' ? ` · ${new Date().getUTCFullYear() - +f.date.slice(0, 4)} years ago today` : ''}</p>}
+      <p>{f.body}</p>
+    </>
+  );
+}
+
 export function FeedCard({ item }: { item: FeedItem }) {
   let body: ReactNode;
   switch (item.kind) {
@@ -434,6 +454,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
     case 'tutorial': body = <TutorialCard item={item} />; break;
     case 'chapter': body = <ChapterCard item={item} />; break;
     case 'term': body = <TermCard item={item} />; break;
+    case 'fact': body = <FactCard item={item} />; break;
   }
   return <article className="fc card" data-kind={item.kind} data-topic={item.topic} aria-label={`${KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}: ${item.title}`}>{body}</article>;
 }
@@ -444,7 +465,13 @@ export function Carousel({ row }: { row: Extract<FeedRow, { kind: 'carousel' }> 
     <section className="fc-carousel" aria-label={row.title}>
       <h3 className="fc-carousel-title">{row.title}</h3>
       <div className="fc-carousel-track">
-        {row.items.map((it) => (
+        {row.items.map((it) => it.kind === 'fact' ? (
+          <div key={it.id} className="fc-mini fc-mini-fact card">
+            <span className="fc-mini-year">{it.fact.year}</span>
+            <strong>{it.fact.title}</strong>
+            <span className="muted">{it.fact.body.split(/(?<=\.)\s/)[0]}</span>
+          </div>
+        ) : (
           <a key={it.id} className="fc-mini card" href={it.href}>
             {it.kind === 'tutorial' ? <span className="fc-mini-icon" aria-hidden="true"><LevelIcon id={it.stop.icon} size={26} /></span> : <span className="fc-mini-icon" aria-hidden="true"><Icon d={ICON.lesson} size={22} /></span>}
             <strong>{it.title}</strong>

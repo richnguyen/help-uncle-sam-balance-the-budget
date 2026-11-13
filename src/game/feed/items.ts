@@ -1,4 +1,6 @@
 import billsJson from '../../data/generated/bills.json';
+import factsJson from '../../data/curated/facts.json';
+import { cbo } from '../../data';
 import { budget, debt, laws, glossary, POP } from '../../data';
 import { CATEGORIES, REVENUE_BY_ID } from '../../lib/categories';
 import { moneyWords, dollars } from '../../lib/format';
@@ -14,10 +16,10 @@ import { mergeNews, type NewsItem } from '../news';
 // lessons, polls on the CBO's options, quick checks and lessons from the missions, words from the
 // glossary, and the laws that moved the deficit. Every post carries its official source and date.
 
-export type Topic = 'bills' | 'budget' | 'polls' | 'lessons' | 'news';
+export type Topic = 'bills' | 'budget' | 'polls' | 'lessons' | 'facts' | 'news';
 export const TOPICS: { id: Topic | 'all'; label: string }[] = [
   { id: 'all', label: 'All' }, { id: 'bills', label: 'Bills' }, { id: 'budget', label: 'Budget' },
-  { id: 'polls', label: 'Polls' }, { id: 'lessons', label: 'Lessons' }, { id: 'news', label: 'News' },
+  { id: 'polls', label: 'Polls' }, { id: 'lessons', label: 'Lessons' }, { id: 'facts', label: 'Fun facts' }, { id: 'news', label: 'News' },
 ];
 /** How much a post asks: a glance, a tap, or a few minutes. The mix alternates them. */
 export type Effort = 'passive' | 'interactive' | 'deep';
@@ -32,6 +34,8 @@ export interface Bill {
 export const BILLS = (billsJson as { fetchedAt: string; bills: Bill[] });
 
 export interface Source { name: string; url?: string; date?: string }
+/** A fun fact, or a dated event from budget history; `near` is set around its anniversary. */
+export interface Fact { title: string; body: string; date?: string; year?: number; near?: 'today' | 'week'; big?: string }
 interface Base { id: string; topic: Topic; effort: Effort; title: string; source: Source; /** Where Save sends you back to. */ href: string; /** For the fresh section: when it happened (ISO). */ time?: string }
 export interface Slice { label: string; value: number; color?: string }
 export interface Stat {
@@ -51,6 +55,7 @@ export type FeedItem =
   | (Base & { kind: 'chapter'; route: string; label: string; blurb: string })
   | (Base & { kind: 'term'; term: { id: string; term: string; def: string } })
   | (Base & { kind: 'law'; law: (typeof laws)[number] })
+  | (Base & { kind: 'fact'; fact: Fact })
   | (Base & { kind: 'daily' });
 
 /** Breaks in the stream: a row of topics or missions to swipe, and the "caught up" line. */
@@ -170,6 +175,50 @@ const STATS: { id: string; make: () => Stat; source: Source }[] = [
   { id: 'tariffs', make: statTariffs, source: MTS },
 ];
 
+// ---- Fun facts: the sourced ones in facts.json, and a few worked out from the game's own data.
+
+interface RawFact { id: string; date?: string; title: string; body: string; source: { title: string; url: string } }
+const RAW_FACTS = (factsJson as { facts: RawFact[] }).facts;
+const HIST_DEBT = { name: 'Treasury, Historical Debt Outstanding', url: 'https://fiscaldata.treasury.gov/datasets/historical-debt-outstanding/' };
+const OMB_HIST = { name: 'OMB Historical Tables', url: 'https://www.whitehouse.gov/omb/information-resources/budget/historical-tables/' };
+
+function computedFacts(): { id: string; fact: Fact; source: Source }[] {
+  const out: { id: string; fact: Fact; source: Source }[] = [];
+  const last = budget.annual.at(-1)!;
+  const perSec = last.outlays / (365 * 86400);
+  out.push({ id: 'per-second', source: { ...MTS, date: `FY${last.fy}` }, fact: { title: 'Federal spending, every second', big: dollars(perSec), body: `In FY${last.fy} the government spent ${moneyWords(last.outlays, 2)}: about ${dollars(perSec)} every second of the year, or ${moneyWords(last.outlays / 365, 1)} a day.` } });
+  const interest = (budget.functionsByFY[String(FY)] ?? []).filter((f) => f.category === 'interest').reduce((a, f) => a + f.amount, 0);
+  if (interest) out.push({ id: 'interest-day', source: { ...MTS, date: `FY${FY}` }, fact: { title: 'What a day of interest costs', big: moneyWords(interest / 365, 1), body: `Net interest on the debt came to ${moneyWords(interest, 2)} in FY${FY}: about ${moneyWords(interest / 365, 1)} a day, every day of the year.` } });
+  const d0 = debt.byFY[0], d1835 = debt.byFY.find((x) => x.fy === 1835), d1838 = debt.byFY.find((x) => x.fy === 1838);
+  if (d0) out.push({ id: 'debt-1790', source: HIST_DEBT, fact: { title: 'The first national debt', year: d0.fy, big: moneyWords(d0.total, 0), body: `In ${d0.fy}, mostly from the Revolutionary War, the national debt was ${moneyWords(d0.total, 1)}. On ${new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(debt.latest.date + 'T12:00:00Z'))}, it was ${moneyWords(debt.latest.total, 2)}.` } });
+  if (d1835 && d1838) out.push({ id: 'debt-1835', source: HIST_DEBT, fact: { title: 'The year the debt almost hit zero', year: 1835, big: dollars(d1835.total), body: `Under President Andrew Jackson the government paid its debts down until, in 1835, the Treasury counted just ${dollars(d1835.total)} outstanding. It didn’t last: by 1838 the debt was back to ${moneyWords(d1838.total, 1)}.` } });
+  const hist = cbo.history.filter((h) => h.actual);
+  const surplus = hist.filter((h) => h.deficit < 0);
+  const lastS = surplus.at(-1);
+  if (lastS) {
+    let run = 1; while (hist.find((h) => h.fy === lastS.fy - run)?.deficit! < 0) run++;
+    out.push({ id: 'last-surplus', source: OMB_HIST, fact: { title: 'The last time the budget balanced', year: lastS.fy, big: `FY${lastS.fy}`, body: `The government last took in more than it spent in FY${lastS.fy}, the end of ${run} surplus years in a row (FY${lastS.fy - run + 1}–FY${lastS.fy}). Every year since has run a deficit.` } });
+  }
+  const h62 = hist[0];
+  const nowDef = (budget.functionsByFY[String(FY)] ?? []).filter((f) => f.category === 'defense').reduce((a, f) => a + f.amount, 0);
+  const nowAll = last.outlays;
+  if (h62 && nowDef) out.push({ id: 'defense-1962', source: OMB_HIST, fact: { title: `In ${h62.fy}, half the budget was defense`, year: h62.fy, big: `${Math.round((h62.defense / h62.outlays) * 100)}%`, body: `Defense was ${Math.round((h62.defense / h62.outlays) * 100)}% of all federal spending in FY${h62.fy}, and Medicare didn’t exist yet. In FY${FY}, defense was about ${Math.round((nowDef / nowAll) * 100)}% and the big programs were Social Security, Medicare and Medicaid.` } });
+  return out;
+}
+
+/** Within three days of the anniversary (today or the days just past or coming). */
+function nearDate(date: string, now: number): 'today' | 'week' | undefined {
+  const t = new Date(now);
+  const y = t.getUTCFullYear();
+  for (const yy of [y - 1, y, y + 1]) {
+    const a = Date.UTC(yy, +date.slice(5, 7) - 1, +date.slice(8, 10));
+    const days = Math.round((a - Date.UTC(y, t.getUTCMonth(), t.getUTCDate())) / 86400000);
+    if (days === 0) return 'today';
+    if (Math.abs(days) <= 3) return 'week';
+  }
+  return undefined;
+}
+
 // ---- Everything, as posts.
 
 const RECENT_DAYS = 14;
@@ -215,6 +264,14 @@ export function buildItems(now = Date.now(), liveNews: NewsItem[] = []): FeedIte
   for (const t of glossary) {
     out.push({ id: `term:${t.id}`, kind: 'term', term: t, topic: 'lessons', effort: 'passive', title: t.term, href: '#glossary', source: { name: 'Glossary' } });
   }
+  for (const f of RAW_FACTS) {
+    const near = f.date ? nearDate(f.date, now) : undefined;
+    out.push({ id: `fact:${f.id}`, kind: 'fact', fact: { title: f.title, body: f.body, date: f.date, year: f.date ? +f.date.slice(0, 4) : undefined, near }, topic: 'facts', effort: 'passive', title: f.title, href: f.source.url,
+      ...(near ? { time: new Date(now).toISOString() } : {}), source: { name: f.source.title, url: f.source.url } });
+  }
+  for (const c of computedFacts()) {
+    out.push({ id: `fact:${c.id}`, kind: 'fact', fact: c.fact, topic: 'facts', effort: 'passive', title: c.fact.title, href: c.source.url ?? '#overview', source: c.source });
+  }
   for (const l of laws) {
     out.push({ id: `law:${l.id}`, kind: 'law', law: l, topic: 'budget', effort: 'passive', title: l.name, href: '#laws', source: { name: l.source.title.split(',')[0], url: l.source.url, date: l.signed.slice(0, 4) } });
   }
@@ -236,7 +293,8 @@ const CHAPTER_BLURB: Record<string, string> = {
 
 /** Is it new: a bill or announcement from the last two weeks. */
 export const isFresh = (it: FeedItem, now = Date.now()) =>
-  (it.kind === 'bill' || it.kind === 'news' || it.kind === 'deadline' || it.kind === 'daily') && (!it.time || now - Date.parse(it.time) < RECENT_DAYS * 86400000);
+  (it.kind === 'fact' && !!it.fact.near)
+  || ((it.kind === 'bill' || it.kind === 'news' || it.kind === 'deadline' || it.kind === 'daily') && (!it.time || now - Date.parse(it.time) < RECENT_DAYS * 86400000));
 
 // ---- The mix.
 
@@ -288,8 +346,10 @@ export function mix(items: FeedItem[], topic: Topic | 'all', seed: string, now =
     if (topic === 'all' && sinceBreak >= 12) {
       sinceBreak = 0;
       const n = rows.filter((r) => r.kind === 'carousel').length;
-      const c = n % 2 === 0
+      const history = items.filter((i) => i.kind === 'fact' && !!i.fact.date).sort((x, y) => (x.kind === 'fact' && y.kind === 'fact' ? (x.fact.date ?? '').localeCompare(y.fact.date ?? '') : 0));
+      const c = n % 3 === 0
         ? { title: 'Chapters of the field guide', items: shuffle(items.filter((i) => i.kind === 'chapter'), rnd).slice(0, 6) }
+        : n % 3 === 1 ? { title: 'Budget history, year by year', items: history }
         : { title: 'Missions to play', items: items.filter((i) => i.kind === 'tutorial').slice(n * 2, n * 2 + 6) };
       if (c.items.length) rows.push({ kind: 'carousel', id: `carousel-${n}`, ...c });
     }

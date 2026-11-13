@@ -231,7 +231,7 @@ export function RecordPage() {
         </div>
       </Section>
       <Section id="impact" title="Your civic impact" sub="What you’ve weighed in on and checked yourself on, in the game and in the feed.">
-        <div className="record-stars record-impact">
+        <div className="record-impact">
           <div><span className="stat-label">Polls answered</span><strong className="num">{Object.keys(votes.mine.options).length + Object.keys(votes.mine.issues).length}</strong><span className="small muted">budget ideas and big questions</span></div>
           <div><span className="stat-label">Bills weighed in on</span><strong className="num">{Object.keys(j.feedVotes ?? {}).filter((k) => k.startsWith('bill:')).length}</strong><span className="small muted">from the feed</span></div>
           <div><span className="stat-label">Quick checks</span><strong className="num">{Object.values(j.feedChecks ?? {}).filter(Boolean).length}/{Object.keys(j.feedChecks ?? {}).length}</strong><span className="small muted">right on the first try</span></div>

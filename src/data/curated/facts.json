@@ -1,0 +1,108 @@
+{
+  "note": "Fun facts and dated events from the history of federal spending, taxes and debt, for the main menu's feed (src/game/feed/items.ts). Each one cites an official source (or, where noted, the Treasury's own historical data). Events with a date also show as 'On this day' / 'This week in budget history' near their anniversary. More facts are computed from the game's data in items.ts (spending per second, the debt in 1790 and 1835, the last surplus, defense's share in 1962).",
+  "facts": [
+    {
+      "id": "treasury-founded",
+      "date": "1789-09-02",
+      "title": "The Treasury Department is created",
+      "body": "Congress created the Department of the Treasury on September 2, 1789. Alexander Hamilton, its first Secretary, took office nine days later, inheriting the debts of the Revolutionary War.",
+      "source": { "title": "U.S. Department of the Treasury, History", "url": "https://home.treasury.gov/about/history" }
+    },
+    {
+      "id": "income-tax-1861",
+      "date": "1861-08-05",
+      "title": "The first federal income tax",
+      "body": "To help pay for the Civil War, a law of August 5, 1861, set a flat 3% tax on incomes over $800. A 1862 law replaced it and became the first income tax actually collected; Congress repealed the income tax in 1872.",
+      "source": { "title": "National Archives, The Documents that Made April Famous", "url": "https://www.archives.gov/press/press-releases/2013/nr13-80" }
+    },
+    {
+      "id": "sixteenth-amendment",
+      "date": "1913-02-03",
+      "title": "The 16th Amendment is ratified",
+      "body": "Ratified on February 3, 1913, it let Congress tax incomes without dividing the tax among the states by population. Income taxes are now the government’s largest source of money.",
+      "source": { "title": "National Archives, 16th Amendment to the U.S. Constitution", "url": "https://www.archives.gov/milestone-documents/16th-amendment" }
+    },
+    {
+      "id": "debt-limit-1917",
+      "date": "1917-09-24",
+      "title": "Where the debt limit comes from",
+      "body": "The Second Liberty Bond Act, enacted September 24, 1917, to pay for World War I, put the first overall limit on federal debt in law. The single limit on all federal debt we know today dates from 1939.",
+      "source": { "title": "CRS, The Debt Limit: History and Recent Increases (RL31967)", "url": "https://www.congress.gov/crs-product/RL31967" }
+    },
+    {
+      "id": "budget-accounting-1921",
+      "date": "1921-06-10",
+      "title": "The President gets a budget",
+      "body": "The Budget and Accounting Act, signed June 10, 1921, required the President to send Congress one budget for the whole government, and created the Bureau of the Budget (today’s OMB) and the General Accounting Office (today’s GAO).",
+      "source": { "title": "GAO, History", "url": "https://www.gao.gov/about/what-gao-does/history" }
+    },
+    {
+      "id": "social-security-act",
+      "date": "1935-08-14",
+      "title": "Social Security becomes law",
+      "body": "President Franklin Roosevelt signed the Social Security Act on August 14, 1935. Today Social Security is the largest single program in the federal budget.",
+      "source": { "title": "Social Security Administration, Historical Background and Development of Social Security", "url": "https://www.ssa.gov/history/briefhistory3.html" }
+    },
+    {
+      "id": "ida-may-fuller",
+      "date": "1940-01-31",
+      "title": "The first monthly Social Security check: $22.54",
+      "body": "Ida May Fuller, a retired legal secretary from Ludlow, Vermont, got the first monthly check, dated January 31, 1940. She had paid $24.75 in Social Security taxes; she lived to 100 and collected $22,888.92 in benefits.",
+      "source": { "title": "Social Security Administration Historian’s Office, Ida May Fuller", "url": "https://www.ssa.gov/history/idapayroll.html" }
+    },
+    {
+      "id": "medicare-signed",
+      "date": "1965-07-30",
+      "title": "Medicare card No. 1 goes to Harry Truman",
+      "body": "President Lyndon Johnson signed Medicare and Medicaid into law on July 30, 1965, at the Truman Library in Independence, Missouri, and gave the first two Medicare cards to Harry and Bess Truman. Truman had asked Congress for health insurance for older Americans years before.",
+      "source": { "title": "Truman Library, 1965 Signing of Medicare Act", "url": "https://www.trumanlibrary.gov/events/83193" }
+    },
+    {
+      "id": "budget-act-1974",
+      "date": "1974-07-12",
+      "title": "Congress builds its own budget process",
+      "body": "The Congressional Budget and Impoundment Control Act, signed July 12, 1974, created the budget committees, the yearly budget resolution and the Congressional Budget Office, and moved the start of the fiscal year from July 1 to October 1.",
+      "source": { "title": "CBO, History", "url": "https://www.cbo.gov/about/history" }
+    },
+    {
+      "id": "cbo-opens",
+      "date": "1975-02-24",
+      "title": "The CBO opens its doors",
+      "body": "The Congressional Budget Office began work on February 24, 1975, when Alice Rivlin was appointed its first director. It estimates the cost of nearly every bill a full committee approves, and makes no policy recommendations.",
+      "source": { "title": "CBO, History", "url": "https://www.cbo.gov/about/history" }
+    },
+    {
+      "id": "transition-quarter",
+      "date": "1976-07-01",
+      "title": "The year that had an extra quarter",
+      "body": "To move the fiscal year’s start from July 1 to October 1, the government ran a three-month “transition quarter” from July 1 to September 30, 1976, belonging to no fiscal year. Fiscal 1977 began on October 1, 1976.",
+      "source": { "title": "Public Law 94-274 (April 21, 1976)", "url": "https://www.govinfo.gov/content/pkg/STATUTE-90/pdf/STATUTE-90-Pg383.pdf" }
+    },
+    {
+      "id": "shutdown-2025",
+      "date": "2025-11-12",
+      "title": "The longest shutdown ends",
+      "body": "Funding lapsed on October 1, 2025, and stayed off for 42 full days, the longest lapse in U.S. history (the record before was 35 days, in 2018–2019). It ended when P.L. 119-37 was signed on November 12, 2025.",
+      "source": { "title": "CRS, Overview of Continuing Appropriations for FY2026 (R48765)", "url": "https://www.congress.gov/crs-product/R48765" }
+    },
+    {
+      "id": "last-penny",
+      "date": "2025-11-12",
+      "title": "The last penny",
+      "body": "The U.S. Mint struck its last circulating pennies in Philadelphia on November 12, 2025, after more than 230 years. Pennies are still legal tender.",
+      "source": { "title": "U.S. Mint, Penny FAQs", "url": "https://www.usmint.gov/news/media-kit/penny" }
+    },
+    {
+      "id": "penny-cost",
+      "title": "A penny cost almost 4 cents to make",
+      "body": "In fiscal 2024, each penny cost the Mint 3.69 cents to make and ship, and each nickel 13.78 cents. Both had cost more than they were worth for 19 years in a row.",
+      "source": { "title": "U.S. Mint, 2024 Annual Report", "url": "https://www.usmint.gov/content/dam/usmint/reports/2024-annual-report.pdf" }
+    },
+    {
+      "id": "medicaid-1966",
+      "title": "Medicaid money first flowed on New Year’s Day, 1966",
+      "body": "Medicare and Medicaid were added to the Social Security Act as Titles XVIII and XIX. Federal Medicaid funds became available to the states on January 1, 1966.",
+      "source": { "title": "CMS, History", "url": "https://www.cms.gov/about-cms/who-we-are/history" }
+    }
+  ]
+}

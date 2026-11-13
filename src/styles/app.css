@@ -3002,9 +3002,9 @@ body:has(.tabbar) .main { padding-bottom: calc(96px + var(--tabh, 66px)); }
 /* Settings opens with your record; Your record shows stars earned, spent and left. */
 .settings-profile { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
 .settings-profile-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.record-stars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.record-stars > div { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
-.record-stars strong { font-family: var(--font-display); font-size: 1.8rem; line-height: 1; color: var(--ink); }
+.record-stars, .record-impact { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.record-stars > div, .record-impact > div { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: var(--radius); background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.record-stars strong, .record-impact strong { font-family: var(--font-display); font-size: 1.8rem; line-height: 1; color: var(--ink); }
 a.stb-stars { color: inherit; text-decoration: none; }
 
 /* ===== The feed (src/game/feed): one column of posts under the main menu's first screen. ===== */
@@ -3172,3 +3172,14 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .saved-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; }
 .saved-item a { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: var(--ink); text-decoration: none; }
 .saved-item a:hover strong { text-decoration: underline; }
+/* Fun facts and budget history. */
+.feed { --fc-facts: #0f7c86; }
+:root[data-theme="dark"] .feed { --fc-facts: #5cc8d1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .feed { --fc-facts: #5cc8d1; } }
+.fc-badge[data-topic="facts"] { --fc-c: var(--fc-facts); }
+.fc[data-kind="fact"] { background: linear-gradient(160deg, color-mix(in srgb, var(--fc-facts) 7%, var(--surface)) 0%, var(--surface) 55%); }
+.fc-fact { display: flex; flex-direction: column; gap: 4px; }
+.fc-fact-big { font-family: var(--font-display, inherit); font-size: 2.6rem; line-height: 1; color: var(--fc-facts); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.fc-fact-date { font-size: 0.875rem; font-weight: 700; color: var(--ink-2); }
+.fc-mini-fact { flex-basis: min(240px, 70%); }
+.fc-mini-year { font-family: var(--font-display, inherit); font-size: 1.6rem; line-height: 1; color: var(--fc-facts); }

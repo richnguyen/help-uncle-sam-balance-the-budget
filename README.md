@@ -316,6 +316,14 @@ like a civic briefing, built for a phone and a thumb.
     taxes and spending, CBO, the House and Senate floors, bills sent to the President) in compact
     cards with an amber edge, and deadlines within two months (the funding deadline) with *Save to
     calendar* (a .ics file).
+  - *Fun facts*: budget history and surprising numbers, each with its official source
+    (`src/data/curated/facts.json`): the Treasury's founding, the first income tax, the 16th
+    Amendment, where the debt limit came from, the first monthly Social Security check ($22.54),
+    Medicare card No. 1, the year with an extra quarter, the longest shutdown, the last penny and
+    what it cost to make; plus facts worked out from the game's data (spending per second, a day of
+    interest, the debt in 1790 and in 1835, the last surplus, defense's share in 1962). Dated
+    events show as *On this day* or *This week in budget history* near their anniversary, at the
+    top of the feed, and as a timeline to swipe, year by year.
   - *The Daily Dollar*, today's puzzle.
 - **Source and date on every post** (Congress.gov · CRS summary · Updated Nov 10, 2026; CBO; U.S.
   Treasury), and **Save** on every post; saved posts are listed in Your record, with *Your civic
@@ -327,8 +335,8 @@ like a civic briefing, built for a phone and a thumb.
 - **The mix.** Fresh official posts (the last two weeks) come first, newest first, then a "You're
   all caught up" line, then the rest in a steady daily shuffle. The rhythm is three posts to
   glance at, one to tap, one to dig into (3-1-1), never three of the same kind in a row, with a
-  row to swipe sideways (field-guide chapters, missions) every dozen posts.
-- **Getting around.** A row of topics (All, Bills, Budget, Polls, Lessons, News) stays pinned at
+  row to swipe sideways (field-guide chapters, budget history, missions) every dozen posts.
+- **Getting around.** A row of topics (All, Bills, Budget, Polls, Lessons, Fun facts, News) stays pinned at
   the top; a *Top* button appears after two screens; open a post and press Back, and the feed is
   where you left it (same posts, same place). On a wide screen, the topics and links sit in a left
   column, the posts in a 640-pixel column, and *Coming up* (deadlines, tax day) and the
