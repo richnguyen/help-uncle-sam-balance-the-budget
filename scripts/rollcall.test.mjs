@@ -87,3 +87,27 @@ ok(n7147[1].chamber === 'Senate' && n7147[1].date === '2026-03-27' && n7147[1].h
 const n9499 = passagesWithoutRollCall(actionsOf('hr9499'));
 ok(n9499.length === 1 && n9499[0].chamber === 'House' && n9499[0].how === 'voice vote' && /suspend the rules and pass/.test(n9499[0].text), 'H.R. 9499: passed the House by voice vote, with no roll call');
 ok(!passagesWithoutRollCall(a7147).some((n) => /table|cloture|proceed/i.test(n.text)), 'procedural motions agreed to by voice vote are not passages');
+
+// The House's way of saying it agreed to the Senate's version ("agree to the Senate amendment")
+// decides the bill; a motion to waive a budget point of order and votes on amendments don't.
+const u = (n, ch = 'house') => (ch === 'house' ? `https://clerk.house.gov/evs/2025/roll${n}.xml` : `https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_00${n}.xml`);
+const act = (date, text, url) => ({ actionDate: date, text, recordedVotes: [{ date: date + 'T20:00:00Z', url }] });
+const hr5371 = [
+  act('2025-11-12', 'On motion that the House agree to the Senate amendment Agreed to by the Yeas and Nays: 222 - 209 (Roll no. 285).', u(285)),
+  act('2025-11-10', 'Passed Senate with an amendment by Yea-Nay Vote. 60 - 40. Record Vote Number: 618.', u(618, 's')),
+  act('2025-11-10', 'Cloture motion on the measure invoked in Senate by Yea-Nay Vote. 60 - 40. Record Vote Number: 617.', u(617, 's')),
+  act('2025-09-30', 'Failed of passage in Senate by Yea-Nay Vote. 55 - 45. Record Vote Number: 535.', u(535, 's')),
+  act('2025-09-19', 'Failed of passage in Senate by Yea-Nay Vote. 44 - 48. Record Vote Number: 528.', u(528, 's')),
+  act('2025-09-19', 'On passage Passed by the Yeas and Nays: 217 - 212 (Roll no. 281).', u(281)),
+];
+const p5371 = pickVoteUrls(hr5371, HOSTS);
+ok(p5371[0] === u(285) && p5371.length === 4 && !p5371.includes(u(617, 's')), 'agreeing to the Senate amendment counts as deciding: the final House vote leads, cloture is left out: ' + p5371.map((x) => x.match(/(\d+)\.xml$/)[1]).join(', '));
+const hr1 = [
+  act('2025-07-03', 'On motion that the House concur in the Senate amendment Agreed to by the Yeas and Nays: 218 - 214 (Roll no. 190).', u(190)),
+  act('2025-07-01', 'Passed Senate with an amendment by Yea-Nay Vote. 51 - 50. Record Vote Number: 372.', u(372, 's')),
+  act('2025-06-30', 'Motion to waive all applicable budgetary discipline with respect to the measure agreed to in Senate by Yea-Nay Vote. 51 - 48. Record Vote Number: 334.', u(334, 's')),
+  act('2025-06-30', 'Amendment SA 2360 agreed to in Senate by Yea-Nay Vote. 51 - 49. Record Vote Number: 340.', u(340, 's')),
+  act('2025-05-22', 'On passage Passed by the Yeas and Nays: 215 - 214 (Roll no. 145).', u(145)),
+];
+const p1 = pickVoteUrls(hr1, HOSTS);
+ok(p1.slice(0, 3).join() === [u(190), u(372, 's'), u(145)].join() && p1.length === 4, 'a motion to waive and an amendment vote are procedural: the three passage votes come first');

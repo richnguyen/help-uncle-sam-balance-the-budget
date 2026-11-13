@@ -55,8 +55,9 @@ export const parseRollCall = (xml, url) => (/clerk\.house\.gov/.test(url) ? pars
 
 // A vote that decides the bill (passage, agreeing to the other chamber's version, a conference
 // report, a veto override), as opposed to a procedural one (cloture, motions to proceed or table).
-const DECIDES = /\bon passage\b|passed|suspend the rules and pass|concur|conference report|override|agreed to in (house|senate)/i;
-const PROCEDURAL = /cloture|motion to (proceed|table|commit|recommit|reconsider)|previous question|providing for consideration/i;
+const DECIDES = /\bon passage\b|passed|failed of passage|suspend the rules and pass|concur|agree to the (senate|house) amendment|agree to the conference report|conference report|override|agreed to in (house|senate)/i;
+// Procedural: cloture and other motions, waivers and points of order, and votes on amendments.
+const PROCEDURAL = /cloture|motion to (proceed|table|commit|recommit|reconsider|waive)|\bwaive|point of order|previous question|providing for consideration|\bS\.?\s?Amdt|\bH\.?\s?Amdt|\bSA \d+|amendment (no\.|sa\b)/i;
 const NO_ROLL = /by voice vote|by unanimous consent|without objection/i;
 
 /**
