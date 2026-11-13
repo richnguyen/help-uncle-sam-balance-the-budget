@@ -6,6 +6,7 @@ import { budget } from '../data';
 import { moneyWords } from '../lib/format';
 import { OPTIONS_DATA } from '../lib/planData';
 import { useVotes } from '../lib/votes';
+import { useCommunity } from '../lib/community';
 import { LevelIcon, LockIcon } from './icons';
 import { CAMPAIGNS, diffKey, isUnlocked, LEVELS, MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS, unlockText } from './levels';
 import { span } from './daily';
@@ -100,7 +101,7 @@ export default function Journey() {
             <MenuIcon id="capitol" size={22} /><span className="menu-mall-stars" aria-hidden="true">★ {left}</span>
           </a>
           <a className="menu-toggle" href="#settings" aria-label="Settings: text size, theme, Uncle Sam’s voice, music" title="Settings"><MenuIcon id="gear" size={20} /></a>
-          <a className="menu-profile" href="#record" aria-label={`Your record: ${rank.name}, ${done.length} of ${STOPS.length} missions, ${j.medals.length} medals`}>
+          <a className="menu-profile" href="#guide" aria-label={`Your record: ${rank.name}, ${done.length} of ${STOPS.length} missions, ${j.medals.length} medals`}>
             <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
             <span className="mp-text">
               <strong>{name || 'Your record'}</strong>
@@ -216,29 +217,92 @@ export function LevelsPage() {
   );
 }
 
-/** Your record: fact cards, the ballot, medals, and certificates. */
+/** Your record now lives at the top of the Guide tab; the old address goes there. */
 export function RecordPage() {
-  const { j, stars, finished } = useProgress();
+  useEffect(() => { location.replace('#guide'); }, []);
+  return null;
+}
+
+/**
+ * Your record, at the top of the Guide tab: one card with who you are, how far you've got
+ * (the progress that used to sit in the top bar), and what you've earned; then your missions as
+ * badges that open to what you learned; your ballot, briefly; how everyone played; medals; and
+ * the posts you saved from the feed.
+ */
+export function RecordTop() {
+  const { j, done, next, stars, rank, finished } = useProgress();
+  const name = useMyName();
   const votes = useVotes();
+  const left = balanceOf(j.stars, j.built ?? []);
+  const polls = Object.keys(votes.mine.options).length + Object.keys(votes.mine.issues).length;
+  const bills = Object.keys(j.feedVotes ?? {}).filter((k) => k.startsWith('bill:')).length;
+  const checks = Object.keys(j.feedChecks ?? {}).length;
+  const right = Object.values(j.feedChecks ?? {}).filter(Boolean).length;
   return (
-    <div className="journey">
-      <PageHead eyebrow="Your record" title="Your record" lede="What you’ve learned, how you voted, and what you’ve earned. Saved in this browser only." />
-      <Section id="stars" title="Your stars" sub="Win stars in missions; spend them on building the Mall. Replay a mission for more.">
-        <div className="record-stars">
-          <div><span className="stat-label">Earned</span><strong className="num">★ {stars}</strong><span className="small muted">of {MAX_STARS}</span></div>
-          <div><span className="stat-label">Spent on the Mall</span><strong className="num">★ {starsSpent(j.built ?? [])}</strong><span className="small muted"><a href="#mall">Build the Mall</a></span></div>
-          <div><span className="stat-label">Left to spend</span><strong className="num">★ {balanceOf(j.stars, j.built ?? [])}</strong><span className="small muted">shown in the top bar</span></div>
+    <div className="record">
+      <section className="card rc-card" aria-labelledby="rc-name">
+        <div className="rc-who">
+          <span className="rc-badge" aria-hidden="true"><MenuIcon id="record" size={26} /></span>
+          <div>
+            <h2 className="rc-name" id="rc-name">{name || 'Your record'}</h2>
+            <span className="rc-rank">{rank.name}</span>
+          </div>
         </div>
-      </Section>
-      <Section id="impact" title="Your civic impact" sub="What you’ve weighed in on and checked yourself on, in the game and in the feed.">
-        <div className="record-impact">
-          <div><span className="stat-label">Polls answered</span><strong className="num">{Object.keys(votes.mine.options).length + Object.keys(votes.mine.issues).length}</strong><span className="small muted">budget ideas and big questions</span></div>
-          <div><span className="stat-label">Bills weighed in on</span><strong className="num">{Object.keys(j.feedVotes ?? {}).filter((k) => k.startsWith('bill:')).length}</strong><span className="small muted">from the feed</span></div>
-          <div><span className="stat-label">Quick checks</span><strong className="num">{Object.values(j.feedChecks ?? {}).filter(Boolean).length}/{Object.keys(j.feedChecks ?? {}).length}</strong><span className="small muted">right on the first try</span></div>
+        <div className="rc-progress">
+          <div className="rc-progress-head"><strong className="num">{done.length}</strong><span> of {STOPS.length} missions</span></div>
+          <div className="rc-camps">
+            {CAMPAIGNS.map((c) => {
+              const n = c.missions.filter((m) => j.done.includes(m)).length;
+              return (
+                <a key={c.n} className="rc-camp" href="#levels" aria-label={`Campaign ${c.n}, ${c.title}: ${n} of ${c.missions.length} missions`}>
+                  <span className="rc-camp-k">Campaign {c.n}</span>
+                  <span className="rc-camp-bar" aria-hidden="true">{c.missions.map((m) => <span key={m} data-done={j.done.includes(m) || undefined} />)}</span>
+                </a>
+              );
+            })}
+          </div>
+          <div className="rc-next">
+            {next ? <a className="btn btn-primary" href={'#' + next.id}>{done.length ? 'Continue' : 'Start'}: {missionShort(next)}, {next.title}</a> : <span className="small">Every mission done.</span>}
+            <a className="btn" href="#levels">Road map</a>
+          </div>
         </div>
+        <dl className="rc-stats">
+          <div><dt>Stars won</dt><dd>★ {stars}<span className="muted">/{MAX_STARS}</span></dd></div>
+          <div><dt>To spend</dt><dd><a href="#mall">★ {left}</a></dd></div>
+          <div><dt>Medals</dt><dd>{j.medals.length}<span className="muted">/{MEDALS.length}</span></dd></div>
+          <div><dt>Polls</dt><dd>{polls}</dd></div>
+          <div><dt>Bills</dt><dd>{bills}</dd></div>
+          <div><dt>Checks</dt><dd>{right}<span className="muted">/{checks}</span></dd></div>
+        </dl>
+        <p className="small muted rc-note">Saved in this browser only. Stars spent on the Mall: ★ {starsSpent(j.built ?? [])}.</p>
+      </section>
+
+      <Section id="missions" title="Your missions" sub="A badge for every mission you finish. Tap one to see what you learned.">
+        <MissionBadges />
       </Section>
-      <Section id="saved" title="Saved for later" sub={(j.saved ?? []).length ? 'Posts you saved from the feed, newest first.' : 'Tap the bookmark on any post in the feed to keep it here.'}>
-        {(j.saved ?? []).length > 0 && (
+
+      <Section id="ballot" title="Your budget ballot" sub={votes.available ? 'How you voted, next to everyone who played.' : 'How you voted in the missions.'}>
+        <Ballot />
+      </Section>
+
+      <EveryonePlayed finished={finished} />
+
+      <Section id="medals" title="Medals" sub={`${j.medals.length} of ${MEDALS.length}. They reward taking part and reading the fine print as much as winning.`}>
+        <ul className="rc-medals">
+          {MEDALS.map((m) => {
+            const got = j.medals.includes(m.id);
+            return (
+              <li key={m.id} className="rc-medal" data-got={got || undefined} title={m.desc}>
+                <span className="medal-disc" aria-hidden="true">{got ? '★' : ''}</span>
+                <span><strong>{m.name}</strong><span className="small muted"> {got ? m.desc : 'Not yet'}</span></span>
+              </li>
+            );
+          })}
+        </ul>
+      </Section>
+
+      {(j.saved ?? []).length > 0 && (
+        <Section id="saved" title="Saved for later" sub="Posts you saved from the feed, newest first.">
           <ul className="saved-list">
             {(j.saved ?? []).map((s) => (
               <li key={s.id} className="card saved-item">
@@ -247,80 +311,120 @@ export function RecordPage() {
               </li>
             ))}
           </ul>
-        )}
-      </Section>
-      <Section id="facts" title="Your fact cards" sub="Every chapter you finish adds a card of what you learned, with the source. Share any of them.">
-        <div className="factcards">
-          {LEVELS.map((l) => {
-            const got = j.done.includes(l.id);
-            return (
-              <article key={l.id} className="factcard" data-got={got} data-diff={diffKey(l.difficulty)}>
-                <div className="factcard-top"><span className="factcard-icon"><LevelIcon id={l.icon} size={18} /></span><span className="stat-label">{missionShort(STOP_BY_ID[l.id])} · {l.badge}</span></div>
-                {got ? (
-                  <>
-                    <ul className="factcard-list">{l.takeaways.map((t) => <li key={t}>{t}</li>)}</ul>
-                    <div className="factcard-actions">
-                      <ShareButton kind="level" className="btn btn-sm" text={`Did you know? ${l.takeaways[0]} (from “${GAME_NAME}”, built on official U.S. government data)`} url={SITE_URL + '#' + l.id} />
-                      {l.deepDive[0] && <a className="small" href={'#' + l.deepDive[0].route}>The full chapter</a>}
-                    </div>
-                  </>
-                ) : (
-                  <p className="small muted">Finish {missionShort(STOP_BY_ID[l.id])}, {l.title}, to collect this card.</p>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      </Section>
+        </Section>
+      )}
 
-      <div className="callout results-callout">
-        <div className="callout-title">{finished ? 'You finished the game. How did everyone else do?' : 'How is everyone else doing?'}</div>
-        <p className="small">See how far players got, how many got each question right, and how everyone voted on every question and policy card. <a href="#results">How everyone played</a></p>
-      </div>
-
-      <Section id="ballot" title="Your budget ballot" sub={votes.available ? 'Your votes from each mission, counted with everyone else who opened this page.' : 'Your votes from each mission, saved in this browser.'}>
-        <Ballot />
-      </Section>
-
-      <Section id="medals" title="Medals" sub={`${j.medals.length} of ${MEDALS.length} earned. Medals reward taking part, reading the fine print, and sharing, as much as winning.`}>
-        <div className="medals">
-          {MEDALS.map((m) => {
-            const got = j.medals.includes(m.id);
-            return (
-              <div key={m.id} className="medal" data-got={got}>
-                <span className="medal-disc" aria-hidden="true">{got ? '★' : ''}</span>
-                <div><strong>{m.name}</strong><div className="small muted">{m.desc}</div></div>
-              </div>
-            );
-          })}
-        </div>
-      </Section>
-
-      <Section id="awards" title="Certificates" sub="Earn one for each mission you finish. Saved in this browser only.">
-        <div className="badges">
-          {STOPS.map((l) => {
-            const got = j.done.includes(l.id);
-            return (
-              <div key={l.id} className="badge" data-got={got}>
-                <span className="badge-medal" aria-hidden="true">{got ? <LevelIcon id={l.icon} size={18} /> : `${l.campaign}.${l.mission}`}</span>
-                <div><strong>{l.badge}</strong><div className="small muted">{got ? `${missionShort(l)} complete · ${'★'.repeat(j.stars[l.id] ?? 0)}` : `Finish ${missionShort(l)}, ${l.title}`}</div></div>
-              </div>
-            );
-          })}
-        </div>
-        {finished && (
-          <div className="certificate card">
-            <Seal icon="capitol" ring={`INFORMED BUDGET VOTER · ALL ${STOPS.length} MISSIONS`} grand size={110} />
-            <div>
-              <div className="eyebrow">Certificate</div>
-              <div className="complete-title">Informed Budget Voter</div>
-              <p className="small muted">For learning where federal money comes from and goes, why the government borrows, how Congress budgets, what the future holds for Social Security, and for casting a vote on each.</p>
-              <div className="sb-actions" style={{ marginTop: 8 }}><ShareButton kind="level" text={`I finished all ${STOPS.length} missions of “${GAME_NAME}” and earned ${stars} of ${MAX_STARS} stars. I’m an Informed Budget Voter.`} /></div>
-            </div>
+      {finished && (
+        <div className="certificate card">
+          <Seal icon="capitol" ring={`INFORMED BUDGET VOTER · ALL ${STOPS.length} MISSIONS`} grand size={110} />
+          <div>
+            <div className="complete-title">Informed Budget Voter</div>
+            <p className="small muted">For learning where federal money comes from and goes, why the government borrows, how Congress budgets, what the future holds for Social Security, and for casting a vote on each.</p>
+            <div className="sb-actions" style={{ marginTop: 8 }}><ShareButton kind="level" text={`I finished all ${STOPS.length} missions of “${GAME_NAME}” and earned ${stars} of ${MAX_STARS} stars. I’m an Informed Budget Voter.`} /></div>
           </div>
-        )}
-      </Section>
+        </div>
+      )}
     </div>
+  );
+}
+
+/**
+ * Every mission as a badge: its seal once finished, a dashed outline until then. Tapping one opens
+ * a sheet with what it taught, so the grid of badges stays put.
+ */
+function MissionBadges() {
+  const j = useJourney();
+  const [open, setOpen] = useState<string | null>(null);
+  const s = open ? STOP_BY_ID[open] : null;
+  useEffect(() => {
+    if (!open) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(null); };
+    addEventListener('keydown', esc);
+    return () => removeEventListener('keydown', esc);
+  }, [open]);
+  return (
+    <>
+      <ul className="mb-grid">
+        {STOPS.map((m) => {
+          const got = j.done.includes(m.id);
+          const n = j.stars[m.id] ?? 0;
+          return (
+            <li key={m.id} className="mb-item" data-got={got || undefined}>
+              <button type="button" className="mb-tile" aria-haspopup="dialog" aria-pressed={open === m.id} onClick={() => setOpen(m.id)}
+                aria-label={`${missionShort(m)}, ${m.title}: ${got ? `complete, ${n} of 3 stars` : 'not finished yet'}. Show details`}>
+                {got ? <Seal icon={m.icon} ring={`MISSION ${m.campaign}.${m.mission} · COMPLETE`} stars={n} diff={diffKey(m.difficulty)} size={64} />
+                  : <span className="mb-empty" aria-hidden="true"><LevelIcon id={m.icon} size={22} /></span>}
+                <span className="mb-code">{m.campaign}.{m.mission}</span>
+                <span className="mb-name">{m.badge}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {s && <MissionSheet s={s} close={() => setOpen(null)} />}
+    </>
+  );
+}
+
+function MissionSheet({ s, close }: { s: (typeof STOPS)[number]; close: () => void }) {
+  const j = useJourney();
+  const got = j.done.includes(s.id);
+  const n = j.stars[s.id] ?? 0;
+  const lv = LEVELS.find((l) => l.id === s.id);
+  return (
+    <div className="mb-scrim" onClick={close}>
+      <div className="mb-sheet card" role="dialog" aria-modal="true" aria-labelledby="mb-sheet-t" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-sheet-head">
+          {got ? <Seal icon={s.icon} ring={`MISSION ${s.campaign}.${s.mission} · COMPLETE`} stars={n} diff={diffKey(s.difficulty)} size={84} />
+            : <span className="mb-empty mb-empty-lg" aria-hidden="true"><LevelIcon id={s.icon} size={28} /></span>}
+          <div>
+            <span className="mb-code">{missionShort(s)} · {s.difficulty}{got ? ` · ${'★'.repeat(n)}${'☆'.repeat(3 - n)}` : ''}</span>
+            <h3 className="mb-sheet-title" id="mb-sheet-t">{s.badge}</h3>
+            <span className="small muted">{s.title}</span>
+          </div>
+          <button type="button" className="mb-close" onClick={close} aria-label="Close" autoFocus>✕</button>
+        </div>
+        {got ? (
+          <>
+            {lv ? <ul className="factcard-list">{lv.takeaways.map((t) => <li key={t}>{t}</li>)}</ul> : <p className="small">A budget-desk mission: you built a plan that met its goal.</p>}
+            <div className="factcard-actions">
+              {lv && <ShareButton kind="level" className="btn btn-sm" text={`Did you know? ${lv.takeaways[0]} (from “${GAME_NAME}”, built on official U.S. government data)`} url={SITE_URL + '#' + lv.id} />}
+              <a className="btn btn-sm" href={'#' + s.id}>Play again</a>
+              {lv?.deepDive[0] && <a className="small" href={'#' + lv.deepDive[0].route}>The full chapter</a>}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="small">{s.topic}</p>
+            <a className="btn btn-primary" href={'#' + s.id}>Play to earn this badge</a>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** How everyone played, in three numbers and a link to the full results and votes. */
+function EveryonePlayed({ finished }: { finished: boolean }) {
+  const c = useCommunity();
+  const v = useVotes();
+  const t = c.totals;
+  const cast = Object.values(v.options).reduce((a, x) => a + x.support + x.oppose, 0);
+  return (
+    <section className="card ep-card" aria-labelledby="ep-t">
+      <div className="ep-head">
+        <h2 className="section-title" id="ep-t">How everyone played</h2>
+        <p className="small muted">{finished ? 'You finished. Here’s how everyone else did.' : 'How far players got, what they got right, and how they voted.'}</p>
+      </div>
+      {c.available || v.available ? (
+        <dl className="ep-stats">
+          <div><dt>Players</dt><dd>{t.players.toLocaleString()}</dd></div>
+          <div><dt>Finished every mission</dt><dd>{t.finishedAll == null ? '—' : t.finishedAll.toLocaleString()}</dd></div>
+          <div><dt>Votes on budget ideas</dt><dd>{cast.toLocaleString()}</dd></div>
+        </dl>
+      ) : <p className="small muted">Everyone’s results show on balancethebudget.us.</p>}
+      <a className="btn btn-primary" href="#results">Results and votes</a>
+    </section>
   );
 }
 
@@ -345,7 +449,7 @@ function ProfileCard() {
   const name = useMyName();
   const left = balanceOf(j.stars, j.built ?? []);
   return (
-    <a className="card settings-profile" href="#record">
+    <a className="card settings-profile" href="#guide">
       <span className="mp-badge" aria-hidden="true"><MenuIcon id="record" /></span>
       <span className="settings-profile-text"><strong>{name || 'Your record'}</strong><span className="small muted">{rank.name} · ★ {left} to spend ({stars} won) · {done.length} of {STOPS.length} missions · {j.medals.length} medals</span></span>
       <span aria-hidden="true">›</span>
@@ -364,6 +468,7 @@ export function SettingsPage() {
   );
 }
 
+/** Your ballot, briefly: one row per vote, your answer as a mark, and how everyone split. */
 function Ballot() {
   const j = useJourney();
   const votes = useVotes();
@@ -374,30 +479,47 @@ function Ballot() {
       const o = OPTIONS_DATA.options.find((x) => x.id === v.optionId)!;
       const shared = votes.available ? votes.mine.options[o.id] : undefined;
       const c = shared === 1 ? 'support' : shared === -1 ? 'oppose' : j.choices['option:' + o.id] || '';
-      return { level: l, q: o.name, a: c === 'support' ? 'Support' : c === 'oppose' ? 'Oppose' : '' };
+      const t = votes.options[o.id];
+      const n = t ? t.support + t.oppose : 0;
+      return { level: l, q: o.name, a: c === 'support' ? 'Support' : c === 'oppose' ? 'Oppose' : '', mark: c === 'support' ? 'yes' : c === 'oppose' ? 'no' : '', share: n ? { p: Math.round(((c === 'oppose' ? t.oppose : t.support) / n) * 100), n } : null };
     }
     const c = (votes.available ? votes.mine.issues[v.id] : undefined) ?? j.choices[v.id] ?? '';
-    return { level: l, q: v.question, a: v.choices.find((x) => x.value === c)?.label ?? '' };
+    const t = votes.issues[v.id];
+    const n = t ? Object.values(t).reduce((a, x) => a + x, 0) : 0;
+    return { level: l, q: v.question, a: v.choices.find((x) => x.value === c)?.label ?? '', mark: c ? 'pick' : '', share: n && c ? { p: Math.round(((t[c] ?? 0) / n) * 100), n } : null };
   }));
   const cast = rows.filter((r) => r.a);
   const text = [`My budget ballot from “${GAME_NAME}”:`, ...cast.map((r) => `• ${r.q}: ${r.a}`)].join('\n');
   const copy = async () => { try { await navigator.clipboard.writeText(text); setCopied('done'); } catch { setCopied('manual'); } };
   return (
-    <div className="card">
-      <ul className="ballot-list">
-        {rows.map((r) => (
-          <li key={r.q} data-cast={!!r.a}>
-            <span className="small muted">{missionShort(STOP_BY_ID[r.level.id])}</span>
-            <span className="ballot-q">{r.q}</span>
-            <span className="ballot-a">{r.a ? <strong>{r.a}</strong> : <a href={'#' + r.level.id}>{j.done.includes(r.level.id) ? 'Not voted' : 'Play to vote'}</a>}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="sb-actions" style={{ marginTop: 12 }}>
-        <span className="small muted">{cast.length} of {rows.length} questions answered.</span>
-        {cast.length > 0 && <button type="button" className="btn" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my ballot'}</button>}
-        {cast.length > 0 && <ShareButton kind="level" text={text} />}
+    <div className="card bl-card">
+      <div className="bl-meter" role="img" aria-label={`${cast.length} of ${rows.length} questions answered`}>
+        {rows.map((r) => <span key={r.q} data-mark={r.mark || undefined} />)}
       </div>
+      <p className="small muted bl-count">{cast.length} of {rows.length} answered{cast.length < rows.length ? ' · the rest are in the missions' : ''}</p>
+      {cast.length > 0 && (
+        <ul className="bl-list">
+          {cast.map((r) => (
+            <li key={r.q}>
+              <span className="bl-mark" data-mark={r.mark} aria-hidden="true">{r.mark === 'yes' ? '✓' : r.mark === 'no' ? '✕' : '●'}</span>
+              <span className="bl-q">{r.q}</span>
+              <span className="bl-a">{r.a}</span>
+              {r.share && (
+                <span className="bl-share" title={`${r.share.p}% of ${r.share.n} players answered the same`}>
+                  <span className="bl-share-bar" aria-hidden="true"><span style={{ width: `${r.share.p}%` }} /></span>
+                  <span className="small muted">{r.share.p}% agree</span>
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {cast.length > 0 && (
+        <div className="sb-actions bl-actions">
+          <button type="button" className="btn btn-sm" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my ballot'}</button>
+          <ShareButton kind="level" className="btn btn-sm" text={text} />
+        </div>
+      )}
       {copied === 'manual' && <textarea className="input" readOnly rows={6} value={text} onFocus={(e) => e.currentTarget.select()} aria-label="Your ballot, ready to copy" />}
     </div>
   );

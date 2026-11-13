@@ -1,12 +1,13 @@
 import { PageHead } from '../components/ui';
-import { ActionBar } from '../components/ActionBar';
 import { BookIcon, DocIcon, LevelIcon } from './icons';
 import { missionShort, STOP_BY_ID } from './levels';
 import { FIELD_GUIDE } from './nav';
 import { useJourney } from './state';
+import { RecordTop } from './Journey';
 
-// The field guide's front page (#guide): every chapter in full, each with the level it goes
-// with, and the reference pages (Sources & methods, the glossary) inside it.
+// The Guide tab (#guide): the player's record on top (Journey.tsx, RecordTop), then the field
+// guide: every chapter in full, each with the level it goes with, and the reference pages
+// (Sources & methods, the glossary) inside it.
 
 /** Each field-guide chapter belongs to a level, so readers can jump into the game from any page. */
 export const CHAPTER_LEVEL: Record<string, string> = {
@@ -18,7 +19,11 @@ export default function FieldGuide() {
   const j = useJourney();
   return (
     <>
-      <PageHead eyebrow="Field guide" title="The field guide" lede="Every chapter in full, no game needed. Each one goes with a mission, and every number says where it comes from." />
+      <PageHead title="Your record and the field guide" />
+      <RecordTop />
+      <section className="guide-chapters" aria-labelledby="guide-t">
+      <h2 className="section-title guide-head" id="guide-t">The field guide</h2>
+      <p className="small muted">Every chapter in full, no game needed. Each one goes with a mission, and every number says where it comes from.</p>
       <ol className="guide-grid">
         {FIELD_GUIDE.map((g, i) => {
           const lv = STOP_BY_ID[CHAPTER_LEVEL[g.route]];
@@ -37,6 +42,7 @@ export default function FieldGuide() {
           );
         })}
       </ol>
+      </section>
       <section className="guide-ref" aria-labelledby="guide-ref-t">
         <h2 className="section-title" id="guide-ref-t">Sources &amp; methods</h2>
         <div className="guide-grid guide-grid-ref">
@@ -50,7 +56,6 @@ export default function FieldGuide() {
           </a>
         </div>
       </section>
-      <ActionBar label="Read"><a className="btn btn-primary" href="#overview">Start with the big picture</a><a className="btn" href="#sources">Sources &amp; methods</a></ActionBar>
     </>
   );
 }

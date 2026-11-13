@@ -3183,3 +3183,94 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .fc-fact-date { font-size: 0.875rem; font-weight: 700; color: var(--ink-2); }
 .fc-mini-fact { flex-basis: min(240px, 70%); }
 .fc-mini-year { font-family: var(--font-display, inherit); font-size: 1.6rem; line-height: 1; color: var(--fc-facts); }
+
+/* ===== The page's title in the top bar (its own heading is for screen readers only). ===== */
+.hud-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.125rem, 0.9rem + 0.9vw, 1.5rem); line-height: 1.1; letter-spacing: 0.01em; text-transform: uppercase; color: var(--ink); }
+.page-head-empty { display: contents; }
+
+/* ===== Your record, on top of the Guide tab. ===== */
+.record { display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px; }
+.record > .section, .record > section { margin: 0; }
+.rc-card { display: flex; flex-direction: column; gap: 16px; padding: 18px; background: linear-gradient(150deg, color-mix(in srgb, var(--gold) 10%, var(--surface)) 0%, var(--surface) 60%); }
+.rc-who { display: flex; align-items: center; gap: 12px; }
+.rc-badge { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--gold); color: #fff; flex: none; }
+.rc-name { margin: 0; font-size: 1.375rem; line-height: 1.15; }
+.rc-rank { display: inline-block; margin-top: 2px; font-size: 0.8125rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gold); }
+.rc-progress { display: flex; flex-direction: column; gap: 10px; }
+.rc-progress-head strong { font-family: var(--font-display); font-size: 2rem; line-height: 1; }
+.rc-progress-head span { color: var(--ink-2); font-weight: 600; }
+.rc-camps { display: grid; gap: 8px; }
+.rc-camp { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 10px; color: var(--ink-2); text-decoration: none; font-size: 0.8125rem; font-weight: 700; min-height: 28px; }
+.rc-camp-bar { display: flex; gap: 3px; }
+.rc-camp-bar span { flex: 1; height: 10px; border-radius: 3px; background: var(--line); }
+.rc-camp-bar span[data-done] { background: var(--accent); }
+.rc-next { display: flex; flex-wrap: wrap; gap: 8px; }
+.rc-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.rc-stats > div { padding: 10px 8px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
+.rc-stats dt { font-size: 0.6875rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.rc-stats dd { margin: 2px 0 0; font-weight: 800; font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.rc-stats dd a { color: inherit; }
+.rc-stats dd .muted { font-weight: 600; font-size: 0.8125rem; }
+@media (max-width: 560px) { .rc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.rc-note { margin: -6px 0 0; }
+
+/* Missions as badges: the seal once finished, a dashed disc until then; tap to open. */
+.mb-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.mb-tile { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px 10px; border: 0; border-radius: 14px; background: none; color: var(--ink); font: inherit; cursor: pointer; text-align: center; }
+.mb-tile:hover { background: var(--surface); }
+.mb-tile:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+.mb-tile .seal { display: block; }
+.mb-empty { display: grid; place-items: center; width: 56px; height: 64px; margin-top: 4px; border-radius: 50% 50% 46% 46%; border: 2px dashed var(--line); color: var(--muted); }
+.mb-item:not([data-got]) .mb-name { color: var(--muted); }
+.mb-code { font-size: 0.75rem; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mb-name { font-size: 0.8125rem; font-weight: 700; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mb-detail { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mb-detail .factcard-list { margin: 2px 0; }
+
+/* The ballot, briefly. */
+.bl-card { display: flex; flex-direction: column; gap: 10px; }
+.bl-meter { display: flex; gap: 4px; }
+.bl-meter span { flex: 1; height: 10px; border-radius: 3px; background: var(--line); }
+.bl-meter span[data-mark] { background: var(--accent); }
+.bl-count { margin: 0; }
+.bl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.bl-list li { display: grid; grid-template-columns: 28px 1fr; grid-template-areas: "m q" "m a" "m s"; gap: 2px 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.bl-list li:first-child { border-top: 0; }
+.bl-mark { grid-area: m; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 0.8125rem; font-weight: 800; background: var(--ink); color: var(--paper); }
+.bl-mark[data-mark="no"] { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+.bl-mark[data-mark="pick"] { background: var(--accent); color: var(--accent-ink); }
+.bl-q { grid-area: q; font-size: 0.9375rem; line-height: 1.3; min-width: 0; }
+.bl-a { grid-area: a; font-weight: 750; font-size: 0.875rem; }
+.bl-share { grid-area: s; display: flex; align-items: center; gap: 8px; }
+.bl-share-bar { flex: 0 1 140px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bl-share-bar span { display: block; height: 100%; background: color-mix(in srgb, var(--ink) 55%, var(--surface)); }
+.bl-actions { margin: 0; }
+
+/* How everyone played. */
+.ep-card { display: flex; flex-direction: column; gap: 12px; }
+.ep-head h2, .ep-head p { margin: 0; }
+.ep-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.ep-stats > div { padding: 10px; border-radius: 10px; background: var(--surface-2, var(--paper)); text-align: center; }
+.ep-stats dt { font-size: 0.75rem; color: var(--muted); font-weight: 650; }
+.ep-stats dd { margin: 2px 0 0; font-family: var(--font-display); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.ep-card > .btn { align-self: flex-start; }
+.rc-medals { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.rc-medal { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-size: 0.875rem; }
+.rc-medal:not([data-got]) { opacity: 0.6; }
+.guide-chapters { margin-top: 8px; }
+.guide-head { margin-bottom: 2px; }
+
+/* A mission's badge, opened: a sheet from the bottom (centered on wide screens). */
+.mb-scrim { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; background: rgba(10, 16, 13, 0.42); animation: mb-fade 0.15s ease-out; }
+.mb-sheet { width: min(560px, 100%); max-height: 82svh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0; animation: mb-up 0.22s cubic-bezier(.2,.8,.2,1); }
+@media (min-width: 700px) { .mb-scrim { align-items: center; } .mb-sheet { border-radius: 20px; } }
+.mb-sheet-head { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.mb-sheet-title { margin: 2px 0; font-size: 1.25rem; }
+.mb-close { width: 44px; height: 44px; border: 0; border-radius: 12px; background: var(--surface-2, var(--paper)); color: var(--ink); font-size: 1.1rem; cursor: pointer; align-self: start; }
+.mb-empty-lg { width: 72px; height: 84px; }
+.mb-sheet .factcard-list { margin: 0; }
+@keyframes mb-up { from { transform: translateY(24px); opacity: 0; } }
+@keyframes mb-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mb-scrim, .mb-sheet { animation: none; } }
+/* With nothing being said, the speech strip stays empty and quiet. */
+.sam-strip[data-state="caption"] { background: transparent; box-shadow: none; }

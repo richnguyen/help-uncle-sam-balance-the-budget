@@ -118,7 +118,7 @@ export function Feed() {
       <aside className="feed-rail" aria-label="Topics">
         <Filters topic={topic} pick={pickTopic} vertical />
         <nav className="feed-rail-links" aria-label="More">
-          <a href="#record">Saved posts and your record</a>
+          <a href="#guide">Saved posts and your record</a>
           <a href="#guide">The field guide</a>
           <a href="#glossary">Glossary</a>
           <a href="#sources">Sources &amp; methods</a>
@@ -181,7 +181,7 @@ function FeedEnd({ topic, pick, refresh, count }: { topic: Topic | 'all'; pick: 
       <nav className="feed-end-links" aria-label="More to explore">
         {TOPICS.filter((t) => t.id !== 'all' && t.id !== topic).map((t) => <button key={t.id} type="button" className="feed-pill" onClick={() => pick(t.id)}>{t.label}</button>)}
       </nav>
-      <p className="small muted feed-end-foot"><a href="#guide">Field guide</a> · <a href="#sources">Sources &amp; methods</a> · <a href="#glossary">Glossary</a> · <a href="#record">Saved posts</a></p>
+      <p className="small muted feed-end-foot"><a href="#guide">Field guide</a> · <a href="#sources">Sources &amp; methods</a> · <a href="#glossary">Glossary</a> · <a href="#guide">Saved posts</a></p>
     </div>
   );
 }
@@ -209,7 +209,7 @@ function Trending() {
   const top = Object.entries(v.options).map(([id, t]) => ({ id, n: t.support + t.oppose, t })).sort((a, b) => b.n - a.n).slice(0, 4);
   const names = useMemo(() => Object.fromEntries(buildItems().filter((i) => i.kind === 'poll').map((i) => [i.id.slice(5), i.title])), []);
   if (!top.length || !v.available) return (
-    <section className="feed-box card"><h3>Your civic record</h3><p className="small">{Object.keys(v.mine.options).length} polls answered · {(j.saved ?? []).length} saved</p><a className="small" href="#record">Your record</a></section>
+    <section className="feed-box card"><h3>Your civic record</h3><p className="small">{Object.keys(v.mine.options).length} polls answered · {(j.saved ?? []).length} saved</p><a className="small" href="#guide">Your record</a></section>
   );
   return (
     <section className="feed-box card">

@@ -256,11 +256,14 @@ export function Section({ id, eyebrow, title, sub, children }: { id?: string; ey
   );
 }
 
-export function PageHead({ eyebrow, title, lede }: { eyebrow: string; title: ReactNode; lede?: ReactNode }) {
+/**
+ * A page's head. The title shows in the top bar, so here it is only for screen readers (the
+ * page's one h1); the lede, if any, opens the page. `eyebrow` is kept for old callers, unused.
+ */
+export function PageHead({ title, lede }: { eyebrow?: string; title: ReactNode; lede?: ReactNode }) {
   return (
-    <header className="page-head">
-      <div className="eyebrow">{eyebrow}</div>
-      <h1 className="page-title">{title}</h1>
+    <header className={'page-head' + (lede ? '' : ' page-head-empty')}>
+      <h1 className="page-title sr-only">{title}</h1>
       {lede && <p className="lede">{lede}</p>}
     </header>
   );

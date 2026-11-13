@@ -378,7 +378,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
     <div className="sb-block sb-next">
       <strong>{missionShort(STOP_BY_ID[desk.id])} complete.</strong>
       <div className="sb-actions">
-        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
+        {nextStop ? <a className="btn btn-primary" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary" href="#guide">See your certificate</a>}
         <a className="btn" href="#levels">Road map</a>
       </div>
     </div>

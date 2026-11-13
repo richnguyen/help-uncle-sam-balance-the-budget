@@ -63,7 +63,7 @@ function MallPage() {
   return (
     <div className="bm-page">
       <header className="level-title">
-        <h1 className="level-name">Build the Mall</h1>
+        <h1 className="level-name sr-only">Build the Mall</h1>
         <span className="level-meta small"><Balance n={bal} /> <span className="muted">· {finished} of {LANDMARKS.length} landmarks</span></span>
       </header>
       <SamSays mood={mallComplete(built) ? 'cheering' : 'happy'} auto>{say}</SamSays>

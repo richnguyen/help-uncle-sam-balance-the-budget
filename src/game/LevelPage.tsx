@@ -413,7 +413,7 @@ function Complete({ level, onReview }: { level: Level; onReview: () => void }) {
       <p className="small complete-together">Play it with others: <a href="#rooms">a room for your class or club</a>, <a href="#daily">the Daily Dollar with your group chat</a>, or <a href="#chain">pass the budget</a>.</p>
       <p className="small"><a href="#levels">See your progress on the road map</a></p>
       <ActionBar label="Next">
-        {next ? <a className="btn btn-primary" href={'#' + next.id}>Next: {missionShort(next)}, {next.title}</a> : <a className="btn btn-primary" href="#record">See your certificate</a>}
+        {next ? <a className="btn btn-primary" href={'#' + next.id}>Next: {missionShort(next)}, {next.title}</a> : <a className="btn btn-primary" href="#guide">See your certificate</a>}
         <button type="button" className="btn" onClick={onReview}>Replay this mission</button>
       </ActionBar>
     </section>

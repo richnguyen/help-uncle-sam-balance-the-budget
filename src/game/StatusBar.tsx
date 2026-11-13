@@ -1,19 +1,17 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BADGES, loadProgress } from '../lib/game';
-import { AwardIcon, CaretIcon, HubIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
-import { campaignOf, isUnlocked, MAX_STARS, missionLong, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
+import { AwardIcon, HubIcon, SpeakerIcon } from './icons';
+import { MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { balanceOf } from './build/landmarks';
-import { FIELD_GUIDE } from './nav';
 import { useJourney } from './state';
 import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
 
 // The one bar at the top of every page. Uncle Sam stands at the left, across both lines. Line one:
-// the current mission, its name, and your title (hovering it, or tapping, lists every mission to
-// jump to, plus the field guide), then stars, accomplishments, and the main menu (where Settings
-// lives; the glossary and Sources & methods are in the field guide and the footer). Line two: his
-// voice switch, then his words, running beside him.
+// the page's title (in a mission, where it sits in its campaign), then stars, accomplishments, and
+// the main menu. Your progress through the missions is in Your record, on the Guide tab. Line two:
+// his voice switch, then his words, running beside him.
 
 /** Budget-desk badges are saved by the desk itself; re-read them whenever it saves. */
 function useDeskBadges() {
@@ -26,7 +24,7 @@ function useDeskBadges() {
   return b;
 }
 
-type Menu = 'levels' | 'acc' | 'settings' | null;
+type Menu = 'acc' | 'settings' | null;
 
 /** A button with a panel; the levels one also opens on hover, with a short grace period. */
 function Pop({ id, open, setOpen, hover = false, button, children, className = '' }: { id: Exclude<Menu, null>; open: Menu; setOpen: (m: Menu) => void; hover?: boolean; button: (p: { 'aria-expanded': boolean; 'aria-controls': string; onClick: () => void }) => ReactNode; children: ReactNode; className?: string }) {
@@ -37,7 +35,7 @@ function Pop({ id, open, setOpen, hover = false, button, children, className = '
   return (
     <div className={'ab-pop ' + className} data-pop={id} onMouseEnter={enter} onMouseLeave={leave}>
       {button({ 'aria-expanded': isOpen, 'aria-controls': 'pop-' + id, onClick: () => setOpen(isOpen ? null : id) })}
-      {isOpen && <div className="ab-panel" id={'pop-' + id} role="dialog" aria-label={id === 'levels' ? 'All missions' : id === 'acc' ? 'Accomplishments' : 'Settings'}>{children}</div>}
+      {isOpen && <div className="ab-panel" id={'pop-' + id} role="dialog" aria-label={id === 'acc' ? 'Accomplishments' : 'Settings'}>{children}</div>}
     </div>
   );
 }
@@ -52,16 +50,13 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
   const stars = STOPS.reduce((a, s) => a + (j.stars[s.id] ?? 0), 0);
   // The stars left to spend on building the Mall (what's been won, less what's been built).
   const left = balanceOf(j.stars, j.built ?? []);
-  const next = STOPS.find((s) => !j.done.includes(s.id) && isUnlocked(s.id, j.done, j.settings.freeRoam));
   const here = STOP_BY_ID[route];
-  const focus = here ?? next ?? STOPS[STOPS.length - 1];
   const rank = rankFor(done);
   const voiceOn = j.settings.narration;
   const earned = j.medals.length + BADGES.filter((b) => desk.includes(b.id)).length;
   const total = MEDALS.length + BADGES.length;
-  const focusDone = j.done.includes(focus.id);
   // With no line of his own on a page, the strip names where you are.
-  const caption = here ? `${missionLong(here)} · ${here.title}` : title ?? '';
+  const caption = '';
 
   useEffect(() => { setOpen(null); }, [route]);
   useEffect(() => {
@@ -81,47 +76,10 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
         <div className="hud-sam"><SamPortrait /></div>
         <div className="hud-main">
         <div className="hud-line">
-        {/* Left: where you are: the mission, its name, and your title. */}
+        {/* Left: the page's title (each page's own heading is for screen readers only). In a
+            mission, where the mission's name heads the page, just its number. */}
         <div className="hud-side hud-left">
-          <Pop id="levels" open={open} setOpen={setOpen} hover className="ab-levels" button={(p) => (
-            <div className="ab-levelbar hud-row">
-              <button type="button" className="ab-level" {...p} aria-label={`${missionLong(focus)}: ${focus.title}. Show all missions`}>
-                <span className="stb-icon" data-done={focusDone}><LevelIcon id={focus.icon} size={17} /></span>
-                <span className="ab-levelnum"><span className="stb-k">Mission</span> <strong className="num">{focus.campaign}.{focus.mission}</strong></span>
-                <span className="ab-mtitle">{focus.title}</span>
-                <CaretIcon />
-              </button>
-              <span className="hud-sub ab-hide-sm">{rank.name}</span>
-            </div>
-          )}>
-            <div className="ab-panel-head"><strong>All missions</strong><span className="small muted">{done} of {STOPS.length} finished</span></div>
-            <ol className="ab-levellist">
-              {STOPS.map((s) => {
-                const ok = isUnlocked(s.id, j.done, j.settings.freeRoam);
-                const fin = j.done.includes(s.id);
-                const body = (
-                  <>
-                    <span className="stb-icon" data-done={fin}>{ok || fin ? <LevelIcon id={s.icon} size={15} /> : <LockIcon />}</span>
-                    <span className="ab-ll-text"><span className="ab-ll-title">{s.campaign}.{s.mission} {s.title}</span><span className="small muted">{s.difficulty}{s.kind === 'desk' ? ' · budget desk' : ''}{fin ? ((j.stars[s.id] ?? 0) > 0 ? ` · ${'★'.repeat(j.stars[s.id] ?? 0)}` : ' · finished') : ''}</span></span>
-                  </>
-                );
-                const head = s.mission === 1 ? <li key={'c' + s.campaign} className="ab-ll-camp"><span className="stat-label">Campaign {s.campaign}</span> {campaignOf(s.id).title}</li> : null;
-                return [head, <li key={s.id} data-here={s.id === route}>{ok ? <a href={'#' + s.id} aria-current={s.id === route ? 'page' : undefined}>{body}</a> : <span className="ab-ll-locked" title="Finish the mission before it to unlock">{body}</span>}</li>];
-              })}
-            </ol>
-            <div className="ab-extras">
-              <a className="ab-results" href="#daily" aria-current={route === 'daily' ? 'page' : undefined}>The Daily Dollar: today’s puzzle</a>
-              <a className="ab-results" href="#peoples" aria-current={route === 'peoples' ? 'page' : undefined}>The People’s Budget: one move a day</a>
-              <a className="ab-results" href="#rooms" aria-current={route === 'rooms' || route === 'room' ? 'page' : undefined}>Rooms: play as a class, office, or family</a>
-              <a className="ab-results" href="#chain" aria-current={route === 'chain' ? 'page' : undefined}>Pass the budget: one change each</a>
-              <a className="ab-results" href="#story" aria-current={route === 'story' ? 'page' : undefined}>Your Budget Story</a>
-              <a className="ab-results" href="#results" aria-current={route === 'results' ? 'page' : undefined}>How everyone played: results and votes</a>
-            </div>
-            <div className="stat-label" style={{ marginTop: 6 }}>Field guide: every chapter in full</div>
-            <ul className="ab-guide">
-              {FIELD_GUIDE.map((g) => <li key={g.route}><a href={'#' + g.route} aria-current={g.route === route ? 'page' : undefined}>{g.label}</a></li>)}
-            </ul>
-          </Pop>
+          <div className="hud-title" aria-hidden="true">{here ? missionShort(here) : title}</div>
         </div>
 
         {/* Right, in one line: your score, his voice, and the way out. */}
@@ -140,7 +98,7 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
             <ul className="stb-pop-list">
               {BADGES.map((b) => <li key={b.id} data-got={desk.includes(b.id)}><AwardIcon size={14} /><span><strong>{b.name}</strong><span className="small muted"> {b.desc}</span></span></li>)}
             </ul>
-            <a className="small" href="#record">Certificates and fact cards are in Your record</a>
+            <a className="small" href="#guide">Badges and what you learned are in Your record, on the Guide tab</a>
             </Pop>
             <a className="ab-btn ab-journey" href="#journey" aria-current={route === 'journey' ? 'page' : undefined} title="Main menu"><HubIcon /><span className="ab-label">Main menu</span></a>
           </div>

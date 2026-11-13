@@ -44,7 +44,7 @@ import FieldGuide, { CHAPTER_LEVEL as CHAPTER_LEVEL_MAP } from './game/FieldGuid
 import { activeDuel, DUEL_LEVEL, loadDuels } from './game/duel';
 import { activeRoom } from './game/rooms';
 import { JourneyProvider, useJourney } from './game/state';
-import Journey, { LevelsPage, MenuIcon, RecordPage, SettingsPage } from './game/Journey';
+import Journey, { LevelsPage, RecordPage, SettingsPage } from './game/Journey';
 import LevelPage from './game/LevelPage';
 import { DESK, isUnlocked, LEVELS, missionLong, missionShort, prevOf, STOP_BY_ID, STOPS } from './game/levels';
 import { FIELD_GUIDE, REFERENCE } from './game/nav';
@@ -107,7 +107,7 @@ const TITLE: Partial<Record<Route, string>> = Object.fromEntries([
   ['levels', 'The road map'],
   ['record', 'Your record'],
   ['settings', 'Settings'],
-  ['guide', 'The field guide'],
+  ['guide', 'Record & guide'],
   ['mall', 'Build the Mall'],
   ...STOPS.map((l) => [l.id, `${missionShort(l)}: ${l.title}`]),
 ]);
@@ -286,16 +286,12 @@ function Shell() {
       {route !== 'journey' && <StatusBar route={route} title={TITLE[route]} />}
       <main className="main" id="main">
         <div className="page" key={route} data-route={route}>
-          {/* Every page off the main menu leads straight back to it (levels have the top bar). */}
-          {route !== 'journey' && !route.startsWith('level-') && route !== 'og-card' && (
-            <a className="backlink" href="#journey"><MenuIcon id="back" size={16} /> Main menu</a>
-          )}
           <ChapterBanner route={route} />
           <Suspense fallback={<p className="small muted page-loading" role="status">Loading…</p>}>
             <Page param={param} />
           </Suspense>
-          {/* The disclaimer, quietly: on the field guide and Your record only. */}
-          {(route === 'guide' || route === 'record') && (
+          {/* The disclaimer, quietly: on the Guide tab (your record and the field guide) only. */}
+          {route === 'guide' && (
             <footer className="footer">
               <span>Independent civic education project. Not affiliated with any government agency.</span>
             </footer>
