@@ -178,6 +178,8 @@ budget adviser.
   their points; a check on phones), the points, a meter toward three stars, and the stars. After each round a banner
   shows the points and why; at the end, the final score, stars (three at 85% of the points, two
   at 60%, one for finishing) and what the game showed (the mission's takeaways), with Play again.
+  The points each star takes are shown before the first round and again on the replay screen
+  (with the ones already earned marked), so a replay is about mastery, not guessing the rules.
   The best score is kept, sets the mission's stars, and greets the player on a return visit.
   Continue waits until the game has been played once.
   - The games: 1.1 Fill the piggy bank (the total, split the $100, your pay stub); 1.2 Size the
