@@ -112,10 +112,11 @@ export function GameStep({ game, takeaways }: { game: GameSpec; takeaways?: stri
         <span className="game-meter" aria-hidden="true"><span style={{ width: `${meter * 100}%` }} /><i style={{ left: `${(0.6 / 0.85) * 100}%` }} /><i style={{ left: '100%' }} /></span>
         <Stars n={over ? live : Math.min(live, total >= 0.6 * max ? 2 : total > 0 ? 1 : 0)} size="sm" label={`${live} of 3 stars so far`} />
       </div>
-      {r === 0 && pts[0] == null && <Thresholds max={max} best={best?.best} />}
       <section className="game-round" key={`${run}-${r}`} aria-labelledby={`round-${round.id}`}>
         <RoundView round={round} done={done} />
       </section>
+      {/* What each star takes, under the first round (not above it, so the round starts high). */}
+      {r === 0 && pts[0] == null && <Thresholds max={max} best={best?.best} />}
       {pts[r] != null && (
         <div className="game-banner" role="status" data-good={(pts[r] ?? 0) >= 60 || undefined}>
           <strong className="game-plus num">+{pts[r]}</strong>

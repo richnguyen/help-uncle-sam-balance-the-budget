@@ -1,3 +1,4 @@
+import FLAGS from '../../data/generated/flags.json';
 import { load } from '../../lib/storage';
 import { useVotes } from '../../lib/votes';
 import { areaForZip } from '../../lib/zip';
@@ -19,6 +20,16 @@ export function useHomeState(): string | null {
   return a?.kind === 'state' ? a.abbr : null;
 }
 
+/**
+ * A state's or territory's flag: a plain geographic marker, shown the same way beside every
+ * lawmaker the game names (bill sponsors, members in floor votes), whoever they are. Decorative:
+ * the state is always in the text beside it. Files from Wikimedia Commons; credits in Sources.
+ */
+export function Flag({ st }: { st: string }) {
+  if (!(st in FLAGS.flags)) return null;
+  return <img className="st-flag" src={`flags/${st}.png`} alt="" aria-hidden="true" width={24} height={16} loading="lazy" decoding="async" />;
+}
+
 /** "Sen. Crapo, Mike [R-ID]": the sponsor exactly as Congress.gov lists them. */
 export function sponsorLine(s: NonNullable<Bill['sponsor']>) {
   return s.display || `${s.name} [${s.party}-${s.state}${s.district ? '-' + s.district : ''}]`;
@@ -36,7 +47,7 @@ function OneVote({ v, home }: { v: FloorVote; home: string | null }) {
       <div className="fv-totals num">Yea {t.yea} · Nay {t.nay}{t.present ? ` · Present ${t.present}` : ''}{t.notVoting ? ` · Not voting ${t.notVoting}` : ''}</div>
       {home && (mine.length
         ? <details className="fv-mine"><summary>How {home}’s {v.chamber === 'Senate' ? 'senators' : 'representatives'} voted ({mine.length})</summary>
-            <ul>{mine.map((m) => <li key={m.join()}>{m[0]} ({m[1]}-{m[2]}): <strong>{m[3]}</strong></li>)}</ul>
+            <ul>{mine.map((m) => <li key={m.join()}><Flag st={m[2]} />{m[0]} ({m[1]}-{m[2]}): <strong>{m[3]}</strong></li>)}</ul>
           </details>
         : <p className="fv-mine small muted">No members from {home} in this record.</p>)}
       <a className="fv-src small" href={v.url} target="_blank" rel="noopener noreferrer">Official record ({v.chamber === 'House' ? 'House Clerk' : 'U.S. Senate'})</a>

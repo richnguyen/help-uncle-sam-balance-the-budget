@@ -44,6 +44,7 @@ export function speakable(t: string) {
     .replace(/\bFY ?(\d{4})\b/g, 'fiscal year $1')
     .replace(/(\d)–(\d)/g, '$1 to $2')
     .replace(/\bGDP\b/g, 'G D P')
+    .replace(/\bZIP\b/g, 'zip') // "zip code", the word, not Z-I-P
     .replace(/\b(CBO|CRS|TCJA|IRS|JCT|OMB|SNAP)\b/g, (m) => (m === 'SNAP' ? 'snap' : m.split('').join(' ')))
     .replace(/\bU\.S\./g, 'U.S')
     .replace(/\bCRs?\b/g, (m) => (m === 'CRs' ? 'continuing resolutions' : 'continuing resolution'));

@@ -1,0 +1,342 @@
+{
+ "fetched": "2026-11-13",
+ "source": "Wikimedia Commons",
+ "flags": {
+  "CO": {
+   "file": "Flag of Colorado.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Colorado.svg",
+   "license": "Public domain",
+   "author": "Original: Andrew Carlyle Carson Vector: Fleminra"
+  },
+  "AL": {
+   "file": "Flag of Alabama.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Alabama.svg",
+   "license": "Public domain",
+   "author": "Steve Hall"
+  },
+  "AK": {
+   "file": "Flag of Alaska.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Alaska.svg",
+   "license": "Public domain",
+   "author": "Benny Benson"
+  },
+  "AZ": {
+   "file": "Flag of Arizona.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Arizona.svg",
+   "license": "Public domain",
+   "author": "Original: Unknown author Vector: Madden"
+  },
+  "AR": {
+   "file": "Flag of Arkansas.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Arkansas.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "CA": {
+   "file": "Flag of California.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_California.svg",
+   "license": "Public domain",
+   "author": "Original: Donald Graeme Kelley Vectorization: Devin Cook"
+  },
+  "FL": {
+   "file": "Flag of Florida.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Florida.svg",
+   "license": "Public domain",
+   "author": "Template:Brendon Tiana"
+  },
+  "HI": {
+   "file": "Flag of Hawaii.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Hawaii.svg",
+   "license": "Public domain",
+   "author": "Dbenbenn"
+  },
+  "IN": {
+   "file": "Flag of Indiana.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Indiana.svg",
+   "license": "Public domain",
+   "author": "The Indiana state flag was designed by Paul Hadley in 1917. This SVG file was made by Zscout370 with some modifications by HoosierMan1816."
+  },
+  "MD": {
+   "file": "Flag of Maryland.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Maryland.svg",
+   "license": "Public domain",
+   "author": "Michael Wheeler"
+  },
+  "NV": {
+   "file": "Flag of Nevada.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Nevada.svg",
+   "license": "Public domain",
+   "author": "Caleb Moore"
+  },
+  "NC": {
+   "file": "Flag of North Carolina.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_North_Carolina.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "SC": {
+   "file": "Flag of South Carolina.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_South_Carolina.svg",
+   "license": "Public domain",
+   "author": "Design by South Carolina General Assembly, SVG by Steve Hall"
+  },
+  "TN": {
+   "file": "Flag of Tennessee.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Tennessee.svg",
+   "license": "Public domain",
+   "author": "-xfi-"
+  },
+  "WY": {
+   "file": "Flag of Wyoming.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Wyoming.svg",
+   "license": "Public domain",
+   "author": "User:Dbenbenn"
+  },
+  "OH": {
+   "file": "Flag of Ohio.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Ohio.svg",
+   "license": "Public domain",
+   "author": "John Eisenmann"
+  },
+  "WA": {
+   "file": "Flag of Washington.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Washington.svg",
+   "license": "Public domain",
+   "author": "WA Secretary of State"
+  },
+  "NM": {
+   "file": "Flag of New Mexico.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_New_Mexico.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "VA": {
+   "file": "Flag of Virginia.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Virginia.svg",
+   "license": "Public domain",
+   "author": "LadyofHats with additional editing by 痛 and Patrickneil / Charles Keck"
+  },
+  "NJ": {
+   "file": "Flag of New Jersey.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_New_Jersey.svg",
+   "license": "Public domain",
+   "author": "author of xrmap, with modifications by Denelson83 and ChrisRuvolo"
+  },
+  "CT": {
+   "file": "Flag of Connecticut.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Connecticut.svg",
+   "license": "Public domain",
+   "author": "Jean-Pierre Demailly, xrmap authors, Commons users (SVG)"
+  },
+  "DE": {
+   "file": "Flag of Delaware.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Delaware.svg",
+   "license": "Public domain",
+   "author": "xrmap flag collection"
+  },
+  "GA": {
+   "file": "Flag of the State of Georgia.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_the_State_of_Georgia.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "IA": {
+   "file": "Flag of Iowa.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Iowa.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "IL": {
+   "file": "Flag of Illinois.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Illinois.svg",
+   "license": "Public domain",
+   "author": "Denelson83"
+  },
+  "ID": {
+   "file": "Flag of Idaho.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Idaho.svg",
+   "license": "Public domain",
+   "author": "Paul B. Evans, based on a work by the Adjutant General of Idaho and Emma Edwards Green"
+  },
+  "KS": {
+   "file": "Flag of Kansas.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Kansas.svg",
+   "license": "Public domain",
+   "author": "Xrmap"
+  },
+  "LA": {
+   "file": "Flag of Louisiana.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Louisiana.svg",
+   "license": "Public domain",
+   "author": "Curtis Vann, Jr."
+  },
+  "MA": {
+   "file": "Flag of Massachusetts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Massachusetts.svg",
+   "license": "Public domain",
+   "author": "State of Massachusetts"
+  },
+  "ME": {
+   "file": "Flag of Maine.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Maine.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "MI": {
+   "file": "Flag of Michigan.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Michigan.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "MO": {
+   "file": "Flag of Missouri.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Missouri.svg",
+   "license": "Public domain",
+   "author": "Marie Watkins Oliver"
+  },
+  "MT": {
+   "file": "Flag of Montana.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Montana.svg",
+   "license": "Public domain",
+   "author": "N.a"
+  },
+  "NE": {
+   "file": "Flag of Nebraska.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Nebraska.svg",
+   "license": "Public domain",
+   "author": "Unknown authorUnknown author"
+  },
+  "NH": {
+   "file": "Flag of New Hampshire.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_New_Hampshire.svg",
+   "license": "Public domain",
+   "author": "Xrmap flag collection"
+  },
+  "NY": {
+   "file": "Flag of New York.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_New_York.svg",
+   "license": "Public domain",
+   "author": "State of New York"
+  },
+  "ND": {
+   "file": "Flag of North Dakota.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_North_Dakota.svg",
+   "license": "Public domain",
+   "author": "Unknown authorUnknown author"
+  },
+  "OK": {
+   "file": "Flag of Oklahoma.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Oklahoma.svg",
+   "license": "Public domain",
+   "author": "xrmap"
+  },
+  "OR": {
+   "file": "Flag of Oregon.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Oregon.svg",
+   "license": "Public domain",
+   "author": "User:Denelson83"
+  },
+  "PA": {
+   "file": "Flag of Pennsylvania.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Pennsylvania.svg",
+   "license": "Public domain",
+   "author": "Simtropolitan, Jean-Pierre Demailly (old version) permission= Insignia This image shows a flag, a coat of arms, a seal or some other official insignia. The use of such symbols is restricted in many countries. These restrictions are independent of the copyright status."
+  },
+  "RI": {
+   "file": "Flag of Rhode Island.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Rhode_Island.svg",
+   "license": "Public domain",
+   "author": "Xrmap flag collection 2.7"
+  },
+  "SD": {
+   "file": "Flag of South Dakota.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_South_Dakota.svg",
+   "license": "Public domain",
+   "author": "xrmap"
+  },
+  "VT": {
+   "file": "Flag of Vermont.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Vermont.svg",
+   "license": "Public domain",
+   "author": "User:SimtropolitanOriginal by User:Denelson83"
+  },
+  "WV": {
+   "file": "Flag of West Virginia.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_West_Virginia.svg",
+   "license": "Public domain",
+   "author": "Militaryace, Denelson83"
+  },
+  "WI": {
+   "file": "Flag of Wisconsin.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Wisconsin.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  },
+  "KY": {
+   "file": "Flag of Kentucky.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Kentucky.svg",
+   "license": "Public domain",
+   "author": "Commonwealth of Kentucky"
+  },
+  "TX": {
+   "file": "Flag of Texas.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Texas.svg",
+   "license": "Public domain",
+   "author": "Paul B. Joiner"
+  },
+  "MS": {
+   "file": "Flag of Mississippi.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Mississippi.svg",
+   "license": "Copyrighted free use",
+   "author": "Rocky Vaughn, Sue Anna Joe, Dominique Pugh, Clay Moss, Kara Giles, Micah Whitson and the Mississippi Department of Archives and History"
+  },
+  "UT": {
+   "file": "Flag of Utah.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Utah.svg",
+   "license": "Public domain",
+   "author": "The State of Utah"
+  },
+  "MN": {
+   "file": "Flag of Minnesota.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Minnesota.svg",
+   "license": "Public domain",
+   "author": "Original: Minnesota State Emblems Redesign Commission Vector: Jamie Eilat, Undertiago"
+  },
+  "DC": {
+   "file": "Flag of Washington, D.C.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Washington,_D.C.svg",
+   "license": "Public domain",
+   "author": "(of code) cs:User:-xfi-"
+  },
+  "VI": {
+   "file": "Flag of the United States Virgin Islands.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_the_United_States_Virgin_Islands.svg",
+   "license": "Public domain",
+   "author": "Percival Wilson Sparks. sparksfamilyassn.org. Retrieved on 2026-05-26."
+  },
+  "AS": {
+   "file": "Flag of American Samoa.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_American_Samoa.svg",
+   "license": "Public domain",
+   "author": "by Tobias Jakobs"
+  },
+  "PR": {
+   "file": "Flag of Puerto Rico.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Puerto_Rico.svg",
+   "license": "Public domain",
+   "author": "Original: Unknown Vector: Cerejota"
+  },
+  "GU": {
+   "file": "Flag of Guam.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Guam.svg",
+   "license": "Public domain",
+   "author": "Xrmap"
+  },
+  "MP": {
+   "file": "Flag of the Northern Mariana Islands.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Northern_Mariana_Islands.svg",
+   "license": "Public domain",
+   "author": "see file page"
+  }
+ }
+}

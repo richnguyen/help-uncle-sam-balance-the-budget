@@ -5,6 +5,7 @@ import { FIELD_GUIDE } from '../game/nav';
 import { useJourney } from '../game/state';
 import { OPTIONS_DATA } from '../lib/planData';
 import { budget, cbo, geo, SOURCES, ssa } from '../data';
+import FLAGS from '../data/generated/flags.json';
 import { dateLabel } from '../lib/format';
 
 export default function Sources({ param }: { param?: string | null }) {
@@ -80,6 +81,12 @@ export default function Sources({ param }: { param?: string | null }) {
           <p><strong>Categories.</strong> Spending categories group the Treasury’s budget functions: Social Security (650), Medicare (570), Medicaid & other health (550), Income security (600), Veterans (700), National defense (050), Net interest (900), and everything else, including undistributed offsetting receipts (950).</p>
           <p><strong>Mandatory, discretionary, and interest</strong> splits and the long-run history (FY{cbo.history[0]?.fy}–FY{cbo.history.at(-1)?.fy}) come from the OMB Historical Tables published with the FY2027 budget (Tables 1.1, 2.1, 7.1, 8.1, 10.1). Projections are the {cbo.vintage}, {cbo.projAssumes}.</p>
           <p><strong>Per person and per household</strong> figures divide national totals by the U.S. resident population ({budget.population.label}) and number of households ({budget.households.label}).</p>
+          <p id="flags"><strong>State and territory flags.</strong> Every lawmaker the game names (a bill’s sponsor, or a member in a floor vote) gets the same small marker: the flag of the state or territory they represent, as plain geography, with no party colors. The images are from Wikimedia Commons (retrieved {dateLabel(FLAGS.fetched)}); {Object.values(FLAGS.flags).filter((f) => f.license === 'Public domain').length} of the {Object.keys(FLAGS.flags).length} are in the public domain, and the rest are marked as noted below.</p>
+          <details className="small flag-credits"><summary>Each flag’s file, author and license</summary>
+            <ul>{Object.entries(FLAGS.flags).sort(([a], [b]) => a.localeCompare(b)).map(([st, f]) => (
+              <li key={st}><img className="st-flag" src={`flags/${st}.png`} alt="" width={24} height={16} loading="lazy" /><a href={f.page} target="_blank" rel="noreferrer">{f.file.replace(/\.svg$/, '')}</a>: {f.license}{f.author !== 'see file page' ? `; ${f.author}` : ''}</li>
+            ))}</ul>
+          </details>
           <p><strong>State and district figures</strong> are federal award obligations in FY{geo.fy} from USAspending.gov, by place of performance. Obligations are commitments to spend and differ from outlays; not all federal spending is recorded as an award.</p>
           <p><strong>Social Security</strong> trust fund history (income, cost, and reserves by fiscal year) comes from the Treasury’s Monthly Treasury Statement, Table 8. Depletion dates, the share of benefits payable afterward, and the changes needed to close the gap are from the {ssa.report} (intermediate assumptions), released {dateLabel(ssa.released)}, and the 2026 Medicare Trustees Report.</p>
           <p><strong>Laws.</strong> Deficit effects are the official CBO or JCT estimates published when each law was enacted, as linked on each entry.</p>

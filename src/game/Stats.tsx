@@ -189,7 +189,7 @@ function PlaySection({ win }: { win: number }) {
   const [err, setErr] = useState(false);
   useEffect(() => {
     let alive = true; setErr(false);
-    playStats(win).then((r) => { if (alive) setP(r); }).catch(() => { if (alive) setErr(true); });
+    playStats(win).then((r) => { if (alive) setP({ window_days: r?.window_days ?? win, since: r?.since ?? '', totals: r?.totals && typeof r.totals === 'object' ? r.totals : {}, daily: Array.isArray(r?.daily) ? r.daily : [] }); }).catch(() => { if (alive) setErr(true); });
     return () => { alive = false; };
   }, [win]);
   const t = p?.totals ?? {};

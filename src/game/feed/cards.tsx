@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useId, useState, type ReactNode } from 'react';
 import { backendOn, countPlay, feedTallies, saveFeedVote } from '../../lib/backend';
-import { FloorVotes, sponsorLine } from './votes';
+import { Flag, FloorVotes, sponsorLine } from './votes';
 import { moneyWords } from '../../lib/format';
 import { useVotes } from '../../lib/votes';
 import { OPTIONS_DATA } from '../../lib/planData';
@@ -168,11 +168,6 @@ const STAGES = ['Introduced', 'In committee', 'Reported by committee', 'Passed H
 const BILL_CHOICES = [{ value: 'support', label: 'Support' }, { value: 'oppose', label: 'Oppose' }, { value: 'unsure', label: 'Not sure' }];
 const tallyCache = new Map<string, Record<string, number>>();
 
-function initials(name: string) {
-  const parts = name.replace(/^(Rep|Sen|Del|Resident Commissioner)\.?\s+/i, '').split(/\s+/).filter((w) => /^[A-Z]/.test(w) && !/^[A-Z]\.$/.test(w));
-  return ((parts[0]?.[0] ?? '') + (parts.at(-1)?.[0] ?? '')).toUpperCase();
-}
-
 /** How a bill becomes law, as six stops; the ones it has passed are filled. */
 const TRACK = ['Introduced', 'Committee', 'Passed one chamber', 'Passed both chambers', 'To the President', 'Law'];
 function trackAt(status: string) {
@@ -233,8 +228,8 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
       <StageTrack status={bill.status} />
       {bill.sponsor && (
         <p className="fc-sponsor">
-          <span className="fc-avatar" aria-hidden="true">{initials(bill.sponsor.name)}</span>
-          <span><span className="muted">Sponsor:</span> {sponsorLine(bill.sponsor)}{bill.cosponsors ? <span className="muted"> · {bill.cosponsors} cosponsor{bill.cosponsors === 1 ? '' : 's'}</span> : null}</span>
+          <Flag st={bill.sponsor.state} />
+          <span><span className="muted">Sponsor:</span> {(() => { const l = sponsorLine(bill.sponsor); const k = l.lastIndexOf(' ['); return k < 0 ? l : <>{l.slice(0, k)} <span style={{ whiteSpace: 'nowrap' }}>{l.slice(k + 1)}</span></>; })()}{bill.cosponsors ? <span className="muted"> · {bill.cosponsors} cosponsor{bill.cosponsors === 1 ? '' : 's'}</span> : null}</span>
         </p>
       )}
       <div className="fc-tabs" role="tablist" aria-label="About this bill">

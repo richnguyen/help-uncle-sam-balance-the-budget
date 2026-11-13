@@ -122,6 +122,12 @@ budget adviser.
   (`u`, `v`), so older links keep their meaning. Caveats are on each card: both were scored against
   CBO's baseline at the time, and the desk's projection is OMB's, which assumes the President's
   proposals; if those already make the tax breaks permanent, that card counts them twice.
+- **State flags beside lawmakers** (`scripts/fetch-flags.mjs` → `public/flags/XX.png`,
+  `src/data/generated/flags.json`): every lawmaker the game names (a bill's sponsor, each member in a
+  floor vote) gets the same marker, the flag of the state or territory they represent, as plain
+  geography. 56 flags (50 states, DC, five territories) from Wikimedia Commons at 72 px wide (about
+  250 KB in all); each file's license and author are listed on the Sources page (55 public domain,
+  Mississippi's "copyrighted free use"). Rerun the script when a state adopts a new flag.
 - **Sponsors and floor votes** (`scripts/rollcall.mjs`, `src/game/feed/votes.tsx`): a bill's sponsor
   reads exactly as Congress.gov lists them ("Rep. Arrington, Jodey C. [R-TX-19]"), with no colors
   or scores. For bills past introduction, `fetch-bills.mjs` follows the recorded votes Congress.gov
@@ -312,10 +318,11 @@ budget adviser.
   player; public results group ballots only by state or by 3-digit ZIP area, for groups of 10 or
   more (`ballot_area_totals()`, in `supabase/migrations/20261112000000_ballot_zip.sql`). In the
   claude.ai copy, where every viewer can read every ballot, a saved ZIP stays in the browser.
-- **Your county** (mission 1.4's next step; `src/game/county.tsx`): who paid the federal income
-  tax in the player's county, by income, next to the whole country. The county comes from the ZIP
-  typed a step earlier (kept for that visit only; this step saves nothing) or from this step's own
-  ZIP box, and a picker lists every county in the state, plus "All of" the state. A ZIP that
+- **Your county** (mission 1.4's first look at home, before "Your state"; `src/game/county.tsx`):
+  the ZIP box is here, and what it finds is shown most local first ("ZIP 22301 is in Alexandria
+  city › Virginia › United States"), then who paid the federal income tax in that county, by
+  income, next to the whole country; the next step zooms out to the state's federal money. The ZIP
+  is kept for that visit only unless the player opts to save it with their votes, and a picker lists every county in the state, plus "All of" the state. A ZIP that
   crosses county lines starts with the county holding most of its land and offers the others as
   chips. It shows the county's federal income tax and its average per return against the U.S.
   average, a sentence on the $200,000-and-up group's share of returns and of the tax (here and
