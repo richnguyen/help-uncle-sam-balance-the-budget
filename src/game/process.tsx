@@ -70,6 +70,8 @@ export const PLAYERS = [
   { id: 'jct', who: 'The Joint Committee on Taxation', what: 'Estimates what tax bills will raise or cost' },
   { id: 'gao', who: 'GAO', what: 'Audits federal spending and polices impoundments' },
 ];
+/** The first memory round: who proposes a budget, and who keeps score. The rest are Congress’s committees and its auditor. */
+const PLAYERS_A = ['pres', 'omb', 'cbo', 'jct'];
 export const PRES_BUDGET = [
   { id: 'agencies', label: 'Agencies send their requests to OMB', detail: 'late summer or early fall' },
   { id: 'passback', label: 'OMB sends back its “passback,” and agencies can appeal', detail: 'after OMB reviews the requests' },
@@ -95,6 +97,19 @@ const TIMETABLE = [
   ['June 30', 'The House finishes the yearly spending bills.'],
   ['October 1', 'The fiscal year begins.'],
 ];
+
+/** Part of the official budget calendar (Section 300 of the Congressional Budget Act). */
+function Timetable({ rows }: { rows: string[][] }) {
+  return (
+    <div className="timetable">
+      <table className="data">
+        <thead><tr><th scope="col">On or before</th><th scope="col">What happens</th></tr></thead>
+        <tbody>{rows.map(([d, w]) => <tr key={d}><td>{d}</td><td>{w}</td></tr>)}</tbody>
+      </table>
+      <p className="small muted">Section 300 of the Congressional Budget Act of 1974, as listed in <a href={CRS.url} target="_blank" rel="noreferrer">{CRS.title}</a>.</p>
+    </div>
+  );
+}
 
 // ---------- 2.4 Rules of the road ----------
 export const BILLS = [
@@ -208,23 +223,20 @@ export const PROCESS_LEVELS: Level[] = [
     steps: [
       { id: 'intro', label: 'Many cooks', kind: 'story', mood: 'happy', sam: <>My budget has a lot of cooks. The President proposes, Congress decides, and a few offices you may never have heard of keep everyone’s numbers honest. Let’s meet them.</> },
       { id: 'game', label: 'Meet the players', kind: 'game', game: {
-        id: 'g-roles', title: 'Meet the players', goal: 'Match each player to its job, then put the President’s budget together in order.',
+        id: 'g-roles', title: 'Meet the players', goal: 'Match the players to their jobs, four at a time, then put the President’s budget in order, three steps at a time.',
         rounds: [
-          { kind: 'custom', id: 'memory', label: 'Who does what', sam: <>Round one: a memory game. Each turn, flip one card that says who, and one that says what. Find the pairs in as few turns as you can.</>,
-            play: ({ done, intro }) => <MemoryRound pairs={PLAYERS} intro={intro} done={done} prompt="Match each player to its job." /> },
-          { kind: 'custom', id: 'order', label: 'The President’s budget', sam: <>Round two. Building the President’s budget takes most of a year. Put the steps in order.</>,
-            play: ({ done, intro }) => <OrderRound items={PRES_BUDGET} start={['submit', 'views', 'agencies', 'msr', 'passback', 'cbo']} intro={intro} done={done} prompt="Put the President’s budget in order, first to last." /> },
+          { kind: 'custom', id: 'memory', label: 'The proposers and scorekeepers', sam: <>Round one: a memory game. Flip a card that says who, then one that says what, and find the four pairs. These are the people who propose a budget and keep score.</>,
+            play: ({ done, intro }) => <MemoryRound pairs={PLAYERS.filter((x) => PLAYERS_A.includes(x.id))} intro={intro} done={done} prompt="Match each player to its job." /> },
+          { kind: 'custom', id: 'memory2', label: 'Congress’s committees', sam: <>Round two: four more pairs. These are the committees that write the bills, and the office that checks the spending afterward.</>,
+            play: ({ done, intro }) => <MemoryRound pairs={PLAYERS.filter((x) => !PLAYERS_A.includes(x.id))} intro={intro} done={done} prompt="Match each player to its job." /> },
+          { kind: 'custom', id: 'order', label: 'Inside the White House', sam: <>Round three. The President’s budget starts inside the government months before anyone sees it. Put these three steps in order.</>,
+            play: ({ done, intro }) => <OrderRound items={PRES_BUDGET.slice(0, 3)} start={['submit', 'agencies', 'passback']} intro={intro} done={done} prompt="Put them in order, first to last." /> },
+          { kind: 'custom', id: 'order2', label: 'After it reaches Congress', sam: <>Round four. Once the budget lands in Congress, three more things happen on the calendar. Which comes first?</>,
+            play: ({ done, intro }) => <OrderRound items={PRES_BUDGET.slice(3)} start={['msr', 'cbo', 'views']} intro={intro} done={done} prompt="Put them in order, first to last." /> },
           { kind: 'choice', id: 'request', label: 'Bonus round', sam: <>Bonus round.</>, quiz: REQUEST },
         ] } },
-      { id: 'calendar', label: 'The official calendar', kind: 'facts', mood: 'thinking', sam: <>Here’s the calendar the law sets for Congress. As you saw in the last mission, it rarely runs on time.</>, body: () => (
-        <div className="timetable">
-          <table className="data">
-            <thead><tr><th scope="col">On or before</th><th scope="col">What happens</th></tr></thead>
-            <tbody>{TIMETABLE.map(([d, w]) => <tr key={d}><td>{d}</td><td>{w}</td></tr>)}</tbody>
-          </table>
-          <p className="small muted">Section 300 of the Congressional Budget Act of 1974, as listed in <a href={CRS.url} target="_blank" rel="noreferrer">{CRS.title}</a>.</p>
-        </div>
-      ) },
+      { id: 'calendar', label: 'Spring: the plan', kind: 'facts', mood: 'thinking', sam: <>Here’s the calendar the law sets for Congress, in two parts. First, spring: the plan. As you saw in the last mission, it rarely runs on time.</>, body: () => <Timetable rows={TIMETABLE.slice(0, 5)} /> },
+      { id: 'calendar2', label: 'Summer: the bills', kind: 'facts', mood: 'thinking', sam: <>Then summer: the spending bills, due before the new fiscal year starts on October first.</>, body: () => <Timetable rows={TIMETABLE.slice(5)} /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>Here’s a change some lawmakers have proposed for the budget resolution. Where do you stand?</>,
         vote: { kind: 'issue', id: 'joint-resolution', question: 'Should the budget resolution become a law the President signs?', choices: [{ value: 'support', label: 'Support' }, { value: 'oppose', label: 'Oppose' }, { value: 'unsure', label: 'Not sure' }], context: (
           <>Today it’s Congress’s own plan, which the President can’t sign or veto, so it raises and spends no money. Supporters of making it a joint resolution say both branches would agree on totals early. Critics say it would add one more bill that can stall, and one more chance for a veto. <a href={CRS.url} target="_blank" rel="noreferrer">CRS</a></>
@@ -245,10 +257,12 @@ export const PROCESS_LEVELS: Level[] = [
         rounds: [
           { kind: 'custom', id: 'ref', label: 'Point of order!', sam: <>Round one: you’re the referee. Each bill comes with its cost. If it would push the subcommittee past its limit, call a point of order. If it fits, let it through.</>,
             play: ({ done, intro }) => <RefereeRound limit={50} bills={BILLS} intro={intro} done={done} prompt="Call each bill against the $50 billion limit." /> },
-          { kind: 'custom', id: 'byrd', label: 'Strike it out', sam: <>Round two. Here’s a reconciliation bill. Under the Byrd rule, anything that doesn’t change spending or revenue gets struck. Tap what goes.</>,
-            play: ({ done, intro }) => <StrikeRound provisions={PROVISIONS} intro={intro} done={done} prompt="Tap each provision the Byrd rule would strike." /> },
-          { kind: 'estimate', id: 'hours', label: 'The clock', sam: <>Round three. Reconciliation is fast because Senate debate on it is capped.</>, quiz: HOURS },
-          { kind: 'custom', id: 'baseline', label: 'Cut or increase?', sam: <>Round four. When CBO scores a bill, it compares it with a baseline: current law, projected forward. So is this bill a cut or an increase? That depends on what you compare it to.</>,
+          { kind: 'custom', id: 'byrd', label: 'Strike it out', sam: <>Round two. Here’s a reconciliation bill, four provisions at a time. Under the Byrd rule, anything that doesn’t change spending or revenue gets struck. Tap what goes.</>,
+            play: ({ done, intro }) => <StrikeRound provisions={PROVISIONS.slice(0, 4)} intro={intro} done={done} prompt="Tap each provision the Byrd rule would strike." /> },
+          { kind: 'custom', id: 'byrd2', label: 'Strike it out, again', sam: <>Same rule, four more provisions from the same bill. Strike anything that doesn’t change spending or revenue.</>,
+            play: ({ done, intro }) => <StrikeRound provisions={PROVISIONS.slice(4)} intro={intro} done={done} prompt="Tap each provision the Byrd rule would strike." /> },
+          { kind: 'estimate', id: 'hours', label: 'The clock', sam: <>Next round. Reconciliation is fast because Senate debate on it is capped.</>, quiz: HOURS },
+          { kind: 'custom', id: 'baseline', label: 'Cut or increase?', sam: <>Next round. When CBO scores a bill, it compares it with a baseline: current law, projected forward. So is this bill a cut or an increase? That depends on what you compare it to.</>,
             play: ({ done, intro }) => <BaselineRound last={100} baseline={110} bill={105} intro={intro} done={done} /> },
           { kind: 'choice', id: 'veto', label: 'Bonus round', sam: <>Bonus round.</>, quiz: VETO },
         ] } },

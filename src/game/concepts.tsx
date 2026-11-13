@@ -240,7 +240,7 @@ export const CONCEPT_LEVELS: Level[] = [
           { value: 'phase', label: 'Yes, phase it in' },
           { value: 'full', label: 'No, start in full right away' },
           { value: 'depends', label: 'It depends on the economy' },
-        ], context: <>{principle('gradual')?.detail ?? principle('gradual')?.claim}{link('gradual')}</> } },
+        ], context: <>The IMF finds that steadying a country’s debt usually takes savings worth 3 to 4.5% of GDP spread over about six years: roughly 0.5 to 0.75% a year. Going faster can weigh more on the economy; waiting makes the job bigger.{link('gradual')}</> } },
 
     ],
     takeaways: ['The budget desk rates a plan by its steepest year: gentle up to 0.5% of GDP, moderate up to 1%, steep above.', 'Phasing a plan in over three years keeps its savings but softens its biggest jolt.', 'Bigger plans squeeze harder, so the size of the goal decides how gentle a plan can be.'],

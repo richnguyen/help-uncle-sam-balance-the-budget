@@ -3347,3 +3347,9 @@ a.stb-stars { color: inherit; text-decoration: none; }
 /* A word to know: its first letter, large. */
 .fc-term { display: flex; align-items: center; gap: 14px; }
 .fc-term-letter { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; font-family: var(--font-display); font-size: 2.4rem; line-height: 1; color: var(--fc-lessons); background: color-mix(in srgb, var(--fc-lessons) 14%, var(--surface)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fc-lessons) 35%, transparent); }
+/* Sorting: one card at a time, dealt above the groups and already picked up. */
+.sort-deal { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sort-tray-one { justify-content: center; min-height: 0; }
+.sort-tray-one .sort-chip { font-size: 1.0625rem; padding: 12px 18px; box-shadow: 0 0 0 2px var(--accent), 0 8px 20px var(--ring); animation: sort-deal 0.22s cubic-bezier(.2,.8,.2,1); }
+@keyframes sort-deal { from { opacity: 0; transform: translateY(-10px) scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .sort-tray-one .sort-chip { animation: none; } }

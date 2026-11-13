@@ -148,7 +148,7 @@ export const YARDSTICK_LEVELS: Level[] = [
           { value: 'mix', label: 'Some of each' },
           { value: 'unsure', label: 'Not sure' },
         ], context: (
-          <>The history yardstick keeps the government’s share of the economy near what it has been, but bringing spending back to its 1946–2000 average would take cuts of about {Math.round(NOW.out - HIST.out)} points of GDP (about {moneyWords(((NOW.out - HIST.out) / 100) * H1.gdp, 1)} in FY{NOW.fy}), from Social Security, Medicare, and Medicaid or from everything else. The needs yardstick treats the cost of an older country as expected, but it means taxes higher than the country has kept for long: revenue has reached 20% of GDP only twice since 1930.</>
+          <>History means cutting spending by about {Math.round(NOW.out - HIST.out)} points of GDP (about {moneyWords(((NOW.out - HIST.out) / 100) * H1.gdp, 1)} in FY{NOW.fy}) to get back to its 1946–2000 average. Today’s needs means taxes above 20% of GDP, a level reached only twice since 1930.</>
         ) } },
     ],
     takeaways: [

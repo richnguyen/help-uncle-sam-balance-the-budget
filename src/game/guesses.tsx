@@ -293,7 +293,7 @@ export function SortCard({ quiz, round }: { quiz: Quiz; round?: RoundCtx }) {
   const chip = (it: SortGuess['items'][number]) => {
     const ok = at[it.id] === it.bin;
     return (
-      <button key={it.id} type="button" className="sort-chip" aria-pressed={sel === it.id} disabled={g.locked} data-ok={g.locked ? ok : undefined} data-drag={drag?.id === it.id && drag.moved ? true : undefined}
+      <button key={it.id} type="button" className="sort-chip" aria-pressed={sel === it.id || (!sel && !g.locked && next?.id === it.id)} disabled={g.locked} data-ok={g.locked ? ok : undefined} data-drag={drag?.id === it.id && drag.moved ? true : undefined}
         onPointerDown={down(it.id)} onPointerMove={move} onPointerUp={up} onPointerCancel={() => setDrag(null)} onClick={() => tap(it.id)}>
         {g.locked && <span className="sort-mark" aria-hidden="true">{ok ? '✓' : '✕'}</span>}
         <span className="sort-text">{it.label}</span>
@@ -302,16 +302,26 @@ export function SortCard({ quiz, round }: { quiz: Quiz; round?: RoundCtx }) {
       </button>
     );
   };
+  // One card at a time: the next card to sort is dealt on its own and already picked up, so
+  // each card is one tap on a group (sorted cards can still be tapped and moved).
   const tray = s.items.filter((it) => !at[it.id]);
+  const next = tray[0];
+  const held = sel ?? (g.locked ? null : next?.id ?? null);
+  const sortedCount = n - tray.length;
   return (
     <GuessFrame quiz={quiz} kind="sort" locked={g.locked} grade={grade} canLock={all} lockLabel={all ? 'Lock in my sort' : `Sort ${n - Object.keys(at).length} more`} onLock={lock} round={round} verdict={<>{verdictText}</>}>
       {!g.locked && <div className="small muted">{s.prompt}</div>}
-      {tray.length > 0 && <div className="sort-tray" data-bin="tray" role="group" aria-label="Cards to sort">{tray.map(chip)}</div>}
+      {next && !g.locked && (
+        <div className="sort-deal">
+          <span className="sort-deal-count small muted">Card {sortedCount + 1} of {n}</span>
+          <div className="sort-tray sort-tray-one" data-bin="tray" role="group" aria-label="The card to sort">{chip(next)}</div>
+        </div>
+      )}
       <div className="sort-bins" style={{ gridTemplateColumns: `repeat(${s.bins.length}, minmax(0, 1fr))` }}>
         {s.bins.map((b) => (
-          <div key={b.id} className="sort-bin" data-bin={b.id} data-ready={sel ? true : undefined} onClick={(e) => { if (sel && !(e.target as HTMLElement).closest('.sort-chip')) place(sel, b.id); }}>
-            <button type="button" className="sort-bin-head" disabled={g.locked || !sel} onClick={(e) => { e.stopPropagation(); if (sel) place(sel, b.id); }}>
-              {b.label}{sel && !g.locked && <span className="sr-only">: put the selected card here</span>}
+          <div key={b.id} className="sort-bin" data-bin={b.id} data-ready={held ? true : undefined} onClick={(e) => { if (held && !(e.target as HTMLElement).closest('.sort-chip')) place(held, b.id); }}>
+            <button type="button" className="sort-bin-head" disabled={g.locked || !held} onClick={(e) => { e.stopPropagation(); if (held) place(held, b.id); }}>
+              {b.label}{held && !g.locked && <span className="sr-only">: put the card here</span>}
             </button>
             <div className="sort-bin-items">{s.items.filter((it) => at[it.id] === b.id).map(chip)}</div>
           </div>

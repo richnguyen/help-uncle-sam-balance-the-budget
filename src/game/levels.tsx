@@ -146,14 +146,16 @@ const BILLS: SizeGuess = {
 };
 
 // ---------- small interactive pieces ----------
-function WaffleBlock() {
+/** Every $100 of spending; the list below the squares can show just some of the categories. */
+function WaffleBlock({ only }: { only?: string[] }) {
   const [active, setActive] = useState<string | null>(null);
+  const rows = only ? CATS.filter((c) => only.includes(c.id)) : CATS;
   const tot = CATS.reduce((s, c) => s + c.amount, 0);
   return (
     <div className="waffle-wrap">
       <Waffle parts={CATS.map((c) => ({ id: c.id, label: c.label, value: c.amount, color: c.color }))} active={active} onActive={setActive} label={`Every $100 of FY${FY} spending`} />
       <div className="key-list" role="list" onPointerLeave={() => setActive(null)}>
-        {CATS.map((c) => (
+        {rows.map((c) => (
           <div key={c.id} role="listitem" className="key-row" data-active={active === c.id} onPointerEnter={() => setActive(c.id)}>
             <span className="swatch" style={{ background: c.color }} />
             <span><strong>{c.label}</strong><div className="small muted">{c.blurb}</div></span>
@@ -351,7 +353,8 @@ const CHAPTERS: Level[] = [
             estimate: { min: 0, max: 100, step: 1, start: 50, answer: DISC_SHARE, spot: 3, close: 8, format: (v) => `${Math.round(v)}%`, diff: (d) => `${Math.round(d)} points`, prompt: 'Drag to the share' },
             explain: <>Discretionary spending, the part set in the 12 yearly appropriations bills, was {pct(BUCKET.y.discretionary / BUCKET.y.outlays, 0)} of spending in FY{BUCKET.y.fy}; {pct(BUCKET.y.defense / BUCKET.y.discretionary, 0)} of it was defense. The rest runs on permanent law, like Social Security and Medicare, or is interest.</> } },
         ] } },
-      { id: 'every100', label: 'Every $100', kind: 'facts', mood: 'thinking', sam: <>Here’s where every $100 went. Point at a row to light it up.</>, body: () => <WaffleBlock /> },
+      { id: 'every100', label: 'Every $100: benefits', kind: 'facts', mood: 'thinking', sam: <>Here’s where every $100 went, in two parts. First, the benefit programs: more than half of it. Point at a row to light it up.</>, body: () => <WaffleBlock only={['ss', 'medicare', 'health', 'income']} /> },
+      { id: 'every100b', label: 'Every $100: the rest', kind: 'facts', mood: 'thinking', sam: <>And the rest: defense, veterans, interest on the debt, and everything else the government does.</>, body: () => <WaffleBlock only={['defense', 'veterans', 'interest', 'other']} /> },
       { id: 'vote', label: 'Your vote', kind: 'vote', mood: 'thinking', sam: <>Defense is the biggest bill Congress votes on every year. Here’s one option CBO priced.</>, vote: { kind: 'option', optionId: 'cut-defense-budget' } },
 
     ],
