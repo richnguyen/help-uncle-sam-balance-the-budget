@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { OPTIONS_DATA } from '../lib/planData';
 import { MULT } from '../lib/plan';
-import { debt } from '../data';
+import { TWISTS } from '../lib/twists';
+import { debt, SOURCE_BY_ID } from '../data';
 
 /** Same as MyShare's: the Treasury's latest average rate, and ten years of payments. */
 const RATE = debt.rates.at(-1)!;
@@ -61,6 +62,12 @@ const methods = () => ({
     sources: [INVESTMENT, OPTIONS_VOLUME],
     leaves: <>Wear and tear on what was built, and the lag: the payoff from schools and research can take a decade or more to arrive. Projects vary widely; some return much more, some less.</>,
   },
+  ...Object.fromEntries(Object.values(TWISTS).map((t) => [t!.id, {
+    title: t!.id === 'rates' ? 'How the rate shock works' : 'How the recession works',
+    method: <>{t!.method}</>,
+    sources: t!.sources.map((id) => SOURCE_BY_ID[id]).filter(Boolean).map((x) => ({ title: `${x.publisher}, ${x.title}`, url: x.url })),
+    leaves: <>{t!.leaves} It’s a test of the plan, not a forecast; the goal and the stars are judged with the twist in place for everyone on this desk, friends’ challenges and duels included.</>,
+  }])) as Record<'rates' | 'recession', Method>,
 }) satisfies Record<string, Method>;
 export type MethodId = keyof ReturnType<typeof methods>;
 let cache: ReturnType<typeof methods> | null = null;

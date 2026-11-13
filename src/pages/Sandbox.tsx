@@ -29,6 +29,7 @@ import { ShareButton } from '../game/ShareButton';
 import { countStep } from '../lib/backend';
 import { encodePlan } from '../game/plans';
 import { Rated } from '../game/Rated';
+import { twistFor } from '../lib/twists';
 import { ballotFrom, compare, useMyName } from '../game/plans';
 import { useShareLink } from '../game/shortlinks';
 import { activeRoom, type RoomRef, setActiveRoom } from '../game/rooms';
@@ -97,7 +98,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const startYear = budget.latestFY;
   const base = useMemo(() => cbo.baseline.filter((b) => b.fy > startYear), [startYear]);
   const start = cbo.baseline.find((b) => b.fy === startYear) ?? cbo.history.find((h) => h.fy === startYear)!;
-  const ctx: PlanContext = useMemo(() => ({ baseline: base, startDebt: start.debtPublic, startRatio: start.debtPublic / start.gdp, options: withEcon() }), [base, start]);
+
   const years = base.map((b) => b.fy);
   const lastFY = years.at(-1)!;
   const HH = budget.households.value;
@@ -130,10 +131,13 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const [hint, setHint] = useState<{ line: string; card?: string } | null>(null);
   const told = useRef(new Set<string>());
   const mission = MISSIONS.find((m) => m.id === goal)!;
+  // Desks 2.7 and 3.5 each add a twist to the model (twists.ts): a rate shock, or a recession.
+  const twist = desk ? twistFor(goal) : undefined;
+  const ctx: PlanContext = useMemo(() => ({ baseline: base, startDebt: start.debtPublic, startRatio: start.debtPublic / start.gdp, options: withEcon(), shock: twist?.shock }), [base, start, twist]);
 
   // --- model ---
-  const run = (sel: string[], levers: Levers) => simulate(base, ctx.startDebt, levers, { phaseIn: gradual, extra: extraFor(sel, ctx, gradual) });
-  const baseline = useMemo(() => simulate(base, ctx.startDebt, ZERO), [base, ctx.startDebt]);
+  const run = (sel: string[], levers: Levers) => simulate(base, ctx.startDebt, levers, { phaseIn: gradual, extra: extraFor(sel, ctx, gradual), shock: ctx.shock });
+  const baseline = useMemo(() => simulate(base, ctx.startDebt, ZERO, { shock: ctx.shock }), [base, ctx.startDebt, ctx.shock]);
   const lastB = baseline.at(-1)!;
   const short0 = shortfall(goal, baseline, ctx.startRatio);
   const shareOf = useMemo(() => {
@@ -356,8 +360,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const introLine = goal === 'stabilize'
     ? `Here’s my budget desk. My debt is growing faster than the economy. ${missionFacts(goal)} Help me pick changes that stop that by FY${lastFY}, without knocking the economy flat or putting the whole load on one group.${desk?.hint ? ` ${HINT_LINES.stuck}` : ''}`
     : goal === 'deficit3'
-      ? `Let’s be bolder. ${missionFacts(goal)} Economists often point to about 3% as a level the country can keep up for the long haul. Can you get me there by FY${lastFY}?`
-      : `The big one: no borrowing at all. ${missionFacts(goal)} It hasn’t happened since FY2001. Fair warning: ${cardsCanWin ? 'this takes a lot of cards.' : 'even every card on the table isn’t quite enough, so we’ll need some across-the-board changes too.'}`;
+      ? `Let’s be bolder. ${missionFacts(goal)} Economists often point to about 3% as a level the country can keep up for the long haul. Can you get me there by FY${lastFY}?${twist ? ' ' + twist.say : ''}`
+      : `The big one: no borrowing at all. ${missionFacts(goal)} It hasn’t happened since FY2001. Fair warning: ${cardsCanWin ? 'this takes a lot of cards.' : 'even every card on the table isn’t quite enough, so we’ll need some across-the-board changes too.'}${twist ? ' ' + twist.say : ''}`;
   // On level 10 the board's coach also gives the opening line, since the board comes first.
   // A friend's challenge opens with a short line, so the cards come sooner on a phone.
   const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : special && !met && prog <= 0.001 ? (duel ? { mood: 'happy' as Mood, line: DUEL_LINES.playing } : challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
@@ -581,6 +585,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                 <StarsPopover stars={ev.stars} checks={ev.checks} extra={efficiencyBlock} />
               </div>
               {progressBlock}
+              {twist && <div className="tb-twist" data-twist={twist.id}><strong>Twist</strong> {twist.line} <Rated id={twist.id} label="How the twist works" /></div>}
               {(challenge || duel) && <div className="small muted tb-cm-line">Economy: {econ.rating} · Who pays: {duel ? splitLabel(assessDuel({ ids, lv, gradual })) : revTen + spTen ? `${Math.round(revenueShare * 100)}% taxes, ${Math.round((1 - revenueShare) * 100)}% cuts` : 'no cards yet'}</div>}
               <div className="sb-actions tb-actions">
                 {hintButton}

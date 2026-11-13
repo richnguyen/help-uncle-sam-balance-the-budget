@@ -112,6 +112,17 @@ budget adviser.
   with a link to show all 20; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
   star, never which card to play; when the cards alone can't reach the goal, the across-the-board
   changes sit right under them.
+- **Desk twists** (`src/lib/twists.ts`): each later desk differs in kind. Mission 2.7 adds a rate
+  shock: the average rate on the debt is higher by the largest one-year rise in the Treasury's
+  average rate since 2001 (0.90 points, September 2022 to 2023), on top of the projection, so
+  interest eats more of the budget and early savings count for more. Mission 3.5 adds a recession
+  in the first projection year: revenue falls by as much as it did from FY2001 to FY2002 (6.9%),
+  half that the next year, and tightening in that year counts double on the economy gauge
+  (multipliers are larger in a slump), so phasing in pays. Both are computed from the game's data;
+  the desk states the twist in one line with a "How the twist works" panel, Uncle Sam says it, and
+  the goal, stars and least-cost plan are judged with it, in shared plans, challenges and duels too
+  (`assess(goal, …)` applies the goal's twist). A 2021-to-2024-sized rise made 2.7 all but
+  unwinnable within the game's protections, which is why it uses the largest single year.
 - **Tap-to-define** (`src/components/Terms.tsx`, `src/data/curated/glossary.json`): `<Terms>` wraps
   mission text, game explanations, takeaways, vote context, the desk's card details and the feed's
   bill summaries, and turns the first use of each glossary term in a block (by the phrases in the

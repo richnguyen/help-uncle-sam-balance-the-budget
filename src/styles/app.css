@@ -3395,3 +3395,8 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .term:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .term-pop { max-width: min(320px, calc(100vw - 16px)); }
 .term-src { display: block; margin-top: 6px; color: inherit; opacity: 0.8; font-size: 0.75rem; }
+
+/* A desk's twist (2.7's rate shock, 3.5's recession), under the progress bar. */
+.tb-twist { font-size: 0.875rem; color: var(--ink-2); padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+.tb-twist > strong { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; color: var(--ink); margin-right: 4px; }
+.tb-twist .rated { margin-top: 4px; }
