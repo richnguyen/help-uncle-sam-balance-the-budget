@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { load, save } from '../lib/storage';
+import { countPlay } from '../lib/backend';
 import { syncThemeColor } from '../lib/appmode';
 import type { SavedPlan } from './plans';
 
@@ -144,7 +145,11 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     }),
     retry: (ids) => update((p) => ({ ...p, quiz: Object.fromEntries(Object.entries(p.quiz).filter(([k]) => !ids.includes(k))) })),
     choose: (issueId, v) => update((p) => ({ ...p, choices: { ...p.choices, [issueId]: v } })),
-    setSettings: (s) => update((p) => ({ ...p, settings: { ...p.settings, ...s } })),
+    setSettings: (s) => update((p) => {
+      // The playtest's counts: free roam switched on (anonymous, a daily total).
+      if (s.freeRoam && !p.settings.freeRoam) countPlay('free_roam', 'on');
+      return { ...p, settings: { ...p.settings, ...s } };
+    }),
     mark: (id) => update((p) => (p.marks.includes(id) ? p : { ...p, marks: [...p.marks, id] })),
     award: (ids) => update((p) => ({ ...p, medals: [...p.medals, ...ids.filter((x) => !p.medals.includes(x))] })),
     savePlan: (level, plan) => update((p) => ({ ...p, plans: { ...(p.plans ?? {}), [level]: plan } })),

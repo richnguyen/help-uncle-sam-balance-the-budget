@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useId, useState, type ReactNode } from 'react';
-import { backendOn, feedTallies, saveFeedVote } from '../../lib/backend';
+import { backendOn, countPlay, feedTallies, saveFeedVote } from '../../lib/backend';
 import { moneyWords } from '../../lib/format';
 import { useVotes } from '../../lib/votes';
 import { OPTIONS_DATA } from '../../lib/planData';
@@ -416,6 +416,8 @@ const MAX_LAW = Math.max(...laws.map((l) => Math.abs(l.deficitEffect)));
 const POLL_TABS = [['does', 'What it does'], ['pays', 'Who pays'], ['gains', 'Who benefits']] as const;
 
 function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
+  // The playtest's counts: the feed's polls were seen (once a day), and each first answer.
+  useEffect(() => { countPlay('poll_view', 'feed', true); }, []);
   const o = item.option;
   const v = useVotes();
   const buzz = useHaptics();
@@ -445,8 +447,8 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
       </div>
       <div className="fc-vote" role="group" aria-label="Would you include this in your plan?">
         <div className="fc-choices fc-choices-2">
-          <button type="button" className="fc-choice" aria-pressed={mine === 1} onClick={() => { buzz('vote'); v.voteOption(o.id, 1); }}>Include it</button>
-          <button type="button" className="fc-choice" aria-pressed={mine === -1} onClick={() => { buzz('vote'); v.voteOption(o.id, -1); }}>Leave it out</button>
+          <button type="button" className="fc-choice" aria-pressed={mine === 1} onClick={() => { buzz('vote'); if (mine == null) countPlay('poll_vote', 'feed'); v.voteOption(o.id, 1); }}>Include it</button>
+          <button type="button" className="fc-choice" aria-pressed={mine === -1} onClick={() => { buzz('vote'); if (mine == null) countPlay('poll_vote', 'feed'); v.voteOption(o.id, -1); }}>Leave it out</button>
         </div>
         {mine != null && (v.available && t.support + t.oppose > 0
           ? <Bars rows={[{ value: '1', label: 'Include it', n: t.support }, { value: '-1', label: 'Leave it out', n: t.oppose }]} total={t.support + t.oppose} mine={String(mine)} />

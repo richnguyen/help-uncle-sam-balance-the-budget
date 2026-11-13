@@ -122,6 +122,16 @@ budget adviser.
   (`u`, `v`), so older links keep their meaning. Caveats are on each card: both were scored against
   CBO's baseline at the time, and the desk's projection is OMB's, which assumes the President's
   proposals; if those already make the tax breaks permanent, that card counts them twice.
+- **Play counts for the playtest** (`supabase/migrations/20261115000000_play_counts.sql`,
+  `countPlay` in `src/lib/backend.ts`): anonymous daily totals, never who did what: each budget desk
+  opened, started (a first card) and finished (desk abandonment is started minus finished), the
+  time spent on mission 1.6's ripple round (in buckets), the feed's polls seen and answered, free
+  roam switched on, missions opened ahead of order, and Quick play started and finished. Only a
+  metric and a key are sent, from a fixed list the database enforces; most are counted once per
+  browser per day. The stats page (`#stats`) has a "How people play" section with the totals and a
+  CSV of the daily counts. `docs/playtest-sessions.md` is the guide for moderated sessions: who to
+  recruit for each of the five personas, the consent note to read aloud, a 40-minute script, the
+  questions afterwards, and how to read the results next to these counts.
 - **Desk twists** (`src/lib/twists.ts`): each later desk differs in kind. Mission 2.7 adds a rate
   shock: the average rate on the debt is higher by the largest one-year rise in the Treasury's
   average rate since 2001 (0.90 points, September 2022 to 2023), on top of the projection, so
