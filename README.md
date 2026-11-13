@@ -27,7 +27,8 @@ budget adviser.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
   like an app's, five tabs alike: Mission (the next mission to play, or the road map once every
   mission is done), Daily (the Daily Dollar), Feed in the middle (the main menu and its feed),
-  Together (Play together) and You (your record, then the field guide; a person icon). Each is the main menu's own icon with a short
+  Together (Play together) and You (your record, then the field guide; a person icon; once
+  the player has given a first name, the tab and its page title say that name instead). Each is the main menu's own icon with a short
   name. The tab for the screen you're on is lit, with a bar above it: the road map counts as
   Mission's, Rooms, chains and duels as Together's, every field-guide chapter, the glossary and
   Sources & methods as You's. It stays in missions and at the budget desk too, with the

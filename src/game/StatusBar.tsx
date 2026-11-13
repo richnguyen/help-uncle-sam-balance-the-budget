@@ -5,6 +5,7 @@ import { MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { balanceOf } from './build/landmarks';
 import { useJourney } from './state';
+import { useMyName } from './plans';
 import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
 
@@ -57,6 +58,8 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
   const total = MEDALS.length + BADGES.length;
   // With no line of his own on a page, the strip names where you are.
   const caption = '';
+  // On the You tab, the player's first name once given.
+  const me = useMyName() || 'You';
 
   useEffect(() => { setOpen(null); }, [route]);
   useEffect(() => {
@@ -79,7 +82,7 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
         {/* Left: the page's title (each page's own heading is for screen readers only). In a
             mission, where the mission's name heads the page, just its number. */}
         <div className="hud-side hud-left">
-          <div className="hud-title" aria-hidden="true">{here ? missionShort(here) : title}</div>
+          <div className="hud-title" aria-hidden="true">{here ? missionShort(here) : route === 'guide' ? me : title}</div>
         </div>
 
         {/* Right, in one line: your score, his voice, and the way out. */}

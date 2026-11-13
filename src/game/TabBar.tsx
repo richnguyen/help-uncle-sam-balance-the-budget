@@ -4,6 +4,7 @@ import { MenuIcon } from './Journey';
 import { isUnlocked, missionShort, STOPS } from './levels';
 import { FIELD_GUIDE, REFERENCE } from './nav';
 import { useJourney } from './state';
+import { useMyName } from './plans';
 
 // The tab bar, along the bottom of every screen: Mission (the next mission to
 // play, or the road map once all are done), the Daily Dollar, the feed (the main menu) in the middle, Play
@@ -35,6 +36,8 @@ export function TabBar({ route }: { route: Route }) {
   const next = STOPS.find((s) => !j.done.includes(s.id) && isUnlocked(s.id, j.done, j.settings.freeRoam));
   const started = j.done.length > 0 || !!j.started;
   const here = tabFor(route);
+  // The player's first name, once given, in place of "You".
+  const me = useMyName() || 'You';
   const tabs: { id: TabId; href: string; label: string; icon: Parameters<typeof MenuIcon>[0]['id']; title: string }[] = [
     next
       ? { id: 'mission', href: '#' + next.id, label: 'Mission', icon: 'play', title: `${started ? 'Continue' : 'Start'}: ${missionShort(next)}, ${next.title}` }
@@ -42,7 +45,7 @@ export function TabBar({ route }: { route: Route }) {
     { id: 'daily', href: '#daily', label: 'Daily', icon: 'daily', title: 'The Daily Dollar' },
     { id: 'menu', href: '#journey', label: 'Feed', icon: 'home', title: 'The feed, on the main menu' },
     { id: 'together', href: '#together', label: 'Together', icon: 'together', title: 'Play together' },
-    { id: 'guide', href: '#guide', label: 'You', icon: 'you', title: 'You: your record, and the field guide' },
+    { id: 'guide', href: '#guide', label: me, icon: 'you', title: `${me}: your record, and the field guide` },
   ];
   return (
     <nav className="tabbar" aria-label="Main">
