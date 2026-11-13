@@ -506,6 +506,14 @@ emulated iPhone 13 (390×664) and tuned to the usual mobile-game principles:
   bounce). His mouth follows his recorded voice: `scripts/voice/synth.py` stores how loud every
   1/15 of a second of each recording is, and the narrator opens his mouth to match (with a device
   voice, it opens on each word). With reduced motion he holds still.
+- **One decision per screen.** Missions are audited step by step (words on screen, things to tap,
+  rows): steps aim for about 80 words and no more than four or five things to handle at once.
+  Sorting rounds deal one card at a time, already picked up ("Card 3 of 6"), so each card is one
+  tap on a group. Mission 2.2 plays its memory game as two rounds of four pairs and the
+  President's budget as two ordering rounds of three, with the official calendar in two steps
+  (spring, summer); 2.4's Byrd-rule round is two rounds of four provisions; 1.2's "Every $100"
+  is two steps of four categories, each with the full chart; vote introductions keep to the facts
+  needed to vote.
 - **Thumb-friendly.** Every control is at least 44 × 44 px on a touch screen.
 - **Less on screen.** On phones the top bar holds the mission, stars, accomplishments and the
   main menu, with the sound switch at the start of Uncle Sam's strip, and the top bar's Continue moves down to the action bar at every width; the footer is one line, with the field guide
