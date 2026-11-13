@@ -231,8 +231,8 @@ function PlaySection({ win }: { win: number }) {
           {(sum('quick_start') > 0 || sum('jump_ahead') > 0) && (
             <div className="table-wrap" style={{ marginTop: 12 }}>
               <table className="data stats-table" aria-label="Quick play and missions opened ahead, by mission">
-                <thead><tr><th scope="col">Mission</th><th scope="col" className="r">Quick play started</th><th scope="col" className="r">Finished</th><th scope="col" className="r">Opened ahead</th></tr></thead>
-                <tbody>{[...new Set([...missions('quick_start'), ...missions('jump_ahead')].map(([k]) => k))].map((k) => <tr key={k}><th scope="row">{name(k)}</th><td className="r num">{n('quick_start', k)}</td><td className="r num">{n('quick_done', k)}</td><td className="r num">{n('jump_ahead', k)}</td></tr>)}</tbody>
+                <thead><tr><th scope="col">Mission</th><th scope="col" className="r" title="Quick play started">Quick</th><th scope="col" className="r" title="Quick play finished">Finished</th><th scope="col" className="r" title="Opened ahead of the next mission in order">Ahead</th></tr></thead>
+                <tbody>{[...new Set([...missions('quick_start'), ...missions('jump_ahead')].map(([k]) => k))].map((k) => <tr key={k}><th scope="row" aria-label={name(k)}>{name(k).replace(/^Mission /, '')}</th><td className="r num">{n('quick_start', k)}</td><td className="r num">{n('quick_done', k)}</td><td className="r num">{n('jump_ahead', k)}</td></tr>)}</tbody>
               </table>
             </div>
           )}
