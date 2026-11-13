@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { BADGES, loadProgress } from '../lib/game';
-import { AwardIcon, SpeakerIcon } from './icons';
-import { MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
+import { AwardIcon, CaretIcon, LevelIcon, LockIcon, SpeakerIcon } from './icons';
+import { campaignOf, isUnlocked, MAX_STARS, missionShort, rankFor, STOP_BY_ID, STOPS } from './levels';
 import { MEDALS } from './medals';
 import { balanceOf } from './build/landmarks';
 import { useJourney } from './state';
@@ -25,7 +25,7 @@ function useDeskBadges() {
   return b;
 }
 
-type Menu = 'acc' | 'settings' | null;
+type Menu = 'levels' | 'acc' | 'settings' | null;
 
 /** A button with a panel; the levels one also opens on hover, with a short grace period. */
 function Pop({ id, open, setOpen, hover = false, button, children, className = '' }: { id: Exclude<Menu, null>; open: Menu; setOpen: (m: Menu) => void; hover?: boolean; button: (p: { 'aria-expanded': boolean; 'aria-controls': string; onClick: () => void }) => ReactNode; children: ReactNode; className?: string }) {
@@ -36,7 +36,7 @@ function Pop({ id, open, setOpen, hover = false, button, children, className = '
   return (
     <div className={'ab-pop ' + className} data-pop={id} onMouseEnter={enter} onMouseLeave={leave}>
       {button({ 'aria-expanded': isOpen, 'aria-controls': 'pop-' + id, onClick: () => setOpen(isOpen ? null : id) })}
-      {isOpen && <div className="ab-panel" id={'pop-' + id} role="dialog" aria-label={id === 'acc' ? 'Accomplishments' : 'Settings'}>{children}</div>}
+      {isOpen && <div className="ab-panel" id={'pop-' + id} role="dialog" aria-label={id === 'levels' ? 'Road map: every mission' : id === 'acc' ? 'Accomplishments' : 'Settings'}>{children}</div>}
     </div>
   );
 }
@@ -82,7 +82,33 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
         {/* Left: the page's title (each page's own heading is for screen readers only). In a
             mission, where the mission's name heads the page, just its number. */}
         <div className="hud-side hud-left">
-          <div className="hud-title" aria-hidden="true">{here ? missionShort(here) : route === 'guide' ? me : title}</div>
+          {here ? (
+            // In a mission, its number opens the road map: every mission, by campaign, to jump to.
+            <Pop id="levels" open={open} setOpen={setOpen} className="ab-levels" button={(p) => (
+              <button type="button" className="hud-title hud-title-btn" {...p} aria-label={`${missionShort(here)}: ${here.title}. Show the road map`}>
+                {missionShort(here)}<CaretIcon />
+              </button>
+            )}>
+              <div className="ab-panel-head"><strong>Road map</strong><span className="small muted">{done} of {STOPS.length} missions finished</span></div>
+              <ol className="ab-levellist">
+                {STOPS.map((s) => {
+                  const ok = isUnlocked(s.id, j.done, j.settings.freeRoam);
+                  const fin = j.done.includes(s.id);
+                  const body = (
+                    <>
+                      <span className="stb-icon" data-done={fin}>{ok || fin ? <LevelIcon id={s.icon} size={15} /> : <LockIcon />}</span>
+                      <span className="ab-ll-text"><span className="ab-ll-title">{s.campaign}.{s.mission} {s.title}</span><span className="small muted">{s.difficulty}{s.kind === 'desk' ? ' · budget desk' : ''}{fin ? ((j.stars[s.id] ?? 0) > 0 ? ` · ${'★'.repeat(j.stars[s.id] ?? 0)}` : ' · finished') : ''}</span></span>
+                    </>
+                  );
+                  const head = s.mission === 1 ? <li key={'c' + s.campaign} className="ab-ll-camp"><span className="stat-label">Campaign {s.campaign}</span> {campaignOf(s.id).title}</li> : null;
+                  return [head, <li key={s.id} data-here={s.id === route}>{ok ? <a href={'#' + s.id} aria-current={s.id === route ? 'page' : undefined}>{body}</a> : <span className="ab-ll-locked" title="Finish the mission before it to unlock">{body}</span>}</li>];
+                })}
+              </ol>
+              <a className="small" href="#levels">The full road map</a>
+            </Pop>
+          ) : (
+            <div className="hud-title" aria-hidden="true">{route === 'guide' ? me : title}</div>
+          )}
         </div>
 
         {/* Right, in one line: your score, his voice, and the way out. */}

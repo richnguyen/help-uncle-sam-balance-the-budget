@@ -3186,7 +3186,7 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .fc-mini-year { font-family: var(--font-display, inherit); font-size: 1.6rem; line-height: 1; color: var(--fc-facts); }
 
 /* ===== The page's title in the top bar (its own heading is for screen readers only). ===== */
-.hud-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.125rem, 0.9rem + 0.9vw, 1.5rem); line-height: 1.1; letter-spacing: 0.01em; text-transform: uppercase; color: var(--ink); }
+.hud-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.5rem, 1.15rem + 1.2vw, 2rem); line-height: 1.1; letter-spacing: 0.01em; text-transform: uppercase; color: var(--ink); }
 .page-head-empty { display: contents; }
 
 /* ===== Your record, on top of the Guide tab. ===== */
@@ -3307,3 +3307,8 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .settings-block { display: flex; flex-direction: column; gap: 12px; }
 .settings-block > .card { margin: 0; }
 .record > .section { scroll-margin-top: 104px; }
+.hud-title-btn { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 44px; padding: 0 8px; margin-left: -8px; border: 0; border-radius: 10px; background: none; cursor: pointer; }
+.hud-title-btn:hover, .hud-title-btn[aria-expanded="true"] { background: var(--surface-2, var(--line)); }
+.hud-title-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+.hud-title-btn svg { flex: none; width: 16px; height: 16px; }
+.hud-left .ab-pop { position: relative; min-width: 0; }

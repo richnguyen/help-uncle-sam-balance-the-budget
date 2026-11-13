@@ -282,8 +282,10 @@ budget adviser.
   - Adviser titles and a copyable "budget ballot".
 - **One top bar, laid out like a game HUD** (`src/game/StatusBar.tsx`): Uncle Sam stands at the
   left, always there, across the bar's two lines: half his body showing, right on its bottom edge.
-  Line one, in larger text: the page's title ("The Daily Dollar", "You"; in a mission,
-  its number, "Mission 2.4", since the mission's name heads the page). Each page's own heading is
+  Line one, in large display type (24px on phones, up to 32px): the page's title ("The Daily
+  Dollar", "You"; in a mission, its number, "Mission 2.4 ▾", since the mission's name heads the
+  page). In a mission the number opens the road map right there: every mission by campaign,
+  this one marked, locked ones greyed, stars earned, and a link to the full road map. Each page's own heading is
   kept for screen readers only, so the title isn't said twice, and there is no small title above
   it. Then stars and accomplishments (medals and budget-desk badges); there's no Main menu button, as
   the tab bar's Feed tab is the way back. Progress
