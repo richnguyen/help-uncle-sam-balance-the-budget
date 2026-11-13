@@ -38,8 +38,9 @@ jobs:
       - name: Fetch the latest official news
         run: node scripts/fetch-news.mjs || echo "News fetch failed; building with the news already in the repo."
       # The feed's bills: Congress.gov's API, with the free api.data.gov key kept as the repository
-      # secret CONGRESS_API_KEY (Settings → Secrets and variables → Actions). Without it, the
-      # shared DEMO_KEY is tried; if that's refused, the bills already in the repo are used.
+      # secret CONGRESS_API_KEY (Settings → Secrets and variables → Actions). Without it (or if
+      # Congress.gov can't be reached), the bills already in the repo are used; the shared
+      # DEMO_KEY is never used here.
       - name: Fetch spending and tax bills for the feed
         env:
           CONGRESS_API_KEY: ${{ secrets.CONGRESS_API_KEY }}

@@ -16,6 +16,7 @@ import { finishLevelTime, levelMinutes, resetLevelTime, useLevelTimer } from './
 import { plain, SamSays } from './UncleSam';
 import { Seal } from './Seal';
 import { lockedLine, QUIZ_LINES } from './script';
+import { takeQuick } from './quickplay';
 import { EstimateGuess, SizesCard, SortCard, SplitCard } from './guesses';
 import { GameStep } from './minigame';
 import { Terms } from '../components/Terms';
@@ -88,6 +89,8 @@ function LevelRun({ level }: { level: Level }) {
     go(level.steps.length);
   };
   const buzz = useHaptics();
+  // Opened from a Quick play post in the feed: straight into the game.
+  useEffect(() => { if (gameIdx >= 0 && takeQuick(level.id)) startQuick(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Active time on the level, for its certificate.
   useLevelTimer(level.id, i < level.steps.length && party == null);
   useEffect(() => { j.start(); }, []); // eslint-disable-line react-hooks/exhaustive-deps

@@ -43,8 +43,51 @@ export function parseSenate(xml, url) {
     totals: { yea: num(tag(count, 'yeas')), nay: num(tag(count, 'nays')), present: num(tag(count, 'present')), notVoting: num(tag(count, 'absent')) },
     url: url.replace(/\.xml$/, '.htm'),
     members,
+    // A tie the Vice President broke: the counts above are senators only, so 50-50 can pass.
+    ...(tag(xml, 'by_whom') ? { tieBreaker: { by: tag(xml, 'by_whom'), vote: tag(xml, 'tie_breaker_vote') } } : {}),
   };
 }
 
 /** Parse a record by where it came from. */
 export const parseRollCall = (xml, url) => (/clerk\.house\.gov/.test(url) ? parseHouse(xml, url) : parseSenate(xml, url));
+
+// ---- Which votes to keep, from a bill's Congress.gov actions.
+
+// A vote that decides the bill (passage, agreeing to the other chamber's version, a conference
+// report, a veto override), as opposed to a procedural one (cloture, motions to proceed or table).
+const DECIDES = /\bon passage\b|passed|suspend the rules and pass|concur|conference report|override|agreed to in (house|senate)/i;
+const PROCEDURAL = /cloture|motion to (proceed|table|commit|recommit|reconsider)|previous question|providing for consideration/i;
+const NO_ROLL = /by voice vote|by unanimous consent|without objection/i;
+
+/**
+ * The record links to fetch, at most `max`, newest first, with every vote that decided the bill
+ * ahead of procedural ones: a bill that took many cloture votes still shows how it passed.
+ */
+export function pickVoteUrls(actions, hosts, max = 4) {
+  const byUrl = new Map();
+  for (const a of actions) for (const v of a.recordedVotes ?? []) {
+    if (!hosts.test(v.url ?? '')) continue;
+    const k = byUrl.get(v.url) ?? { url: v.url, date: v.date ?? a.actionDate ?? '', decides: false };
+    if (DECIDES.test(a.text ?? '') && !PROCEDURAL.test(a.text ?? '')) k.decides = true;
+    byUrl.set(v.url, k);
+  }
+  const all = [...byUrl.values()].sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''));
+  return [...all.filter((x) => x.decides), ...all.filter((x) => !x.decides)].slice(0, max).map((x) => x.url);
+}
+
+/**
+ * Passages with no roll call (voice vote, unanimous consent, without objection), which have no
+ * member list: from the Library of Congress's summary actions, one per chamber and day, newest first.
+ */
+export function passagesWithoutRollCall(actions, max = 3) {
+  const notes = [];
+  for (const a of actions) {
+    const m = (a.text ?? '').match(/^(?:Passed\/agreed to in (House|Senate)|Resolving differences -- (House|Senate) actions):\s*(.*)$/);
+    if (!m || !NO_ROLL.test(m[3]) || (a.recordedVotes ?? []).length || PROCEDURAL.test(m[3])) continue;
+    const chamber = m[1] || m[2];
+    if (notes.some((n) => n.chamber === chamber && n.date === a.actionDate)) continue;
+    const how = /voice vote/i.test(m[3]) ? 'voice vote' : /unanimous consent/i.test(m[3]) ? 'unanimous consent' : 'without objection';
+    notes.push({ chamber, date: a.actionDate ?? '', how, text: m[3].replace(/\s*\((?:text|consideration)[^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim() });
+  }
+  return notes.sort((x, y) => y.date.localeCompare(x.date)).slice(0, max);
+}

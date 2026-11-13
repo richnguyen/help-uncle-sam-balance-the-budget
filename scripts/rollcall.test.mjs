@@ -1,6 +1,7 @@
 // The roll-call parser, on short records written in each chamber's published format.
 //   node scripts/rollcall.test.mjs
-import { parseRollCall } from './rollcall.mjs';
+import { readFileSync } from 'node:fs';
+import { parseRollCall, passagesWithoutRollCall, pickVoteUrls } from './rollcall.mjs';
 
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
 
@@ -46,7 +47,7 @@ const SENATE = `<?xml version="1.0" encoding="UTF-8"?>
 <vote_title>H.R. 1 As Amended</vote_title>
 <majority_requirement>1/2</majority_requirement>
 <vote_result>Bill Passed</vote_result>
-<count><yeas>51</yeas><nays>50</nays><present></present><absent></absent></count>
+<count><yeas>50</yeas><nays>50</nays><present></present><absent></absent></count>
 <tie_breaker><by_whom>Vice President</by_whom><tie_breaker_vote>Yea</tie_breaker_vote></tie_breaker>
 <members>
 <member><member_full>Alsobrooks (D-MD)</member_full><last_name>Alsobrooks</last_name><first_name>Angela</first_name><party>D</party><state>MD</state><vote_cast>Nay</vote_cast><lis_member_id>S428</lis_member_id></member>
@@ -64,9 +65,25 @@ ok(h.url === 'https://clerk.house.gov/Votes/2025190', 'House: the link is the Cl
 const s = parseRollCall(SENATE, 'https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_00372.xml');
 ok(s.chamber === 'Senate' && s.roll === 372 && s.date === '2025-07-01', `Senate: vote 372 on ${s.date}`);
 ok(s.question === 'On Passage of the Bill (H.R. 1 As Amended )' && s.result === 'Bill Passed', 'Senate: the question and result as the Senate records them');
-ok(s.totals.yea === 51 && s.totals.nay === 50 && s.totals.present === 0 && s.totals.notVoting === 0, 'Senate: the totals, with empty counts as zero');
+ok(s.totals.yea === 50 && s.totals.nay === 50 && s.totals.present === 0 && s.totals.notVoting === 0, 'Senate: the totals (senators only), with empty counts as zero');
+ok(s.tieBreaker?.by === 'Vice President' && s.tieBreaker?.vote === 'Yea', 'Senate: a tie the Vice President broke is kept, with the vote cast');
+ok(!('tieBreaker' in parseRollCall(SENATE.replace(/<tie_breaker>[\s\S]*?<\/tie_breaker>/, '<tie_breaker><by_whom></by_whom><tie_breaker_vote></tie_breaker_vote></tie_breaker>'), 'https://www.senate.gov/x.xml')), 'Senate: no tie-breaker when the record names none');
 ok(s.members.length === 2 && s.members[0].join() === 'Angela Alsobrooks,D,MD,Nay', 'Senate: each senator with party, state and vote');
 ok(s.url.endsWith('vote_119_1_00372.htm'), 'Senate: the link is the Senate’s page for the vote');
 
 const bad = parseRollCall('<html>not a record</html>', 'https://clerk.house.gov/evs/2025/roll1.xml');
 ok(bad.members.length === 0 && bad.totals.yea === 0 && bad.question === '', 'a page that isn’t a record gives nothing, not a guess');
+
+// Which votes a bill keeps, from real Congress.gov actions (scripts/fixtures, trimmed).
+const HOSTS = /^https:\/\/(clerk\.house\.gov|www\.senate\.gov)\//;
+const actionsOf = (f) => JSON.parse(readFileSync(new URL(`./fixtures/${f}-actions.json`, import.meta.url), 'utf8')).actions;
+const a7147 = actionsOf('hr7147');
+const urls = pickVoteUrls(a7147, HOSTS);
+ok(urls.length === 4 && /clerk\.house\.gov\/evs\/2026\/roll042\.xml$/i.test(urls[0]), `H.R. 7147: the House passage (roll 42, 220-207) comes first, ahead of the Senate's failed cloture votes: ${urls[0]}`);
+ok(urls.slice(1).every((u) => /senate\.gov/.test(u)), 'H.R. 7147: then the most recent procedural votes fill the rest');
+const n7147 = passagesWithoutRollCall(a7147);
+ok(n7147.length === 2 && n7147[0].chamber === 'House' && n7147[0].date === '2026-04-30' && n7147[0].how === 'voice vote' && /concur in the Senate amendment/.test(n7147[0].text) && !/\(text:/.test(n7147[0].text), 'H.R. 7147: the House agreed to the Senate version by voice vote (Apr 30, 2026)');
+ok(n7147[1].chamber === 'Senate' && n7147[1].date === '2026-03-27' && n7147[1].how === 'voice vote', 'H.R. 7147: the Senate passed it by voice vote (Mar 27, 2026), once, though Congress.gov lists it twice');
+const n9499 = passagesWithoutRollCall(actionsOf('hr9499'));
+ok(n9499.length === 1 && n9499[0].chamber === 'House' && n9499[0].how === 'voice vote' && /suspend the rules and pass/.test(n9499[0].text), 'H.R. 9499: passed the House by voice vote, with no roll call');
+ok(!passagesWithoutRollCall(a7147).some((n) => /table|cloture|proceed/i.test(n.text)), 'procedural motions agreed to by voice vote are not passages');

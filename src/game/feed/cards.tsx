@@ -8,7 +8,8 @@ import { laws } from '../../data';
 import { puzzleFor, todayKey } from '../daily';
 import { useHaptics } from '../haptics';
 import { LevelIcon } from '../icons';
-import { missionShort } from '../levels';
+import { isUnlocked, missionShort, unlockText } from '../levels';
+import { queueQuick } from '../quickplay';
 import { when } from '../news';
 import { useJourney } from '../state';
 import { visitLabel } from './since';
@@ -23,7 +24,7 @@ import { Terms } from '../../components/Terms';
 // date, and Save. Then its body, and its own one action: vote, swipe, check, start, or read more.
 
 const TOPIC_LABEL: Record<Topic, string> = { bills: 'Bill in Congress', budget: 'Budget lesson', polls: 'Poll', lessons: 'Civic lesson', facts: 'Fun fact', news: 'Announcement' };
-const KIND_LABEL: Partial<Record<FeedItem['kind'], string>> = { check: 'Quick check', tutorial: 'Mission', chapter: 'Field guide', term: 'Word to know', law: 'Law that moved the deficit', deadline: 'Deadline', daily: 'Daily Dollar' };
+const KIND_LABEL: Partial<Record<FeedItem['kind'], string>> = { check: 'Quick check', tutorial: 'Mission', quick: 'Quick play', chapter: 'Field guide', term: 'Word to know', law: 'Law that moved the deficit', deadline: 'Deadline', daily: 'Daily Dollar' };
 const DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const fmtDate = (d?: string) => (d && /^\d{4}-\d{2}-\d{2}/.test(d) ? DATE.format(new Date(d.slice(0, 10) + 'T12:00:00Z')) : d ?? '');
 
@@ -513,6 +514,28 @@ function TutorialCard({ item }: { item: Extract<FeedItem, { kind: 'tutorial' }> 
   );
 }
 
+/** A mission's game on its own: one tap opens the mission straight into Quick play. */
+function QuickCard({ item }: { item: Extract<FeedItem, { kind: 'quick' }> }) {
+  const j = useJourney();
+  const s = item.stop;
+  const open = isUnlocked(s.id, j.done, j.settings.freeRoam);
+  const stars = j.stars[s.id] ?? 0;
+  const done = j.done.includes(s.id);
+  const go = () => { queueQuick(s.id); location.hash = '#' + s.id; };
+  return (
+    <>
+      <Head item={item} />
+      <PostArt tone="lessons" figure={<span className="fc-art-quick" aria-hidden="true">⚡</span>} big="About a minute" small={`${item.game.rounds} round${item.game.rounds === 1 ? '' : 's'} · up to 2 stars${done ? ` · you have ${stars}` : ''}`} />
+      <h3 className="fc-title">{item.game.title}</h3>
+      <p className="muted fc-quick-goal">{item.game.goal}</p>
+      {open
+        ? <button type="button" className="btn btn-primary fc-cta fc-quick-go" onClick={go}><span aria-hidden="true">⚡</span> {done ? 'Quick play again' : 'Quick play'}</button>
+        : <p className="small fc-quick-locked"><span aria-hidden="true">🔒</span> {unlockText(s.id)}</p>}
+      <p className="fc-fine">Just the game and one takeaway. The whole mission earns the third star.</p>
+    </>
+  );
+}
+
 function ChapterCard({ item }: { item: Extract<FeedItem, { kind: 'chapter' }> }) {
   return (
     <>
@@ -568,6 +591,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
     case 'poll': body = <PollCard item={item} />; break;
     case 'check': body = <CheckCard item={item} />; break;
     case 'tutorial': body = <TutorialCard item={item} />; break;
+    case 'quick': body = <QuickCard item={item} />; break;
     case 'chapter': body = <ChapterCard item={item} />; break;
     case 'term': body = <TermCard item={item} />; break;
     case 'fact': body = <FactCard item={item} />; break;

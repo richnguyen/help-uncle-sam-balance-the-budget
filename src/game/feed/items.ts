@@ -7,7 +7,7 @@ import { moneyWords, dollars } from '../../lib/format';
 import { OPTIONS_DATA } from '../../lib/planData';
 import type { PolicyOption } from '../../lib/plan';
 import { DEADLINES, type Deadline } from '../daily';
-import { LEVELS, STOPS, quizzesOf, missionShort, type Quiz, type Stop } from '../levels';
+import { gameOf, LEVELS, STOPS, quizzesOf, missionShort, type Quiz, type Stop } from '../levels';
 import { FIELD_GUIDE } from '../nav';
 import { mergeNews, type NewsItem } from '../news';
 
@@ -31,6 +31,8 @@ export interface Bill {
   sponsor: { name: string; party: string; state: string; display?: string; district?: number | null } | null; cosponsors: number;
   /** Floor votes from the official records (House Clerk, U.S. Senate), newest first. */
   votes?: FloorVote[];
+  /** Passages with no roll call (voice vote, unanimous consent), from Congress.gov's actions, newest first. */
+  floorNotes?: FloorNote[];
   summary: string; summaryCut?: boolean; summaryStage: string; summaryDate: string;
   cbo: { title: string; url: string; date: string } | null; url: string; updated: string; companion?: string;
 }
@@ -39,7 +41,10 @@ export interface FloorVote {
   chamber: 'House' | 'Senate'; roll: number; date: string; question: string; result: string;
   totals: { yea: number; nay: number; present: number; notVoting: number }; url: string;
   members: [string, string, string, string][];
+  /** A Senate tie broken by the Vice President (the counts above are senators only). */
+  tieBreaker?: { by: string; vote: string };
 }
+export interface FloorNote { chamber: 'House' | 'Senate'; date: string; how: 'voice vote' | 'unanimous consent' | 'without objection'; text: string }
 export const BILLS = (billsJson as { fetchedAt: string; bills: Bill[] });
 
 export interface Source { name: string; url?: string; date?: string }
@@ -61,6 +66,7 @@ export type FeedItem =
   | (Base & { kind: 'poll'; option: PolicyOption })
   | (Base & { kind: 'check'; quiz: Quiz; stop: Stop })
   | (Base & { kind: 'tutorial'; stop: Stop; steps: string[]; takeaways: string[] })
+  | (Base & { kind: 'quick'; stop: Stop; game: { title: string; goal: string; rounds: number } })
   | (Base & { kind: 'chapter'; route: string; label: string; blurb: string })
   | (Base & { kind: 'term'; term: { id: string; term: string; def: string } })
   | (Base & { kind: 'law'; law: (typeof laws)[number] })
@@ -262,6 +268,9 @@ export function buildItems(now = Date.now(), liveNews: NewsItem[] = []): FeedIte
     const lv = LEVELS.find((l) => l.id === s.id);
     out.push({ id: `tutorial:${s.id}`, kind: 'tutorial', stop: s, steps: lv ? lv.steps.map((x) => x.label) : [], takeaways: lv?.takeaways ?? [], topic: 'lessons', effort: 'deep', title: s.title, href: '#' + s.id, source: { name: `${missionShort(s)} · ${s.minutes} min` } });
     if (!lv) continue;
+    // Quick play: the mission's game on its own, about a minute, for up to two stars.
+    const g = gameOf(lv);
+    if (g) out.push({ id: `quick:${s.id}`, kind: 'quick', stop: s, game: { title: g.title, goal: g.goal, rounds: g.rounds.length }, topic: 'lessons', effort: 'interactive', title: `Quick play: ${g.title}`, href: '#' + s.id, source: { name: `${missionShort(s)}, ${s.title}` } });
     for (const q of quizzesOf(lv)) {
       if (q.guess || q.estimate || q.split || q.sizes || q.sort || q.choices.length < 2 || out.some((x) => x.id === `check:${q.id}`)) continue;
       out.push({ id: `check:${q.id}`, kind: 'check', quiz: q, stop: s, topic: 'lessons', effort: 'interactive', title: q.question, href: '#' + s.id, source: { name: `From ${missionShort(s)}, ${s.title}` } });

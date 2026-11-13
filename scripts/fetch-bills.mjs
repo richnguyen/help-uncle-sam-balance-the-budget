@@ -5,8 +5,10 @@
 //   CONGRESS_API_KEY=... node scripts/fetch-bills.mjs   → src/data/generated/bills.json
 //
 // The key is a free api.data.gov key, kept as the repository secret CONGRESS_API_KEY (never in
-// the code). Without one, the shared DEMO_KEY is tried with a small number of calls; if that is
-// refused or Congress.gov can't be reached, the file is left as it was.
+// the code); the deploy workflow passes it in. On GitHub Actions the repository's key is required:
+// if it's missing, the bills already in the repo are kept. Run by hand without a key, the shared
+// DEMO_KEY is tried with a small number of calls; if that is refused or Congress.gov can't be
+// reached, the file is left as it was.
 //
 // Which bills: CRS summaries written or updated in the last 60 days for bills of the current
 // Congress, kept when the bill's policy area is taxation or public finance, or when its title is
@@ -14,11 +16,15 @@
 // Nothing here takes a side: the summary is CRS's, the status and sponsor are Congress.gov's.
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { parseRollCall } from './rollcall.mjs';
+import { parseRollCall, passagesWithoutRollCall, pickVoteUrls } from './rollcall.mjs';
 
 const OUT = new URL('../src/data/generated/bills.json', import.meta.url);
 const PUBLIC = new URL('../public/bills.json', import.meta.url);
-const KEY = process.env.CONGRESS_API_KEY || 'DEMO_KEY';
+const KEY = process.env.CONGRESS_API_KEY || (process.env.GITHUB_ACTIONS ? '' : 'DEMO_KEY');
+if (!KEY) {
+  console.error('CONGRESS_API_KEY is not set (Settings → Secrets and variables → Actions): keeping the bills already in the repo.');
+  process.exit(1);
+}
 const DEMO = KEY === 'DEMO_KEY';
 const API = 'https://api.congress.gov/v3';
 const UA = 'HelpUncleSamBalanceTheBudget/1.0 (civic education game; +https://balancethebudget.us/)';
@@ -53,10 +59,15 @@ async function get(path, params = {}) {
  */
 const VOTE_HOSTS = /^https:\/\/(clerk\.house\.gov|www\.senate\.gov)\//;
 let voteRecords = 0;
+/**
+ * The bill's floor votes, at most four, newest first: every vote that decided the bill comes
+ * before procedural ones, so a bill that took many cloture votes still shows how it passed. Plus
+ * any passage with no roll call (voice vote, unanimous consent), which has no member list.
+ */
 async function floorVotes(congress, type, number) {
   let actions = [];
-  try { actions = (await get(`/bill/${congress}/${type}/${number}/actions`, { limit: 250 })).actions ?? []; } catch (e) { console.warn(`no actions for ${type}${number}: ${e.message}`); return []; }
-  const urls = [...new Set(actions.flatMap((a) => (a.recordedVotes ?? []).map((v) => v.url)).filter((u) => VOTE_HOSTS.test(u ?? '')))].slice(0, 4);
+  try { actions = (await get(`/bill/${congress}/${type}/${number}/actions`, { limit: 250 })).actions ?? []; } catch (e) { console.warn(`no actions for ${type}${number}: ${e.message}`); return { votes: [], notes: [] }; }
+  const urls = pickVoteUrls(actions, VOTE_HOSTS);
   const votes = [];
   for (const url of urls) {
     try {
@@ -66,7 +77,7 @@ async function floorVotes(congress, type, number) {
       if (v.roll && v.members.length && v.totals.yea + v.totals.nay > 0) { votes.push(v); voteRecords++; }
     } catch (e) { console.warn(`roll call ${url} unreadable: ${e.message}`); }
   }
-  return votes.sort((a, b) => b.date.localeCompare(a.date));
+  return { votes: votes.sort((a, b) => b.date.localeCompare(a.date)), notes: passagesWithoutRollCall(actions) };
 }
 
 /** The summary's opening paragraphs, up to about 1,400 characters; the rest is on Congress.gov. */
@@ -162,8 +173,9 @@ async function main() {
       url: `https://www.congress.gov/bill/${c.b.congress}th-congress/${TYPE_PATH[c.b.type] ?? 'house-bill'}/${c.b.number}`,
       updated: (d.updateDateIncludingText ?? d.updateDate ?? c.s.updateDate ?? '').slice(0, 10),
       // Floor votes, only for bills past introduction (and only when the detail call worked).
-      votes: d.sponsors && !/^introduced/i.test(statusOf(latest.text, c.s.actionDesc, d.laws ?? [])) && !limited && calls < DETAIL_BUDGET + 20
-        ? await floorVotes(c.b.congress, c.b.type.toLowerCase(), c.b.number) : [],
+      ...(d.sponsors && !/^introduced/i.test(statusOf(latest.text, c.s.actionDesc, d.laws ?? [])) && !limited && calls < DETAIL_BUDGET + 20
+        ? await (async () => { const f = await floorVotes(c.b.congress, c.b.type.toLowerCase(), c.b.number); return { votes: f.votes, floorNotes: f.notes }; })()
+        : { votes: [], floorNotes: [] }),
     });
   }
   // A House bill and its Senate twin share a title: keep the one summarized last, and name the other.
