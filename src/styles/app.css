@@ -3599,3 +3599,15 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .quick-note { margin: 6px 0 0; }
 #play .stats-table th, #play .stats-table td { padding-inline: 8px; }
 @media (max-width: 420px) { #play .stats-table { font-size: 0.8125rem; } }
+
+/* Floor votes on a bill: the official record, plain facts. */
+.fv-wrap { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
+.fv-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fv { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); font-size: 0.875rem; display: flex; flex-direction: column; gap: 3px; }
+.fv-head { color: var(--ink-2); font-size: 0.8125rem; }
+.fv-totals { font-weight: 650; color: var(--ink); }
+.fv-mine summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 0.8125rem; }
+.fv-mine ul { margin: 4px 0 0; padding-left: 18px; }
+.fv-src { align-self: flex-start; }
+.fv-hint { margin: 0; }
+.fb-item .fv-wrap { grid-column: 1 / -1; }

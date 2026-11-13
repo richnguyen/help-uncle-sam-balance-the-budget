@@ -5,6 +5,7 @@ import { useHaptics } from '../haptics';
 import { notificationsOn } from '../reminders';
 import { useJourney, type FollowedBill } from '../state';
 import { BILLS, type Bill } from './items';
+import { FloorVotes } from './votes';
 
 // Following a bill. The player taps Follow on a bill in the feed; the game remembers the stage it
 // was at. When the published bills show it at a new stage, the bill is marked "Moved" in the feed
@@ -77,6 +78,7 @@ export function FollowedBills() {
               <strong>{f.title}</strong>
               <span className="small muted">{b ? (moved.has(id) ? <>{f.seen} → <strong>{b.status}</strong></> : b.status) : `${f.status} · no new action in the last 60 days`}</span>
             </a>
+            {b && <FloorVotes bill={b} />}
             <button type="button" className="btn btn-sm" onClick={() => { j.toggleFollow(f, id); if (backendOn()) unfollowBill(id).catch(() => {}); }} aria-label={`Stop following ${f.label}`}>Unfollow</button>
           </li>
         );

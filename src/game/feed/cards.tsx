@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useId, useState, type ReactNode } from 'react';
 import { backendOn, countPlay, feedTallies, saveFeedVote } from '../../lib/backend';
+import { FloorVotes, sponsorLine } from './votes';
 import { moneyWords } from '../../lib/format';
 import { useVotes } from '../../lib/votes';
 import { OPTIONS_DATA } from '../../lib/planData';
@@ -233,7 +234,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
       {bill.sponsor && (
         <p className="fc-sponsor">
           <span className="fc-avatar" aria-hidden="true">{initials(bill.sponsor.name)}</span>
-          <span><span className="muted">Sponsor:</span> {bill.sponsor.name}{bill.cosponsors ? <span className="muted"> · {bill.cosponsors} cosponsor{bill.cosponsors === 1 ? '' : 's'}</span> : null}</span>
+          <span><span className="muted">Sponsor:</span> {sponsorLine(bill.sponsor)}{bill.cosponsors ? <span className="muted"> · {bill.cosponsors} cosponsor{bill.cosponsors === 1 ? '' : 's'}</span> : null}</span>
         </p>
       )}
       <div className="fc-tabs" role="tablist" aria-label="About this bill">
@@ -253,6 +254,7 @@ function BillCard({ item, bill }: { item: FeedItem; bill: Bill }) {
           <p>The Congressional Budget Office hasn’t published a cost estimate for this bill yet. CBO usually scores a bill once a committee reports it.</p>
         )}
       </div>
+      <FloorVotes bill={bill} />
       <p className="fc-latest"><span className="muted">Latest action{bill.latestAction.date ? `, ${fmtDate(bill.latestAction.date)}` : ''}:</span> {bill.latestAction.text}</p>
       <div className="fc-vote" role="group" aria-label="Would you support this bill?">
         <p className="fc-ask">Would you support this bill?</p>

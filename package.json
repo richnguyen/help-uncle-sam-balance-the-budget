@@ -19,6 +19,7 @@
     "previews": "node scripts/make-previews.mjs http://localhost:5173/",
     "news": "node scripts/fetch-news.mjs",
     "dts": "node scripts/fetch-dts.mjs",
+    "test:rollcall": "node scripts/rollcall.test.mjs",
     "test:alerts": "node --experimental-strip-types --no-warnings supabase/tests/bill-alerts.test.mts"
   },
   "dependencies": {

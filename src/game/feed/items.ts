@@ -27,9 +27,18 @@ export type Effort = 'passive' | 'interactive' | 'deep';
 export interface Bill {
   id: string; label: string; title: string; area: string; status: string;
   latestAction: { date: string; text: string }; introduced: string;
-  sponsor: { name: string; party: string; state: string } | null; cosponsors: number;
+  /** The sponsor; `display` is exactly as Congress.gov lists them, e.g. "Sen. Crapo, Mike [R-ID]". */
+  sponsor: { name: string; party: string; state: string; display?: string; district?: number | null } | null; cosponsors: number;
+  /** Floor votes from the official records (House Clerk, U.S. Senate), newest first. */
+  votes?: FloorVote[];
   summary: string; summaryCut?: boolean; summaryStage: string; summaryDate: string;
   cbo: { title: string; url: string; date: string } | null; url: string; updated: string; companion?: string;
+}
+/** One roll call: members are [name, party, state, vote] as the record lists them. */
+export interface FloorVote {
+  chamber: 'House' | 'Senate'; roll: number; date: string; question: string; result: string;
+  totals: { yea: number; nay: number; present: number; notVoting: number }; url: string;
+  members: [string, string, string, string][];
 }
 export const BILLS = (billsJson as { fetchedAt: string; bills: Bill[] });
 

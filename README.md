@@ -122,6 +122,15 @@ budget adviser.
   (`u`, `v`), so older links keep their meaning. Caveats are on each card: both were scored against
   CBO's baseline at the time, and the desk's projection is OMB's, which assumes the President's
   proposals; if those already make the tax breaks permanent, that card counts them twice.
+- **Sponsors and floor votes** (`scripts/rollcall.mjs`, `src/game/feed/votes.tsx`): a bill's sponsor
+  reads exactly as Congress.gov lists them ("Rep. Arrington, Jodey C. [R-TX-19]"), with no colors
+  or scores. For bills past introduction, `fetch-bills.mjs` follows the recorded votes Congress.gov
+  lists for the bill to the official records (the House Clerk's and the Senate's roll-call XML) and
+  keeps, for each, the question, the result, the yeas and nays, a link to the record, and every
+  member's vote with party and state as the record lists them. Bill cards in the feed and followed
+  bills in Your record show them, and if the player saved a ZIP code in mission 1.4, how that
+  state's members voted. Facts only: no ratings of members. `npm run test:rollcall` checks the
+  parser on records in each chamber's format.
 - **Play counts for the playtest** (`supabase/migrations/20261115000000_play_counts.sql`,
   `countPlay` in `src/lib/backend.ts`): anonymous daily totals, never who did what: each budget desk
   opened, started (a first card) and finished (desk abandonment is started minus finished), the
