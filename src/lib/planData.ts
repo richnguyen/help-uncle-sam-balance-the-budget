@@ -58,6 +58,9 @@ const OVERRIDES: Record<string, Partial<Econ>> = {
   'cut-defense-budget': { cls: 'purchases', growth: 0, tags: [], why: 'Government purchases have the largest short-run effect per dollar, so cuts are best phased in.' },
   'cut-transport-education-grants': { cls: 'stateInfra', growth: -1, tags: ['investment'], why: 'Cuts money for roads, transit, and schools, which support long-run growth.' },
   'crop-insurance-subsidies': { cls: 'transfersPersons', growth: 1, tags: [], why: 'Trims subsidies that mainly benefit larger farms and encourage riskier planting.' },
+  // Two-way cards: these add to deficits (negative savings). The class says how much the extra money moves the economy at first.
+  'extend-aca-credits': { cls: 'transfersPersons', growth: 0, tags: [], why: 'Puts more money in households’ hands through lower premiums, which adds to spending in the short run; it adds to borrowing unless it is paid for.' },
+  'extend-obbba-temp-tax': { cls: 'taxBroad', growth: 0, tags: [], why: 'Leaves more money with workers and retirees who claim the breaks, which adds to spending in the short run; it adds to borrowing unless it is paid for.' },
 };
 
 export function econFor(o: PolicyOption): Econ {

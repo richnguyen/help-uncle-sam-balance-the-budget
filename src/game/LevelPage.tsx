@@ -318,7 +318,7 @@ function VoteCard({ vote }: { vote: VoteSpec }) {
         <h2 className="ballot-title">{o.name}</h2>
         <p>{o.summary}</p>
         <dl className="ballot-facts">
-          <div><dt>Ten-year savings</dt><dd className="num">{money(o.savings10 * 1e9)}</dd></div>
+          <div><dt>{o.savings10 < 0 ? 'Adds to deficits, ten years' : 'Ten-year savings'}</dt><dd className="num">{money(Math.abs(o.savings10) * 1e9)}</dd></div>
           <div><dt>Who pays</dt><dd>{o.affects}</dd></div>
           <div><dt>Who benefits</dt><dd>{o.benefits}</dd></div>
         </dl>

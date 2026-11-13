@@ -167,7 +167,7 @@ export default function Chain({ param }: { param: string | null }) {
                     <span className="rcard-kind" data-side={o.side}>{o.side === 'revenue' ? 'Tax' : 'Cut'}</span>
                     <strong className="peoples-name">{o.name}</strong>
                   </div>
-                  <div className="small muted">Closes {own >= 1 ? 'the whole gap' : `${Math.max(own > 0 ? 1 : 0, Math.round(own * 100))}%`} on its own · {money(o.savings10 * 1e9)} over ten years</div>
+                  <div className="small muted">{o.savings10 < 0 ? <>Adds to the gap · {money(-o.savings10 * 1e9)} more borrowing over ten</> : <>Closes {own >= 1 ? 'the whole gap' : `${Math.max(own > 0 ? 1 : 0, Math.round(own * 100))}%`} on its own · {money(o.savings10 * 1e9)} over ten</>} years</div>
                   <div className="peoples-actions">
                     <button type="button" className="vote-btn" onClick={() => take(o.id, !isIn)}>{isIn ? 'Take it out' : 'Add it'}</button>
                   </div>

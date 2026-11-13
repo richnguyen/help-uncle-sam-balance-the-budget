@@ -109,9 +109,19 @@ budget adviser.
   help (the gentlest one that would finish the job on its own), or, once the goal is met, says
   what earns the next star; the player still plays it. The first desk also opens on a starter
   deck: the three biggest tax and three biggest spending cards (more if those can't reach the goal),
-  with a link to show all 20; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
+  with a link to show the whole deck; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
   star, never which card to play; when the cards alone can't reach the goal, the across-the-board
   changes sit right under them.
+- **Two-way cards** (in `src/data/curated/options.json`, `savings10` below zero): two cards that
+  add to deficits, each with an official estimate on the card. *Bring back the larger ACA premium
+  tax credits, permanently* (CBO, September 2025: $349.8 billion over 2026 to 2035) and *Make the
+  2025 law's temporary tax breaks permanent* (JCT's estimate in CBO's August 2025 letter: about
+  $0.8 trillion over 2025 to 2034, before interest). They sit last in the deck, say "adds to
+  deficits", widen the gap when played, and are left out of the who-pays split, the plan's
+  economic cost, the 1.9 starter deck, hints and the Daily puzzles; share links give them new codes
+  (`u`, `v`), so older links keep their meaning. Caveats are on each card: both were scored against
+  CBO's baseline at the time, and the desk's projection is OMB's, which assumes the President's
+  proposals; if those already make the tax breaks permanent, that card counts them twice.
 - **Desk twists** (`src/lib/twists.ts`): each later desk differs in kind. Mission 2.7 adds a rate
   shock: the average rate on the debt is higher by the largest one-year rise in the Treasury's
   average rate since 2001 (0.90 points, September 2022 to 2023), on top of the projection, so

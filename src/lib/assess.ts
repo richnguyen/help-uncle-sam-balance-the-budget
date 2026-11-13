@@ -1,6 +1,6 @@
 import { budget, cbo } from '../data';
 import { evaluate, type Evaluation } from './game';
-import { economics, type EconSummary, extraFor, type Goal, goalMet, optimize, type PlanContext, planCost, shortfall } from './plan';
+import { economics, type EconSummary, extraFor, type Goal, goalMet, optimize, type PlanContext, planCost, savingsSplit, shortfall } from './plan';
 import { withEcon } from './planData';
 import { type Levers, simulate, type SimYear, ZERO } from './sandbox';
 import { shockFor } from './twists';
@@ -56,8 +56,7 @@ export function assess(goal: Goal, ids: string[], lv: Levers, gradual: boolean):
   const progress = short0 > 0 ? Math.min(1, Math.max(0, (short0 - shortfall(goal, sim, CTX.startRatio)) / short0)) : 1;
   const econ = economics(ctxFor(goal), ids, lv, gradual);
   const sel = CTX.options.filter((o) => ids.includes(o.id));
-  const revTen = sel.filter((o) => o.side === 'revenue').reduce((s, o) => s + o.savings10, 0);
-  const spTen = sel.filter((o) => o.side === 'spending').reduce((s, o) => s + o.savings10, 0);
+  const { rev: revTen, sp: spTen } = savingsSplit(sel);
   const revenueShare = revTen + spTen ? revTen / (revTen + spTen) : 0;
   const crossesRules = sel.some(crossing);
   const ev = evaluate({ met, econ, revenueShare, count: sel.length, crossesRules, heavySide: sel.length ? (revenueShare > 2 / 3 ? 'revenue' : revenueShare < 1 / 3 ? 'spending' : null) : null });

@@ -3400,3 +3400,5 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .tb-twist { font-size: 0.875rem; color: var(--ink-2); padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
 .tb-twist > strong { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; color: var(--ink); margin-right: 4px; }
 .tb-twist .rated { margin-top: 4px; }
+.pill-cost { background: color-mix(in srgb, var(--c-cut) 14%, transparent); color: var(--ink); }
+.pcard[data-cost] { box-shadow: inset 0 3px 0 var(--c-cut); }

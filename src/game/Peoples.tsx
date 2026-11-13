@@ -162,7 +162,7 @@ export default function Peoples() {
                 </div>
                 <div className="peoples-meta small">
                   <span className="num">{c.net > 0 ? '+' : ''}{c.net} net · {c.in} in, {c.out} out</span>
-                  <span className="muted">Closes {own >= 1 ? 'the whole gap' : `${Math.max(own > 0 ? 1 : 0, Math.round(own * 100))}%`} on its own · {money(o.savings10 * 1e9)} over ten years</span>
+                  <span className="muted">{o.savings10 < 0 ? <>Adds to the gap · {money(-o.savings10 * 1e9)} more borrowing over ten</> : <>Closes {own >= 1 ? 'the whole gap' : `${Math.max(own > 0 ? 1 : 0, Math.round(own * 100))}%`} on its own · {money(o.savings10 * 1e9)} over ten</>} years</span>
                 </div>
                 <span className="peoples-split" aria-hidden="true">{n > 0 && <><span className="in" style={{ flex: `${c.in} 0 0` }} /><span className="out" style={{ flex: `${c.out} 0 0` }} /></>}</span>
                 <div className="peoples-actions" role="group" aria-label={`Your move on ${o.name}`}>

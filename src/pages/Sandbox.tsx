@@ -10,7 +10,7 @@ import { ChartFrame, Legend, PageHead, Section, Seg, Term } from '../components/
 import { budget, cbo } from '../data';
 import { dateLabel, dollars, lower, money, pct } from '../lib/format';
 import { BADGES, earnedBadges, evaluate, loadProgress, MISSIONS, planText, type Progress, saveProgress } from '../lib/game';
-import { economics, extraFor, type Goal, goalMet, MULT, mid, optimize, optionPath, type PlanContext, planCost, type Protect, score, shortfall } from '../lib/plan';
+import { economics, extraFor, type Goal, goalMet, MULT, mid, optimize, optionPath, type PlanContext, planCost, type Protect, savingsSplit, score, shortfall } from '../lib/plan';
 import { OPTIONS_DATA, withEcon } from '../lib/planData';
 import { LEVERS, type LeverId, type Levers, simulate, ZERO } from '../lib/sandbox';
 import { type Choice, useVotes } from '../lib/votes';
@@ -172,8 +172,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const met = goalMet(goal, mine, ctx.startRatio);
   const econ = useMemo(() => economics(ctx, ids, lv, gradual), [ctx, ids, lv, gradual]);
   const selected = ctx.options.filter((o) => ids.includes(o.id));
-  const revTen = selected.filter((o) => o.side === 'revenue').reduce((s, o) => s + o.savings10, 0);
-  const spTen = selected.filter((o) => o.side === 'spending').reduce((s, o) => s + o.savings10, 0);
+  const { rev: revTen, sp: spTen } = savingsSplit(selected);
   const revenueShare = revTen + spTen ? revTen / (revTen + spTen) : 0;
   const slidersUsed = Object.values(lv).some((v) => v !== 0);
   const crossesRules = selected.some((o) => o.econ.tags.some((t) => t === 'retirees' || t === 'lowIncome' || t === 'investment'));
@@ -346,7 +345,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const deck = ctx.options
     .filter((o) => visible(o.id))
     .filter((o) => filter === 'all' || o.side === filter)
-    .sort((a, b) => (sort === 'impact' ? (shareOf[b.id] ?? 0) - (shareOf[a.id] ?? 0) : score(a.econ) - score(b.econ)));
+    // Cards that add to deficits go last either way.
+    .sort((a, b) => (Number(a.savings10 < 0) - Number(b.savings10 < 0)) || (sort === 'impact' ? (shareOf[b.id] ?? 0) - (shareOf[a.id] ?? 0) : score(a.econ) - score(b.econ)));
 
   const missionFacts = (g: Goal) => {
     if (g === 'stabilize') return `Debt is ${pct(ctx.startRatio, 0)} of GDP today and heads to ${pct(lastB.debt / lastB.gdp, 0)} by FY${lastFY}.`;
@@ -440,17 +440,18 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                 o.econ.tags.includes('investment') && 'Cuts public investment',
               ].filter(Boolean) as string[];
               return (
-                <article key={o.id} className="pcard" data-on={on} data-side={o.side} data-card={o.id} data-hint={hint?.card === o.id || undefined}>
+                <article key={o.id} className="pcard" data-on={on} data-side={o.side} data-card={o.id} data-cost={o.savings10 < 0 || undefined} data-hint={hint?.card === o.id || undefined}>
                   {hint?.card === o.id && <span className="pcard-hint">Uncle Sam’s hint</span>}
                   <div className="pcard-top">
                     <span className="pcard-icon" style={{ color: SIDE_COLOR[o.side] }}><LeverIcon lever={o.lever} /></span>
-                    <span className="pcard-kind">{o.side === 'revenue' ? 'Tax' : `Spending cut · ${LEVER_NAME[o.lever]}`}</span>
+                    <span className="pcard-kind">{o.savings10 < 0 ? (o.side === 'revenue' ? 'Tax cut · adds to deficits' : 'More spending · adds to deficits') : o.side === 'revenue' ? 'Tax' : `Spending cut · ${LEVER_NAME[o.lever]}`}</span>
                   </div>
                   <h3 className="pcard-title">{o.name}</h3>
-                  <div className="pcard-big">{share >= 1 ? <>Closes <strong>the whole gap</strong>{share >= 1.5 ? ` (${(share).toFixed(1)}× over)` : ''}</> : <>Closes <strong>{share < 0.01 ? '<1%' : `${Math.round(share * 100)}%`}</strong> of the gap</>}</div>
-                  <div className="pcard-sub num">{money(y)} in FY{lastFY} · about {dollars(y / HH)} per household</div>
+                  <div className="pcard-big">{o.savings10 < 0 ? <>Widens the gap <strong>{Math.max(1, Math.round(-share * 100))}%</strong></> : share >= 1 ? <>Closes <strong>the whole gap</strong>{share >= 1.5 ? ` (${(share).toFixed(1)}× over)` : ''}</> : <>Closes <strong>{share < 0.01 ? '<1%' : `${Math.round(share * 100)}%`}</strong> of the gap</>}</div>
+                  <div className="pcard-sub num">{o.savings10 < 0 ? `costs ${money(-y)}` : money(y)} in FY{lastFY} · about {dollars(Math.abs(y) / HH)} per household</div>
                   <div className="pcard-meta">
-                    <DragBars level={dragLevel(score(o.econ))} />
+                    {o.savings10 > 0 && <DragBars level={dragLevel(score(o.econ))} />}
+                    {o.savings10 < 0 && <span className="pill pill-cost">Adds to deficits: pair it with savings</span>}
                     {o.econ.growth === 1 && <span className="pill">Helps long-run growth</span>}
                     {o.econ.growth === -1 && <span className="pill">Hurts long-run growth</span>}
                     {rules.map((r) => <span key={r} className="pill pill-warn">{r}</span>)}
@@ -466,7 +467,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
                     <p><strong>Who benefits:</strong> {o.benefits}.</p>
                     <p><strong>Economic effect:</strong> {o.econ.why}</p>
                     {o.obbbaNote && <p className="muted">{o.obbbaNote}</p>}
-                    <p><a href={o.source.url} target="_blank" rel="noreferrer">CBO’s estimate: {money(o.savings10 * 1e9)} over 10 years</a></p>
+                    <p><a href={o.source.url} target="_blank" rel="noreferrer">{o.savings10 < 0 ? `Official estimate: adds ${money(-o.savings10 * 1e9)} to deficits over 10 years` : `CBO’s estimate: ${money(o.savings10 * 1e9)} over 10 years`}</a></p>
                   </details>
                   {votes.available && (
                     <div className="vote-row">

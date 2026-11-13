@@ -28,7 +28,7 @@ export interface PersonalEffect {
 }
 
 const PRICE_CARDS = ['vat-5pct', 'carbon-tax-25', 'gas-tax-15c', 'alcohol-tax'];
-const BREAK_CARDS: Record<string, string> = { 'cap-health-exclusion': 'if you get health insurance through work', 'limit-itemized-15pct': 'if you itemize deductions' };
+const BREAK_CARDS: Record<string, string> = { 'cap-health-exclusion': 'if you get health insurance through work', 'limit-itemized-15pct': 'if you itemize deductions', 'extend-obbba-temp-tax': 'if you get tips or overtime pay, or are 65 or older' };
 
 export const savedWages = () => ({ wages: load<number>('wages', 65000), status: load<FilingStatus>('status', 'single') });
 

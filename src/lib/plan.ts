@@ -22,7 +22,9 @@ export interface PolicyOption {
   variant?: string;
   side: 'revenue' | 'spending';
   lever: LeverId;
-  savings10: number; // $ billions over ten years
+  savings10: number; // $ billions over ten years (negative: the card adds to deficits)
+  /** Who made the estimate, when it isn't CBO's own (e.g. "JCT, as reported by CBO"). */
+  by?: string;
   affects: string;
   /** Who gains from it, beyond the lower borrowing every saving brings (our summary of CBO's case for it). */
   benefits: string;
@@ -277,5 +279,17 @@ export function optimize(ctx: PlanContext, goal: Goal, protect: Protect, gradual
 
 /** Total economic cost of a set of options: harm per dollar times ten-year dollars (as in optimize). */
 export function planCost(ctx: PlanContext, ids: string[]) {
-  return ctx.options.filter((o) => ids.includes(o.id)).reduce((s, o) => s + Math.max(0.01, score(o.econ)) * o.savings10, 0);
+  // Cards that add to deficits aren't a cost to weigh here: the savings that make up for them are.
+  return ctx.options.filter((o) => ids.includes(o.id) && o.savings10 > 0).reduce((s, o) => s + Math.max(0.01, score(o.econ)) * o.savings10, 0);
+}
+
+/**
+ * Who pays: the ten-year savings from tax cards and from spending cuts. Cards that add to deficits
+ * (tax cuts, new spending) are counted apart, as what the plan adds, so the split stays a split.
+ */
+export function savingsSplit(sel: { side: 'revenue' | 'spending'; savings10: number }[]) {
+  const rev = sel.filter((o) => o.side === 'revenue' && o.savings10 > 0).reduce((s, o) => s + o.savings10, 0);
+  const sp = sel.filter((o) => o.side === 'spending' && o.savings10 > 0).reduce((s, o) => s + o.savings10, 0);
+  const adds = -sel.filter((o) => o.savings10 < 0).reduce((s, o) => s + o.savings10, 0);
+  return { rev, sp, adds };
 }

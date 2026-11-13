@@ -427,10 +427,10 @@ function PollCard({ item }: { item: Extract<FeedItem, { kind: 'poll' }> }) {
   return (
     <>
       <Head item={item} />
-      <PostArt tone="polls" icon={o.side === 'revenue' ? 'paycheck' : 'bills'} big={moneyWords(Math.abs(o.savings10) * 1e9, 2)} small={`${saves ? (o.side === 'revenue' ? 'raised' : 'saved') : 'cost'} over 10 years, by CBO’s estimate`} />
+      <PostArt tone="polls" icon={o.side === 'revenue' ? 'paycheck' : 'bills'} big={moneyWords(Math.abs(o.savings10) * 1e9, 2)} small={`${saves ? (o.side === 'revenue' ? 'raised' : 'saved') : 'added to deficits'} over 10 years, by ${o.by ? 'JCT’s estimate, as reported by CBO' : 'CBO’s estimate'}`} />
       <p className="fc-ask fc-ask-top">Would you include this in your plan?</p>
       <h3 className="fc-title">{o.name}</h3>
-      <p className="fc-fact">Fact: deficits would be about {moneyWords(Math.abs(o.savings10) * 1e9, 2)} {saves ? 'smaller' : 'larger'} over ten years, by CBO’s estimate.</p>
+      <p className="fc-fact">Fact: deficits would be about {moneyWords(Math.abs(o.savings10) * 1e9, 2)} {saves ? 'smaller' : 'larger'} over ten years, by {o.by ? 'JCT’s estimate, as reported by CBO' : 'CBO’s estimate'}.</p>
       <div className="fc-size">
         <span className="fc-size-bar" role="img" aria-label={`Size among CBO’s options: ${Math.round((Math.abs(o.savings10) / MAX_OPTION) * 100)}% of the biggest`}><span style={{ width: `${Math.max(3, (Math.abs(o.savings10) / MAX_OPTION) * 100)}%` }} /></span>
         <span className="fc-size-k">compared with the biggest of CBO’s options in the game</span>
