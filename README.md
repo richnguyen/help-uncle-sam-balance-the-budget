@@ -209,7 +209,7 @@ budget adviser.
   (`QUICK_MAX` in `src/game/LevelPage.tsx`); the whole mission is how to earn the third, so the
   three-star medals still mean the whole thing. The record marks the mission done, keeps the
   game's score, and notes `quick:<mission>`; the completion screen says how to earn the third star.
-  The points each star takes are shown before the first round and again on the replay screen
+  The points each star takes are shown under the first round and again on the replay screen
   (with the ones already earned marked), so a replay is about mastery, not guessing the rules.
   The best score is kept, sets the mission's stars, and greets the player on a return visit.
   Continue waits until the game has been played once.
