@@ -12,6 +12,7 @@ import { ShareButton, SocialShare } from './ShareButton';
 import { ME_LINES } from './script';
 import { useJourney } from './state';
 import { SamSays, UncleSam } from './UncleSam';
+import { Rated } from './Rated';
 
 // "My share of Uncle Sam": the card a player gets at the end of level 1. It is about them, not
 // about a position: what their salary pays in federal taxes, the interest Uncle Sam would save if
@@ -143,6 +144,7 @@ export function MyShareCard({ compact = false, wages, status }: { compact?: bool
           <ShareButton text={text} url={url} card={() => svgToPng(svg, ME_W, ME_H)} label="Share my card" className="btn btn-primary" kind="level" onShare={() => j.mark('share:me')} />
         </div>
         <SocialShare text={text} url={url} kind="level" onShare={() => j.mark('share:me')} />
+        <Rated id="interest" label="How the interest saved is figured" />
         {compact && <a className="small" href="#me">Try another salary, or see the whole card</a>}
       </div>
     </div>

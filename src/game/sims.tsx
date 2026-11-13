@@ -9,6 +9,7 @@ import { MULT, mid } from '../lib/plan';
 import { simulate, ZERO } from '../lib/sandbox';
 import { useHaptics } from './haptics';
 import type { Done } from './minigame';
+import { Rated } from './Rated';
 
 const fmtMult = (v: number) => `$${v.toFixed(2)}`;
 
@@ -437,7 +438,8 @@ export function PieSim() {
           <span className="small muted">Why: CBO estimates each extra dollar of deficits crowds out about 33 cents of private investment, so workers have fewer machines, factories, and software to work with. And more of what the country earns goes to foreign lenders. Debt held by the public was {Math.round(today.pct)}% of GDP in FY{today.fy}.</span>
         </div>
       </div>
-      <p className="small muted">A rule of thumb, drawn as a straight line through one CBO comparison (May 2025): if debt were held at about 100% of GDP instead of rising to CBO’s projected 156% by 2055, income per person would be about 4% higher. Past 156%, the line is the game’s extension, not CBO’s estimate.</p>
+      <p className="small muted">A rule of thumb from one CBO comparison (May 2025); past 156%, the line is the game’s extension.</p>
+      <Rated id="growth" label="How this is figured" />
     </div>
   );
 }
@@ -513,7 +515,8 @@ export function BridgeSim() {
         </div>
         <figcaption className="small"><span className="bridge-key" data-k="save" /> saved that year <span className="bridge-key" data-k="lost" /> output lost that year, growing as the missing investment adds up</figcaption>
       </figure>
-      <p className="small muted">A rule of thumb from CBO’s estimate that federal investment in infrastructure, education, and research earns about 5% a year on average, half the return on private investment (The Macroeconomic and Budgetary Effects of Federal Investment, 2016). Simplified: it leaves out wear and tear, and the payoff from schools and research can take a decade or more to arrive. Savings are CBO’s estimate for this card, scaled to the cut.</p>
+      <p className="small muted">A rule of thumb from CBO’s estimate that federal investment earns about 5% a year on average (2016).</p>
+      <Rated id="investment" label="How this is figured" />
     </div>
   );
 }

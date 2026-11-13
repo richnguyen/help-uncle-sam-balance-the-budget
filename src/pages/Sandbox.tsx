@@ -28,6 +28,7 @@ import { CHALLENGE_LINES } from '../game/script';
 import { ShareButton } from '../game/ShareButton';
 import { countStep } from '../lib/backend';
 import { encodePlan } from '../game/plans';
+import { Rated } from '../game/Rated';
 import { ballotFrom, compare, useMyName } from '../game/plans';
 import { useShareLink } from '../game/shortlinks';
 import { activeRoom, type RoomRef, setActiveRoom } from '../game/rooms';
@@ -594,6 +595,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
               {econBlock(true)}
               {splitBlock(true)}
             </div>
+            <div className="tb-rated"><Rated id="steep" label="How “hit to the economy” is rated" /></div>
           </section>
           {challenge && theirs && mineNow && h2h && (
             <section className="card challenge-live" id="vs" aria-live="polite">

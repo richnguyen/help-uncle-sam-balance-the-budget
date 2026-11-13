@@ -112,6 +112,12 @@ budget adviser.
   with a link to show all 20; the 2.7 and 3.5 desks open on the full deck. Elsewhere the star tips say what earns each
   star, never which card to play; when the cards alone can't reach the goal, the across-the-board
   changes sit right under them.
+- **How this is rated** (`src/game/Rated.tsx`): every number the game rates on its own opens its
+  method in place: the desk's economy gauge and mission 1.7 (gentle, moderate, steep), mission
+  1.6's ripple ranking, the interest saved on the player's card, and the rules of thumb in missions
+  2.5 and 2.6. Each says how it's figured, what it leaves out, and its official sources, and notes
+  that CBO's option estimates are conventional: the game shows a dynamic estimate only where CBO or
+  JCT published one, and none of the options in the game has one.
 - **Plan ideas** (`src/game/ideas.tsx`), on every desk, in two tabs kept apart: "Plans that work
   well", built for that desk's goal around one idea each (stop overpaying, make prices tell the
   truth, two big moves, ask the top and pay fairly for care; for the balanced budget, everyone
