@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:artifact": "vite build --mode artifact && node scripts/make-artifact.mjs",
+    "build:artifact": "node scripts/pull-bills.mjs && vite build --mode artifact && node scripts/make-artifact.mjs",
     "preview": "vite preview",
     "check-hosts": "NODE_USE_ENV_PROXY=1 node scripts/check-hosts.mjs",
     "data": "NODE_USE_ENV_PROXY=1 node scripts/fetch-all.mjs && node scripts/build-data.mjs",
