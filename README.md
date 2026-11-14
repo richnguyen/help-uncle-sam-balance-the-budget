@@ -891,14 +891,18 @@ source, and its link carries the platform's partner code (`?via=bot-bluesky`). `
 no party or ideology words; the Bluesky client against a stand-in). `.github/workflows/social-drafts.yml`
 runs three times a day and puts the drafts on the run's summary page (Actions tab).
 
-**Posting to Bluesky** (`scripts/social/post.mjs`, `scripts/social/bluesky.mjs`) is off until the
+**Posting to Bluesky and Mastodon** (`scripts/social/post.mjs`, `bluesky.mjs`, `mastodon.mjs`) is off until the
 repository variable `SOCIAL_POSTING` is `on`. It signs in with the variable `BLUESKY_HANDLE` (the
 account's handle, e.g. `dailydollar.bsky.social`) and the secret `BLUE_SKY_APP_KEY` (an app
 password, never the account password), and posts the same text the drafts show, with a clickable
 link and a link card. A skipped slot isn't posted, and a text already among the account's recent
 posts isn't posted again, so re-running is safe. `node scripts/social/post.mjs --slot morning`
 prints what it would post. To post one by hand: Actions → Daily Dollar posts → Run workflow, pick
-a slot. To stop: set `SOCIAL_POSTING` to anything but `on`.
+a slot. To stop: set `SOCIAL_POSTING` to anything but `on`. Mastodon posts with the variable `MASTODON_INSTANCE`
+(the server, e.g. `https://mastodon.social`) and the secret `MASTODON_ACCESS_TOKEN` (an access
+token with `write:statuses`; with `read` too, a text already posted is recognized). The app's
+client key and secret aren't needed to post. Each platform posts on its own: one that isn't set
+up is skipped with a note, and one that fails doesn't stop the other.
 
 ## Test it
 

@@ -1,8 +1,9 @@
 # Daily Dollar posts for the brand account, three times a day. Always writes the day's drafts to
 # this run's summary page (from the game's own puzzle and the crowd's public, read-only counts).
-# Posts to Bluesky only when the repository variable SOCIAL_POSTING is "on" (Settings → Secrets
-# and variables → Actions → Variables), signing in with the variable BLUESKY_HANDLE and the
-# secret BLUE_SKY_APP_KEY (an app password). Times are UTC: about 7:30 AM, 1 PM and 8 PM Eastern
+# Posts to Bluesky and Mastodon only when the repository variable SOCIAL_POSTING is "on" (Settings
+# → Secrets and variables → Actions → Variables). Bluesky: the variable BLUESKY_HANDLE and the
+# secret BLUE_SKY_APP_KEY (an app password). Mastodon: the variable MASTODON_INSTANCE (e.g.
+# https://mastodon.social) and the secret MASTODON_ACCESS_TOKEN. A platform not set up is skipped. Times are UTC: about 7:30 AM, 1 PM and 8 PM Eastern
 # in winter (an hour later in summer). Run it by hand from the Actions tab, picking a slot.
 name: Daily Dollar posts
 
@@ -53,9 +54,11 @@ jobs:
             *) case "$PICKED" in morning|midday|evening) slot="$PICKED" ;; *) slot= ;; esac ;;
           esac
           echo "slot=$slot" >> "$GITHUB_OUTPUT"
-      - name: Post to Bluesky
+      - name: Post to Bluesky and Mastodon
         if: ${{ vars.SOCIAL_POSTING == 'on' && steps.slot.outputs.slot != '' }}
         env:
           BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUE_SKY_APP_KEY }}
+          MASTODON_INSTANCE: ${{ vars.MASTODON_INSTANCE }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
         run: node scripts/social/post.mjs --slot ${{ steps.slot.outputs.slot }} --live
