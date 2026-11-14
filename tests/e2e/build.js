@@ -12,7 +12,9 @@ const many = (n) => { const ids = ['level-1', 'level-2', 'level-3', 'level-4', '
   const b = await chromium.launch(); const errs = [];
   const mk = async (state, opts = { viewport: { width: 1280, height: 860 } }) => {
     const ctx = await b.newContext(opts);
-    await ctx.addInitScript((j) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('ftd:journey', j); sessionStorage.setItem('seeded', '1'); } }, S(state));
+    // state.streak: that many Daily Dollar days in a row, ending today (what unlocks the decorations).
+    const days = Array.from({ length: state.streak ?? 0 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+    await ctx.addInitScript(([j, daily]) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('ftd:journey', j); localStorage.setItem('ftd:daily', daily); sessionStorage.setItem('seeded', '1'); } }, [S(state), JSON.stringify(Object.fromEntries(days.map((k) => [k, [true, true, true, true, true]])))]);
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errs.push(e.message));
     return p;
@@ -93,7 +95,7 @@ const many = (n) => { const ids = ['level-1', 'level-2', 'level-3', 'level-4', '
   ok(await p.locator('.bm-stage-lock').count() === 1 && /Finish the Jefferson Memorial first|Finish the .* first/.test(await p.locator('.bm-page .actionbar .btn-primary').textContent()), 'a landmark not yet open says what to finish first');
 
   // 5. Finish a landmark: the crane lowers the capstone, then the postcard; then the decoration.
-  p = await mk({ stars: many(6), medals: ['first-steps'], built: ['monument:grounds', 'monument:foundation', 'monument:shaft1', 'monument:shaft2', 'monument:pyramidion'] });
+  p = await mk({ stars: many(6), streak: 1, built: ['monument:grounds', 'monument:foundation', 'monument:shaft1', 'monument:shaft2', 'monument:pyramidion'] });
   await p.goto(base + '#mall-monument'); await p.waitForTimeout(900);
   await p.locator('.bm-build').click(); await p.waitForTimeout(1500);
   const crane = await p.locator('.bm-fx .bm-crane').count();
@@ -107,16 +109,16 @@ const many = (n) => { const ids = ['level-1', 'level-2', 'level-3', 'level-4', '
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   ok(await p.locator('.bm-postcard').count() === 0, 'Escape closes it');
   const dbtn = p.locator('.bm-build');
-  ok(/ring of 50 flags/.test(await dbtn.textContent()), 'with one accomplishment, the flags can go up: ' + await dbtn.textContent());
+  ok(/ring of 50 flags/.test(await dbtn.textContent()), 'with a 1-day Daily Dollar streak, the flags can go up: ' + await dbtn.textContent());
   await dbtn.click(); await p.waitForTimeout(400); for (let t = 0; t < 60 && await p.locator('.bm-page .actionbar button[disabled]').count(); t++) await p.waitForTimeout(150); await p.waitForTimeout(300);
   st = await saved(p);
   ok(st.decor.includes('monument:flags') && await p.locator('.bm-stage [data-part="decor"] .bm-flag').count() >= 20, `the ring of flags is up (${await p.locator('.bm-stage [data-part="decor"] .bm-flag').count()} flags drawn)`);
   for (let t = 0; t < 40 && !/Fifty U\.S\. flags/.test(await p.locator('.sam-strip').textContent()); t++) await p.waitForTimeout(150);
   ok(/Fifty U\.S\. flags/.test(await p.locator('.sam-strip').textContent()), 'and Uncle Sam says why there are fifty');
   ok(/Next landmark: the Lincoln Memorial/.test(await p.locator('.bm-page .actionbar .btn-primary').textContent()), 'then on to the Lincoln Memorial');
-  // A decoration that needs more accomplishments says how many.
+  // A decoration that needs a longer streak says how long, and what the best is.
   await p.goto(base + '#mall-lincoln'); await p.waitForTimeout(600);
-  ok(/needs 3 accomplishments; you have [0-2]\b/.test(await p.locator('.bm-job-decor').textContent()), 'a decoration still locked says how many accomplishments it needs');
+  ok(/needs a Daily Dollar streak of 2 days; your best is 1\b/.test(await p.locator('.bm-job-decor').textContent()) && /🔥2/.test(await p.locator('.bm-job-decor .bm-job-cost').textContent()), 'a decoration still locked says the streak it needs (🔥2 for the second landmark) and the best so far');
 
   // 6. The Capitol's old dome comes down before the new one goes up.
   const before = await p.evaluate(async () => { const B = await import('/src/game/build/landmarks.ts'); const out = []; for (const l of B.LANDMARKS) for (const t of l.tasks) { if (t.id === 'capitol:drum') return out; out.push(t.id); } return out; });

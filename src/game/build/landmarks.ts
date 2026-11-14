@@ -3,7 +3,8 @@
 // and the foundation before the walls, the walls before the roof), star costs that grow from the
 // first landmark to the last, and big centerpieces (the Capitol's dome, Lincoln's statue) paid
 // for in stages. Every job comes with one true thing about the building, which Uncle Sam says as
-// it goes up. Accomplishments (medals and budget-desk badges) unlock each landmark's decoration.
+// it goes up. Each landmark's finishing touch (its decoration) needs a Daily Dollar streak: the
+// first landmark a 1-day streak, the second 2 days, up to 6 for the Capitol (the best run counts).
 // Stars never run out or expire: the balance is the stars won, less the stars spent.
 //
 // Facts are from the National Park Service, the Architect of the Capitol, the White House
@@ -25,6 +26,7 @@ export interface Task {
   fact: string;
 }
 
+/** A landmark's finishing touch; `need` is the Daily Dollar streak it takes, in days (the best run counts). */
 export interface Decor { id: string; label: string; need: number; kind: BuildKind; fact: string }
 
 export interface Landmark {
@@ -78,7 +80,7 @@ export const LANDMARKS: Landmark[] = [
       T('lincoln', 'statue', 'Seat the statue of Lincoln', 2, 'drop', 'Daniel Chester French designed the statue, and the Piccirilli brothers carved it from 28 blocks of white Georgia marble. It is 19 feet tall.'),
       T('lincoln', 'pool', 'Fill the Reflecting Pool', 2, 'fill', 'The Reflecting Pool, finished in 1924, stretches about 2,000 feet east toward the Washington Monument.'),
     ],
-    decor: { id: 'lincoln:lights', label: 'Light it at night', need: 3, kind: 'bloom', fact: 'At night the memorial is lit up at the end of the pool.' },
+    decor: { id: 'lincoln:lights', label: 'Light it at night', need: 2, kind: 'bloom', fact: 'At night the memorial is lit up at the end of the pool.' },
     postcard: [
       'The memorial was dedicated on May 30, 1922.',
       'The words of the Gettysburg Address and Lincoln’s Second Inaugural Address are carved on its inside walls.',
@@ -100,7 +102,7 @@ export const LANDMARKS: Landmark[] = [
       T('jefferson', 'dome', 'Close the dome', 2, 'rise', 'The memorial was dedicated on April 13, 1943, Jefferson’s 200th birthday.'),
       T('jefferson', 'statue', 'Set the bronze statue', 1, 'drop', 'During the war, metal was scarce, so a plaster statue painted the color of bronze stood here first. The 19-foot bronze went in in 1947.'),
     ],
-    decor: { id: 'jefferson:blossoms', label: 'Plant the cherry trees', need: 5, kind: 'bloom', fact: 'The cherry trees around the Tidal Basin were a gift of about 3,000 trees from the city of Tokyo. The first two were planted in 1912.' },
+    decor: { id: 'jefferson:blossoms', label: 'Plant the cherry trees', need: 3, kind: 'bloom', fact: 'The cherry trees around the Tidal Basin were a gift of about 3,000 trees from the city of Tokyo. The first two were planted in 1912.' },
     postcard: [
       'Words from the Declaration of Independence are carved on its inside walls.',
       'It faces north, toward the White House.',
@@ -122,7 +124,7 @@ export const LANDMARKS: Landmark[] = [
       T('treasury', 'north', 'Add the west and north wings', 1, 'rise', 'The north wing, the last, was finished in 1869, more than thirty years after the first stone.'),
       T('treasury', 'roof', 'Top it with the balustrade', 1, 'rise', 'This is where the money of the federal government is managed: taxes coming in, bills going out, and the debt.'),
     ],
-    decor: { id: 'treasury:hamilton', label: 'Set up the statue of Hamilton', need: 7, kind: 'drop', fact: 'A statue of Alexander Hamilton, the first Secretary of the Treasury, stands on the south plaza. It was dedicated in 1923.' },
+    decor: { id: 'treasury:hamilton', label: 'Set up the statue of Hamilton', need: 4, kind: 'drop', fact: 'A statue of Alexander Hamilton, the first Secretary of the Treasury, stands on the south plaza. It was dedicated in 1923.' },
     postcard: [
       'It is the oldest departmental building in Washington, built in stages from 1836 to 1869.',
       'Its Cash Room, finished in 1869, hosted President Grant’s inaugural celebration that March.',
@@ -145,7 +147,7 @@ export const LANDMARKS: Landmark[] = [
       T('whitehouse', 'portico', 'Add the South Portico', 2, 'stagger', 'The round South Portico, with its columns, was added in 1824.'),
       T('whitehouse', 'flag', 'Raise the flag', 1, 'drop', 'Each year the president sends Congress a budget request: the first step toward a federal budget.'),
     ],
-    decor: { id: 'whitehouse:fountain', label: 'Turn on the South Lawn fountain', need: 9, kind: 'bloom', fact: 'A fountain plays on the South Lawn, in front of the portico.' },
+    decor: { id: 'whitehouse:fountain', label: 'Turn on the South Lawn fountain', need: 5, kind: 'bloom', fact: 'A fountain plays on the South Lawn, in front of the portico.' },
     postcard: [
       'Every president since John Adams has lived here.',
       'It was burned in 1814 and rebuilt.',
@@ -170,7 +172,7 @@ export const LANDMARKS: Landmark[] = [
       T('capitol', 'dome', 'Close the cast-iron dome', 3, 'rise', 'The new dome holds almost 9 million pounds of iron. Work went on through the Civil War; Lincoln called it a sign that the Union would go on.'),
       T('capitol', 'freedom', 'Crown it with the Statue of Freedom', 2, 'drop', 'The Statue of Freedom, by Thomas Crawford, was set on top of the dome on December 2, 1863. Philip Reid, an enslaved worker at the foundry, worked out how to take apart its plaster model so it could be cast in bronze.'),
     ],
-    decor: { id: 'capitol:fireworks', label: 'Celebrate the Fourth of July', need: 12, kind: 'bloom', fact: 'Every Fourth of July, fireworks light up the sky over the Mall.' },
+    decor: { id: 'capitol:fireworks', label: 'Celebrate the Fourth of July', need: 6, kind: 'bloom', fact: 'Every Fourth of July, fireworks light up the sky over the Mall.' },
     postcard: [
       'Every federal dollar spent, and every tax collected, starts as a bill passed here.',
       'The Senate meets in the north wing and the House in the south.',
