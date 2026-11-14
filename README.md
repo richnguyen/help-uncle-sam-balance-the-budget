@@ -844,6 +844,34 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   increase is still called one, line by line.
 - **Uncle Sam reacts** the first time each policy card is played, with one true fact from CBO's
   data.
+- **The road map** (`#levels`, `RoadPath.tsx`, `roadLayout.ts`): a path, not a list. One stop per
+  mission on a walk through Washington in this order: the Lincoln Memorial, the White House, the
+  Treasury Building, the Washington Monument, the Jefferson Memorial, the National Mall, the U.S.
+  Capitol. The page opens at the stop you are on: it is bigger, in its campaign's colour, with a
+  ring of one arc per step of the mission (done steps filled), a START or CONTINUE bubble, and
+  Uncle Sam beside it. A finished stop shows a tick and its stars, and turns gold at three; a
+  locked stop is gray but shows its topic; each campaign's budget desk is a larger stop ringed in
+  gold. A tap on a stop opens its card: the mission, minutes, steps left, Start / Continue, Quick
+  play, and for a finished one "What I learned" (its takeaways). The campaign's header stays
+  pinned under the top bar and changes colour and text with the campaign on screen; a tap on it
+  opens the three campaigns (progress, stars, each one's walk, what is locked) and its book opens
+  that campaign's briefing (the blurb and its missions). An arrow floats in when your stop
+  scrolls away and brings it back. The Daily Dollar and the Sealed Showdown are side stops.
+  - **The ground is drawn from above, true to the city** (`roadLayout.ts`, worked out once from
+    the mission list): Campaign 1 walks on light-gray granite, Campaign 2 on dark-gray cobblestone
+    around the Tidal Basin, Campaign 3 on the Mall's tan crushed gravel. A row of American elms
+    runs down each side, doubled where there is room, with redbuds, dogwoods, magnolias, azaleas
+    and flower beds between and cherry trees at the Tidal Basin. Cross streets of the grid are
+    marked (15th, Independence Avenue, 14th, 7th, 3rd), Pennsylvania and Maryland Avenues meet
+    Capitol Hill in circles (the Peace and Garfield Monuments), and the hill rises in terraces.
+    Statues on plinths carry captions: the Albert Einstein, John Paul Jones, Martin Luther King,
+    Jr., Franklin Delano Roosevelt and Ulysses S. Grant Memorials and the Joseph Henry statue.
+  - **Landmarks are the Mall's** (`build/art.tsx`): each of the six stands beside the walk as
+    built with stars: built parts in full, the rest as blueprints, with "Build it: N stars"
+    linking to its page on the Mall.
+  - The stage is 390 units wide and scales to the screen; at night (dark theme) the ground dims
+    and the stops keep their colours. Chests, quick-review stops, a streak that counts missions,
+    and the mission's own focus mode are the next steps and are not built yet.
 - **Play together** (`#together`, and on the road map): the ways to play with other
   people. Each card has an icon, who it's for, how long it takes (as chips), one sentence, the
   steps under "How it works", and one button; a card also shows what you have going (a showdown

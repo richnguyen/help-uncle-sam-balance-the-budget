@@ -23,7 +23,7 @@ const J = (done, o = {}) => JSON.stringify({ v: 2, done, stars: {}, steps: {}, q
   ok(/Finish Mission 1\.6 to unlock/.test(lockText), 'the lock says what opens it: ' + lockText);
   const newOnes = camps.flatMap((c) => c.stops.map((s) => s.title)).filter((t) => /economy|moderate|Who pays|Growing|investment|later/i.test(t));
   ok(newOnes.length >= 6, 'the six new missions are on the map: ' + newOnes.join(' · '));
-  ok(await p.locator('.jp-bar > span').count() === 21 && await p.locator('.jp-bar > span[data-camp-start]').count() === 2, 'the progress bar: 21 missions, a gap before campaigns 2 and 3');
+  ok(await p.locator('.roadmap .stop').count() === 21 && await p.locator('.rp-gate').count() === 2 && await p.locator('.stop[data-next="true"]').count() === 1, 'the path: 21 stops, a gate before campaigns 2 and 3, and one stop you are on');
   const process4 = camps.flatMap((c) => c.stops.map((s) => s.title)).filter((t) => /Paying the bills|Who’s who|Rules of the road|Brakes/.test(t));
   ok(process4.length === 4 && camps[0].stops[2].title === 'Paying the bills' && camps[1].stops[1].title === 'Who’s who in the budget' && camps[1].stops[3].title === 'Rules of the road' && camps[2].stops[2].title === 'Brakes and the debt limit', 'the four budget-process missions sit at 1.3, 2.2, 2.4 and 3.3');
 
