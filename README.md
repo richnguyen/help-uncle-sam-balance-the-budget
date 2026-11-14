@@ -878,6 +878,28 @@ paid federal income tax there (IRS county data, states and DC), its sources, and
 game that pass on a partner code from the page's address. Rerun it when the state figures change;
 the game's state chapter links to each state's page.
 
+**Daily Dollar posts (dry run).** `npm run social:drafts` (`scripts/social/compose.mjs`) writes the
+brand accounts' three daily posts for review, to `social/drafts/<date>.md` (git-ignored), and posts
+nothing. The puzzles come from the game's own code (`src/game/daily.ts`, loaded through Vite) and the
+crowd's numbers from the public, read-only `daily_stats()`, so the posts match the game:
+*morning* (7:30 AM ET), the puzzle's topic and first number; *midday* (1 PM ET), each call's share
+right so far, by call number only, once every call has 20 answers (otherwise it's skipped);
+*evening* (8 PM ET), yesterday's numbers, its hardest call told the right way round, and the source.
+Each platform's version fits its length (Bluesky 300, Mastodon 500), dropping detail before the
+source, and its link carries the platform's partner code (`?via=bot-bluesky`). `--date` and
+`--days` preview other days; `npm run test:social` checks the rules (no spoilers, lengths, codes,
+no party or ideology words; the Bluesky client against a stand-in). `.github/workflows/social-drafts.yml`
+runs three times a day and puts the drafts on the run's summary page (Actions tab).
+
+**Posting to Bluesky** (`scripts/social/post.mjs`, `scripts/social/bluesky.mjs`) is off until the
+repository variable `SOCIAL_POSTING` is `on`. It signs in with the variable `BLUESKY_HANDLE` (the
+account's handle, e.g. `dailydollar.bsky.social`) and the secret `BLUE_SKY_APP_KEY` (an app
+password, never the account password), and posts the same text the drafts show, with a clickable
+link and a link card. A skipped slot isn't posted, and a text already among the account's recent
+posts isn't posted again, so re-running is safe. `node scripts/social/post.mjs --slot morning`
+prints what it would post. To post one by hand: Actions → Daily Dollar posts → Run workflow, pick
+a slot. To stop: set `SOCIAL_POSTING` to anything but `on`.
+
 ## Test it
 
 The browser tests live in `tests/e2e/`: 42 Playwright scripts, one per area of the game, each

@@ -23,7 +23,9 @@
     "test:alerts": "node --experimental-strip-types --no-warnings supabase/tests/bill-alerts.test.mts",
     "test:e2e": "node tests/e2e/run.mjs",
     "test:e2e:full": "node tests/e2e/run.mjs --tier full",
-    "state-pages": "node scripts/make-state-pages.mjs --images"
+    "state-pages": "node scripts/make-state-pages.mjs --images",
+    "test:social": "node scripts/social/posts.test.mjs && node scripts/social/bluesky.test.mjs",
+    "social:drafts": "node scripts/social/compose.mjs"
   },
   "dependencies": {
     "d3": "7.9.0",
