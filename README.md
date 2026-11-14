@@ -132,6 +132,11 @@ budget adviser.
   carry one post per mission with a game: the game's name and goal, its rounds, and "up to 2
   stars". One tap opens the mission straight into Quick play; a locked mission's post says what
   unlocks it instead.
+- **Sharing a post** (`src/game/feed/sharePost.ts`): every post has a Share button beside Save. It
+  opens the phone's share sheet (or copies the link) and the social networks, with the post in a
+  line: a bill's number, title and status; a poll's option and CBO's estimate; a quick check's
+  question, never its answer. The link (`?post=<id>`) opens the feed with that post first, marked
+  "Shared with you", once; a malformed id is ignored. The Daily Dollar's post links to `?daily`.
 - **Sponsors and floor votes** (`scripts/rollcall.mjs`, `src/game/feed/votes.tsx`): a bill's sponsor
   reads exactly as Congress.gov lists them ("Rep. Arrington, Jodey C. [R-TX-19]"), with no colors
   or scores. For bills past introduction, `fetch-bills.mjs` follows the recorded votes Congress.gov
