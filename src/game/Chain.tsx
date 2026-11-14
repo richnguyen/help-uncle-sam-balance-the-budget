@@ -15,7 +15,7 @@ import { ShareButton, SocialShare } from './ShareButton';
 import { useJourney } from './state';
 import { SamSays } from './UncleSam';
 
-// Pass the budget (#chain?g=5&t=CRk&n=Rich~Sam): each person makes one change to Uncle Sam's
+// Pass the budget (#chain?g=5&t=CRk&n=Ruth~Sam): each person makes one change to Uncle Sam's
 // budget (adds one policy card or takes one out) and passes the link on. The whole chain lives in
 // the link: the goal (g), every turn in order (t: a capital letter adds a card, a small one takes
 // it out), and optional first names (n). No server is involved, so it works anywhere.

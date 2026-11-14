@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { PageHead, Section, Seg, Stat } from '../components/ui';
 import { backendOn, CHANNELS, LINK_KINDS, type LinkKind, playStats, type PlayStats, rpc } from '../lib/backend';
+import { PARTNER_RE, partnerLink, partnerStats, type PartnerStats } from '../lib/partners';
+import PARTNERS from '../data/curated/partners.json';
+import { geo } from '../data';
 import { STOP_BY_ID, missionShort } from './levels';
 import { pct } from '../lib/format';
 import { PUBLIC_SITE } from './share';
@@ -171,6 +174,8 @@ export default function StatsPage() {
 
           <PlaySection win={Number(win)} />
 
+          <PartnerSection win={Number(win)} />
+
           <p className="small muted">
             How these are counted: a share is a press of a share button or a social network link (whether or not the post was sent). An opened link is counted once per browser per day for each kind and channel. A new player is someone whose record (a finished level or an answered quick check) was first saved in this period; their channel is the shared link that first brought them, kept in their browser. Links copied by hand, or forwarded without their tag, count as “No shared link”. Share and open counts are anonymous tallies that any browser can add to, so treat small numbers loosely. {s.players_all} players in all.
           </p>
@@ -242,6 +247,96 @@ function PlaySection({ win }: { win: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+/** Where a partner link can lead: the game's front door, a few places in it, or a state's page. */
+const PARTNER_DEST: [string, string][] = [
+  ['', 'The game (main menu)'], ['#daily', 'Today’s Daily Dollar'], ['#level-3', 'Mission 1.4: federal money where you live'],
+  ['#level-5', 'Mission 1.9: the first budget desk'], ['#peoples', 'The People’s Budget'], ['#together', 'Play together (classrooms)'], ['#teach', 'For teachers'],
+];
+
+/**
+ * Partner codes: for each partner link (?via=code), how many people arrived by it and how far
+ * they got. Plus a link maker. Daily totals only, with a CSV of them.
+ */
+function PartnerSection({ win }: { win: number }) {
+  const [p, setP] = useState<PartnerStats | null>(null);
+  const [err, setErr] = useState(false);
+  const [code, setCode] = useState('');
+  const [dest, setDest] = useState('');
+  const [st, setSt] = useState('oh');
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    let alive = true; setErr(false);
+    partnerStats(win).then((r) => { if (alive) setP(r); }).catch(() => { if (alive) setErr(true); });
+    return () => { alive = false; };
+  }, [win]);
+  const names = (PARTNERS as { codes: Record<string, string> }).codes;
+  const rows = Object.entries(p?.codes ?? {}).map(([c, m]) => ({ c, a: m.arrival ?? 0, pl: m.played ?? 0, f: m.finished ?? 0, r: m.returned ?? 0, s: m.shared ?? 0 })).sort((x, y) => y.a - x.a || x.c.localeCompare(y.c));
+  const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : '–');
+  const csv = p ? 'day,code,metric,count\n' + p.daily.map((r) => `${r.day},${r.code},${r.metric},${r.n}`).join('\n') + '\n' : '';
+  const clean = code.trim().toLowerCase();
+  const valid = PARTNER_RE.test(clean);
+  const where = dest === 'state' ? `state/${st}/` : dest;
+  const link = valid ? partnerLink(clean, where) : '';
+  const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* the link is on screen to copy by hand */ } };
+  const states = [...geo.states].sort((a, b) => a.name.localeCompare(b.name));
+  return (
+    <Section id="partners" title="Partners" sub="Each newsletter, creator, teacher group or press piece gets its own link. The first partner link a browser arrives by is credited with what that player goes on to do. Anonymous daily totals only.">
+      <div className="partner-make card">
+        <span className="stat-label">Make a partner link</span>
+        <div className="partner-fields">
+          <div className="field"><label htmlFor="pc-code">Partner code</label>
+            <input id="pc-code" className="input" value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. tangle" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={24} aria-describedby="pc-rule" />
+          </div>
+          <div className="field"><label htmlFor="pc-dest">Leads to</label>
+            <select id="pc-dest" className="select" value={dest} onChange={(e) => setDest(e.target.value)}>
+              {PARTNER_DEST.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              <option value="state">A state’s page</option>
+            </select>
+          </div>
+          {dest === 'state' && (
+            <div className="field"><label htmlFor="pc-st">State</label>
+              <select id="pc-st" className="select" value={st} onChange={(e) => setSt(e.target.value)}>{states.map((x) => <option key={x.abbr} value={x.abbr.toLowerCase()}>{x.name}</option>)}</select>
+            </div>
+          )}
+        </div>
+        <p className="small muted" id="pc-rule">2 to 24 lowercase letters, digits or hyphens. One code per partner; any new code starts counting on its first visit.</p>
+        {code && !valid && <p className="small zip-msg" role="alert">That code won’t count: use 2 to 24 lowercase letters, digits or hyphens, starting with a letter or digit.</p>}
+        {link && (
+          <div className="partner-link">
+            <code className="partner-url">{link}</code>
+            <button type="button" className="btn btn-sm" onClick={copy}>{copied ? 'Copied' : 'Copy link'}</button>
+          </div>
+        )}
+      </div>
+      {err && <div className="callout small" role="status">Partner counts can’t be loaded right now. If the partner SQL (supabase/migrations/20261116000000_partner_counts.sql) hasn’t been run yet, run it in Supabase first.</div>}
+      {!p && !err && <p className="small muted" role="status">Loading…</p>}
+      {p && (rows.length ? (
+        <>
+          <div className="table-wrap">
+            <table className="data stats-table partner-table" aria-label="Partner links: arrivals and what those players did">
+              <thead><tr><th scope="col">Partner</th><th scope="col" className="r" title="Browsers that arrived by this link for the first time">Arrived</th><th scope="col" className="r" title="Finished a mission step or a Daily Dollar">Played</th><th scope="col" className="r" title="Finished a whole mission">Done</th><th scope="col" className="r" title="Came back on a later day">Back</th><th scope="col" className="r" title="Shared something from the game">Shared</th></tr></thead>
+              <tbody>{rows.map((r) => (
+                <tr key={r.c}>
+                  <th scope="row"><span className="num">{r.c}</span>{names[r.c] ? <span className="small muted"> · {names[r.c]}</span> : null}</th>
+                  <td className="r num">{r.a}</td>
+                  <td className="r num">{r.pl} <span className="small muted">{pct(r.pl, r.a)}</span></td>
+                  <td className="r num">{r.f}</td>
+                  <td className="r num">{r.r} <span className="small muted">{pct(r.r, r.a)}</span></td>
+                  <td className="r num">{r.s}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+          <p className="small" style={{ marginTop: 10 }}>
+            <a className="btn btn-sm" href={'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)} download={`partner-counts-${p.since}.csv`}>Download the daily counts (CSV)</a>{' '}
+            <span className="muted">Percentages are of those who arrived. Each player counts once per step, for the first partner they came from; a partner’s players can finish or come back in a later period than they arrived.</span>
+          </p>
+        </>
+      ) : <p className="small muted">No partner links used in this period yet.</p>)}
     </Section>
   );
 }

@@ -10,6 +10,7 @@ import { SITE_URL } from './share';
 import { ShareButton, SocialShare } from './ShareButton';
 import { useJourney } from './state';
 import { SamSays } from './UncleSam';
+import { partnerEvent } from '../lib/partners';
 
 // The Daily Dollar page: one chain of real federal numbers a day; call each next one higher or lower.
 
@@ -53,7 +54,7 @@ export default function Daily({ param = null }: { param?: string | null }) {
     buzz(right ? 'right' : 'wrong');
     if (preview) { if (a.length >= ROUNDS && a.every(Boolean)) buzz('win'); return; }
     saveResult(key, a);
-    if (a.length >= ROUNDS) { j.mark('daily'); if (a.every(Boolean)) buzz('win'); }
+    if (a.length >= ROUNDS) { partnerEvent('played'); j.mark('daily'); if (a.every(Boolean)) buzz('win'); }
   };
   const advance = () => setRevealed(false);
   const shareTextStr = `The Daily Dollar #${n}${theme ? ` · ${editionName(theme)}` : ''} · ${score}/${ROUNDS}\n${grid(answers)}\nHigher or lower, on real federal numbers.`;

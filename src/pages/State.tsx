@@ -85,6 +85,8 @@ export default function StatePage({ param }: { param: string | null }) {
           <Seg<Metric> label="Map metric" value={metric} onChange={setMetric} options={[{ value: 'perCapita', label: 'Per person' }, { value: 'total', label: 'Total' }]} />
         </div>
       </div>
+      {/* The state's own page (public/state/<ab>/): a plain page to link to and share, with its own preview card. */}
+      {!__ARTIFACT__ && <p className="small state-page-link"><a href={`state/${s.abbr.toLowerCase()}/`}>{s.name} on one page, to share or link to</a></p>}
 
       <div className="split">
         <div className="card">

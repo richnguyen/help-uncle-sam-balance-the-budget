@@ -3,6 +3,7 @@ import { load, save } from '../lib/storage';
 import { countPlay } from '../lib/backend';
 import { syncThemeColor } from '../lib/appmode';
 import type { SavedPlan } from './plans';
+import { partnerEvent } from '../lib/partners';
 
 // The player's journey: which levels are done, stars earned, quiz attempts, their choices on each
 // level's issue, and reading settings. Kept in this browser only (a per-viewer convenience).
@@ -125,15 +126,15 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
 
   const value: Journey = {
     ...st,
-    completeStep: (level, step) => update((p) => {
+    completeStep: (level, step) => { partnerEvent('played'); update((p) => {
       const cur = p.steps[level] ?? [];
       return cur.includes(step) ? p : { ...p, steps: { ...p.steps, [level]: [...cur, step] } };
-    }),
-    completeLevel: (level, stars) => update((p) => ({
+    }); },
+    completeLevel: (level, stars) => { partnerEvent('finished'); update((p) => ({
       ...p,
       done: p.done.includes(level) ? p.done : [...p.done, level],
       stars: { ...p.stars, [level]: Math.max(p.stars[level] ?? 0, stars) },
-    })),
+    })); },
     scoreGame: (game, score, stars) => update((p) => {
       const cur = p.games?.[game];
       const best = Math.max(cur?.best ?? 0, score);

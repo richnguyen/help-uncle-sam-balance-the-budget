@@ -1,4 +1,5 @@
 import { countArrival, LINK_KINDS, type LinkKind, todayUTC } from '../lib/backend';
+import { partnerReturnCheck, takePartner } from '../lib/partners';
 import { load, save } from '../lib/storage';
 import type { SharedPlan } from './plans';
 import { linkKind } from './share';
@@ -16,6 +17,13 @@ export const dropChallenge = () => { save('challenge', null); window.dispatchEve
 export function takeLinkFromSearch() {
   try {
     const q = new URLSearchParams(location.search);
+    // A partner link (?via=code, on any page): counted, then taken out of the address so links
+    // shared from here don't carry the partner on.
+    if (takePartner(q.get('via'))) {
+      q.delete('via');
+      history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash);
+    }
+    partnerReturnCheck();
     const s = q.get('s');
     if (s && /^[a-z0-9-]{1,16}$/.test(s)) {
       // What kind of link it was, and where it was shared: the first one is kept with the player's

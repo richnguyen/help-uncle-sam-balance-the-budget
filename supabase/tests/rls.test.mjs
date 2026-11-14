@@ -71,14 +71,14 @@ console.log('  state_rankings:', JSON.stringify(sr));
 ok(sr.length === 1 && sr[0].state === 'OH', 'state ranking leaves out states with fewer than 5 players');
 
 // Plans
-const ins = await as(U[0], `insert into public.plans (level, code, cards, stars, revenue_share, by_name) values (10, 'p=10.acg&lv=r5.d-5', '{income-tax-rates-1pt,ss-tax-earnings-over-250k,limit-itemized-15pct}', 2, 0.6, 'Rich') returning id`);
+const ins = await as(U[0], `insert into public.plans (level, code, cards, stars, revenue_share, by_name) values (10, 'p=10.acg&lv=r5.d-5', '{income-tax-rates-1pt,ss-tax-earnings-over-250k,limit-itemized-15pct}', 2, 0.6, 'Ruth') returning id`);
 const id = ins.rows[0].id;
 ok(/^[0-9a-f]{12}$/.test(id), 'short link id: ' + id);
 await as(U[1], `insert into public.plans (level, code, cards, stars) values (10, 'p=10.ar', '{income-tax-rates-1pt,cut-defense-budget}', 1)`);
 ok((await as(U[1], 'select * from public.plans')).rows.length === 1, 'players cannot list other people’s plans');
 ok((await as(null, 'select * from public.plans')).rows.length === 0, 'signed-out visitors cannot list plans');
 const gp = (await as(null, 'select public.get_plan($1) as p', [id])).rows[0].p;
-ok(gp && gp.code === 'p=10.acg&lv=r5.d-5' && gp.by === 'Rich', 'anyone with the link can open the plan');
+ok(gp && gp.code === 'p=10.acg&lv=r5.d-5' && gp.by === 'Ruth', 'anyone with the link can open the plan');
 ok(await fails(() => as(U[2], `insert into public.plans (level, code, stars) values (10, 'p=10.a<script>', 1)`)), 'plan code is checked');
 ok(await fails(() => as(U[2], `insert into public.plans (level, code, stars) values (7, 'p=7.a', 1)`)), 'only budget-desk levels');
 const cr = (await as(null, 'select * from public.card_rankings(10::smallint)')).rows;
@@ -296,7 +296,7 @@ ok((await as(G[1], 'select * from public.bill_follows')).rows.length === 0, 'fol
 for (const [m, k] of [['desk_open', 'level-5'], ['desk_open', 'level-5'], ['desk_play', 'level-5'], ['desk_done', 'level-5'], ['ripple_time', '30-60'], ['poll_view', 'feed'], ['poll_vote', 'feed'], ['free_roam', 'on'], ['jump_ahead', 'level-7'], ['quick_start', 'level-2'], ['quick_done', 'level-2']]) await as(null, 'select public.count_play($1, $2)', [m, k]);
 await as(G[0], `select public.count_play('desk_open', 'level-8')`);
 await as(null, `select public.count_play('desk_open', 'level-99')`);
-await as(null, `select public.count_play('who_played', 'rich@example.com')`);
+await as(null, `select public.count_play('who_played', 'someone@example.com')`);
 await as(null, `select public.count_play('ripple_time', '12.34')`);
 const ps = (await as(null, 'select public.play_stats(30) as s')).rows[0].s;
 console.log('  play_stats:', JSON.stringify(ps.totals));
@@ -306,3 +306,15 @@ ok(!ps.totals.who_played && !ps.totals.desk_open['level-99'] && !ps.totals.rippl
 ok(Array.isArray(ps.daily) && ps.daily.every((r) => Object.keys(r).sort().join() === 'day,key,metric,n'), 'play counts: the daily rows hold only a day, a metric, a key and a count');
 ok(await fails(() => as(null, `insert into public.play_counts (day, metric, key, n) values (current_date, 'desk_open', 'level-5', 999)`)), 'play counts: nobody writes the counts directly');
 ok((await as(null, 'select * from public.play_counts')).rows.length === 0 && (await as(G[0], 'select * from public.play_counts')).rows.length === 0, 'play counts: nobody reads the table directly');
+
+// Partner codes: anonymous daily totals per code, from a fixed list of metrics; malformed codes ignored.
+for (const [c, m] of [['tangle', 'arrival'], ['tangle', 'arrival'], ['tangle', 'played'], ['tangle', 'finished'], ['ap-macro-1', 'arrival'], ['ap-macro-1', 'returned'], ['ap-macro-1', 'shared']]) await as(null, 'select public.count_partner($1, $2)', [c, m]);
+await as(G[0], `select public.count_partner('tangle', 'played')`);
+for (const [c, m] of [['Tangle', 'arrival'], ['someone@example.com', 'arrival'], ['x', 'arrival'], ['-lead', 'arrival'], ['a'.repeat(25), 'arrival'], ['tangle', 'who_played'], [null, 'arrival']]) await as(null, 'select public.count_partner($1, $2)', [c, m]);
+const pst = (await as(null, 'select public.partner_stats(30) as s')).rows[0].s;
+console.log('  partner_stats:', JSON.stringify(pst.codes));
+ok(pst.codes.tangle.arrival === 2 && pst.codes.tangle.played === 2 && pst.codes.tangle.finished === 1 && pst.codes['ap-macro-1'].returned === 1 && pst.codes['ap-macro-1'].shared === 1, 'partner codes: arrivals and what those players did, per code, as daily totals');
+ok(Object.keys(pst.codes).sort().join() === 'ap-macro-1,tangle' && !pst.codes.tangle.who_played, 'partner codes: malformed codes (capitals, an email, too short or long, a leading hyphen) and unknown metrics are ignored');
+ok(Array.isArray(pst.daily) && pst.daily.every((r) => Object.keys(r).sort().join() === 'code,day,metric,n'), 'partner codes: the daily rows hold only a day, a code, a metric and a count');
+ok(await fails(() => as(null, `insert into public.partner_counts (day, code, metric, n) values (current_date, 'tangle', 'arrival', 999)`)), 'partner codes: nobody writes the counts directly');
+ok((await as(null, 'select * from public.partner_counts')).rows.length === 0 && (await as(G[0], 'select * from public.partner_counts')).rows.length === 0, 'partner codes: nobody reads the table directly');

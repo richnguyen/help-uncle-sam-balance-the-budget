@@ -31,7 +31,7 @@ export const GOAL_PLAN: Record<Goal, string> = {
 const RATING: Record<string, string> = { gentle: 'gentle', moderate: 'moderate', steep: 'steep' };
 export const whoPays = (a: Assessment) => (a.revTen + a.spTen ? `${pct(a.revenueShare, 0)} taxes, ${pct(1 - a.revenueShare, 0)} cuts` : 'no cards');
 
-/** A challenge reads like a note from the player: "Rich here. I balanced Uncle Sam’s budget…" */
+/** A challenge reads like a note from the player: "Ruth here. I balanced Uncle Sam’s budget…" */
 export const challengeText = (name: string, body: string) => (name ? `${name} here. ${body}` : body);
 
 /** "Challenge a friend": your plan as a link, with an optional name and your answers to the big questions. */

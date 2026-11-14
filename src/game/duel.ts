@@ -8,8 +8,8 @@ import { cleanName, decodePlan, encodePlan, siteRoot } from './plans';
 // The level 10 duel: two people balance Uncle Sam's budget on their own, without seeing each
 // other's plan, then compare in three rounds. Everything travels in links, so it works on the
 // static site and in the artifact, with no accounts:
-//   the invite  …/p/duel/?duel=<id>&hp=10.abc&hlv=r2&hby=Rich       the host's plan, sealed
-//   the reply   …/p/duel-back/?duelr=<id>&hp=…&hby=Rich&p=10.xyz&by=Sam   both plans
+//   the invite  …/p/duel/?duel=<id>&hp=10.abc&hlv=r2&hby=Ruth       the host's plan, sealed
+//   the reply   …/p/duel-back/?duelr=<id>&hp=…&hby=Ruth&p=10.xyz&by=Sam   both plans
 // One invite can go to many friends; each reply is its own head-to-head, and every duel is kept
 // in this browser (the Duels page). Plans are compared, never people: no rankings of players.
 

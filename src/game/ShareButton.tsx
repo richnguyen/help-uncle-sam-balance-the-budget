@@ -4,6 +4,7 @@ import type { LinkKind } from '../lib/backend';
 import { countShare } from '../lib/backend';
 import { linkKind, shareText, SITE_URL, socialLinks } from './share';
 import { useJourney } from './state';
+import { partnerEvent } from '../lib/partners';
 
 /** A Share button (share sheet → clipboard → text to copy) and, on the public site, "Save image". */
 export function ShareButton({ text, title, url, card, label = 'Share', className = 'btn', kind, onShare }: { text: string; title?: string; url?: string; card?: () => Promise<Blob | null>; label?: string; className?: string; kind?: LinkKind; onShare?: () => void }) {
@@ -48,7 +49,7 @@ export function SocialShare({ text, url = SITE_URL, kind, onShare }: { text: str
       <span className="stat-label">Post it</span>
       <div className="social-links">
         {socialLinks(text, url, kind).map((s) => (
-          <a key={s.id} className="social-link" data-net={s.id} href={s.href} target="_blank" rel="noopener noreferrer" onClick={() => { j.mark('share'); countShare(kind ?? linkKind(url), s.ch); onShare?.(); }}>{s.label}</a>
+          <a key={s.id} className="social-link" data-net={s.id} href={s.href} target="_blank" rel="noopener noreferrer" onClick={() => { j.mark('share'); partnerEvent('shared'); countShare(kind ?? linkKind(url), s.ch); onShare?.(); }}>{s.label}</a>
         ))}
       </div>
     </div>

@@ -683,7 +683,7 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
 
 - **Your name.** The game asks for a first name once (on level 1's card, in the challenge pop-up,
   or in settings), keeps it on the device, and uses it where it makes things personal: the card,
-  challenge links and their message ("Rich here. I balanced Uncle Sam's budget…"), the Budget
+  challenge links and their message ("Ruth here. I balanced Uncle Sam's budget…"), the Budget
   Story, chains, and Uncle Sam's greeting on screen (his recorded voice says the line without it).
 - **"My share of Uncle Sam"** (`#me`), the card at the end of level 1: what the player's salary
   pays in federal taxes, how much interest Uncle Sam would save if ten straight years of it paid
@@ -841,6 +841,32 @@ CNAME file. To update the data, run `npm run data` locally, commit `src/data/gen
 Shared voting totals and "How everyone played" need a shared database, so they work on the
 claude.ai copy of the site; on the public site the game shows each player's own results. Badges,
 stars and progress are saved in each visitor's browser.
+
+## Grow it
+
+Two pieces of plumbing for growing the game without relying on anyone's personal social accounts.
+
+**Partner codes.** Every newsletter, creator, teacher group or press piece gets its own link:
+`https://balancethebudget.us/?via=<code>`, to any place in the game (`?via=tangle#daily`) or to a
+state page (`/state/oh/?via=tangle`). Codes are 2 to 24 lowercase letters, digits or hyphens, and
+any new code counts from its first visit (name known ones in `src/data/curated/partners.json`).
+The game (`src/lib/partners.ts`) counts, anonymously and at most once per browser: the arrival,
+then whether that player *played* (finished a mission step or a Daily Dollar), *finished* a
+mission, *came back* on a later day, and *shared* something. The first code a browser arrives by
+keeps the credit; the code is taken out of the address so links shared onward don't carry it.
+The stats page (`#stats`, "Partners") lists each code's numbers with a CSV, and makes partner
+links. Only a code and a metric are sent; the counts are daily totals
+(`supabase/migrations/20261116000000_partner_counts.sql`, which must be run in Supabase once).
+
+**State pages.** The game's own pages are places after a `#` (`#state-oh`), which search engines
+treat as one page. `npm run state-pages` (`scripts/make-state-pages.mjs`) writes a real page for
+each state and territory (`public/state/oh/`), an index (`public/state/`), a 1200×630 preview card
+each (`public/state/img/`, made with Playwright), `sitemap.xml` and `robots.txt`. Each page has
+its own title, description and address, the state's federal awards (USAspending.gov: total, per
+person against the nation, by kind, top programs and agencies, change from the year before), who
+paid federal income tax there (IRS county data, states and DC), its sources, and links into the
+game that pass on a partner code from the page's address. Rerun it when the state figures change;
+the game's state chapter links to each state's page.
 
 ## Test it
 

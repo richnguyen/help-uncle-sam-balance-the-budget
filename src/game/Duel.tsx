@@ -20,7 +20,7 @@ const them = (name?: string) => name || 'your friend';
 const Them = (name?: string) => name || 'Your friend';
 const flip = (score: string) => score.split('–').reverse().join('–');
 type Result = ReturnType<typeof duelRounds>;
-/** "Your plan wins 2–1", "Rich’s plan wins on a gentler economy", "Tied 1–1". */
+/** "Your plan wins 2–1", "Ruth’s plan wins on a gentler economy", "Tied 1–1". */
 const headline = (r: Result, theirName?: string) => {
   const how = r.tiebreak && r.tiebreak !== 'tie' ? (r.tiebreakBy === 'economy' ? 'on a gentler economy' : 'on fewer cards') : null;
   return r.outcome === 'tied' ? `Tied ${r.score}` : r.outcome === 'won' ? `Your plan wins ${how ?? r.score}` : `${Them(theirName)}’s plan wins ${how ?? flip(r.score)}`;

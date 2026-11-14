@@ -1,4 +1,5 @@
 import { countShare, type LinkKind } from '../lib/backend';
+import { partnerEvent } from '../lib/partners';
 // Sharing: the system share sheet where the browser has one, otherwise the clipboard, otherwise a
 // box of text to copy by hand. Links always point at the public site.
 
@@ -28,6 +29,7 @@ export async function shareText(o: { title?: string; text: string; url?: string;
   const url = o.url ?? SITE_URL;
   const kind = o.kind ?? linkKind(url);
   const r = await shareTextInner(o, url, kind);
+  if (r === 'shared' || r === 'copied') partnerEvent('shared');
   if (r === 'shared') countShare(kind, 'sh');
   if (r === 'copied') countShare(kind, 'cp');
   return r;
