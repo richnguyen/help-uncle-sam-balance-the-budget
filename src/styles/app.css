@@ -3639,3 +3639,12 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .partner-table td .small { display: block; line-height: 1.2; }
 .partner-table th, .partner-table td { padding-inline: 6px; }
 .partner-table thead th { font-size: 0.75rem; }
+
+/* The Daily Dollar: a friend's result beside yours, and the crowd's lines. */
+.daily-friend { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--accent-wash); margin: 0 0 12px; }
+.daily-vs-friend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin: 12px 0; }
+.daily-vs-friend > div { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; }
+.daily-vs-friend .num { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; line-height: 1; }
+.daily-vs-friend .stat-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.daily-vs-friend p { grid-column: 1 / -1; margin: 0; }
+.daily-crowd { color: var(--ink-2); margin-top: 4px; }

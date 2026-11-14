@@ -318,3 +318,19 @@ ok(Object.keys(pst.codes).sort().join() === 'ap-macro-1,tangle' && !pst.codes.ta
 ok(Array.isArray(pst.daily) && pst.daily.every((r) => Object.keys(r).sort().join() === 'code,day,metric,n'), 'partner codes: the daily rows hold only a day, a code, a metric and a count');
 ok(await fails(() => as(null, `insert into public.partner_counts (day, code, metric, n) values (current_date, 'tangle', 'arrival', 999)`)), 'partner codes: nobody writes the counts directly');
 ok((await as(null, 'select * from public.partner_counts')).rows.length === 0 && (await as(G[0], 'select * from public.partner_counts')).rows.length === 0, 'partner codes: nobody reads the table directly');
+
+// The Daily Dollar's crowd counts: per puzzle, each call right or wrong and the final scores; today's puzzle (±1 day) only.
+const today = (await as(null, 'select public.daily_puzzle_today() as n')).rows[0].n;
+const expect = Math.floor((Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()) - Date.UTC(2026, 10, 5)) / 86400000);
+ok(today === expect, `daily counts: today's puzzle number matches the game's (#${today})`);
+for (const [c, r] of [[1, 1], [1, 1], [1, 0], [4, 0], [4, 0], [4, 1], [0, 4], [0, 5], [0, 4]]) await as(null, 'select public.count_daily($1, $2, $3)', [today, c, r]);
+await as(G[0], 'select public.count_daily($1, 2, 1)', [today - 1]);
+for (const [p, c, r] of [[today + 5, 1, 1], [today - 9, 1, 1], [today, 6, 1], [today, 1, 2], [today, 0, 9], [today, -1, 0], [null, 1, 1]]) await as(null, 'select public.count_daily($1, $2, $3)', [p, c, r]);
+const dst = (await as(null, 'select public.daily_stats($1) as s', [today])).rows[0].s;
+console.log('  daily_stats:', JSON.stringify(dst));
+ok(dst.calls.length === 5 && dst.calls[0].right === 2 && dst.calls[0].wrong === 1 && dst.calls[3].wrong === 2 && dst.calls[3].right === 1 && dst.calls[1].right === 0, 'daily counts: each call’s rights and wrongs, all five calls listed');
+ok(dst.scores['4'] === 2 && dst.scores['5'] === 1 && dst.players === 3, 'daily counts: the finished scores and how many finished');
+ok((await as(null, 'select public.daily_stats($1) as s', [today - 1])).rows[0].s.calls[1].right === 1, 'daily counts: yesterday’s puzzle still counts (time zones), and its totals can be read');
+ok(!(await as(null, 'select public.daily_stats($1) as s', [today + 5])).rows[0].s.players && (await as(null, 'select public.daily_stats($1) as s', [today - 9])).rows[0].s.calls.every((x) => x.right === 0), 'daily counts: puzzles far from today, unknown calls and results out of range are ignored');
+ok(await fails(() => as(null, `insert into public.daily_counts (puzzle, call, result, n) values (${today}, 1, 1, 999)`)), 'daily counts: nobody writes the counts directly');
+ok((await as(null, 'select * from public.daily_counts')).rows.length === 0, 'daily counts: nobody reads the table directly');

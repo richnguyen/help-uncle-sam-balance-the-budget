@@ -734,6 +734,16 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   in the browser with a canvas and MediaRecorder (MP4 where supported, else WebM).
 - **The Daily Dollar** (`#daily`, `?daily`): five higher-or-lower calls a day on real federal
   numbers, the same puzzle for everyone on a date, with a spoiler-free result grid to post.
+  **The crowd** (`src/game/dailyCrowd.ts`, `supabase/migrations/20261117000000_daily_counts.sql`):
+  each call, right or wrong, and each finished score is counted anonymously (only the puzzle, the
+  call and the result, once per browser), and read back once 20 or more have answered: "61% of
+  players got this one" after a call, and on the result screen how many played, the average, how
+  many got all five, and the hardest call. **The share**: the text adds a streak ("🔥 5 days in a
+  row") and a spoiler-free crowd line ("Call 4 tripped up 69% of players today"); the link goes
+  through a preview card for its right/wrong pattern (`/p/daily-11011/`, 32 of them, made by
+  `node scripts/make-daily-previews.mjs`) and carries the sharer's puzzle, pattern and first name
+  (`?daily&dn=9&vs=11011&by=Ruth`), so a friend who plays the same puzzle sees both results side
+  by side, and one from another day says which puzzle it was.
   **Themed weeks** twice a year: **Budget Week**, the seven days from the first Monday in
   February (when the law asks the President to send Congress a budget request), with spending by
   budget function, deficits since FY1962, and agency spending; and **Tax Week**, the seven days
