@@ -3625,3 +3625,17 @@ a.stb-stars { color: inherit; text-decoration: none; }
 .fv-src { align-self: flex-start; }
 .fv-hint { margin: 0; }
 .fb-item .fv-wrap { grid-column: 1 / -1; }
+
+/* Stats page: the partner link maker. */
+.partner-make { display: grid; gap: 8px; margin-bottom: 14px; }
+.partner-fields { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.partner-fields .field { margin: 0; min-width: 0; flex: 1 1 12rem; }
+.partner-link { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.partner-url { flex: 1 1 16rem; min-width: 0; overflow-wrap: anywhere; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--line); font-size: 0.875rem; }
+.partner-make { min-width: 0; }
+.partner-make .input, .partner-make .select { width: 100%; min-width: 0; }
+.partner-table th[scope=row] { white-space: normal; word-break: break-all; }
+@media (max-width: 420px) { .partner-table { font-size: 0.8125rem; } }
+.partner-table td .small { display: block; line-height: 1.2; }
+.partner-table th, .partner-table td { padding-inline: 6px; }
+.partner-table thead th { font-size: 0.75rem; }

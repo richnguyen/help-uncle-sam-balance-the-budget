@@ -1,0 +1,4 @@
+{
+  "_about": "Names for partner codes (balancethebudget.us/?via=<code>), shown on the stats page. Any well-formed code is counted whether or not it is listed here; add one when a partner starts, e.g. \"tangle\": \"Tangle (newsletter)\". Codes: 2-24 lowercase letters, digits or hyphens.",
+  "codes": {}
+}
