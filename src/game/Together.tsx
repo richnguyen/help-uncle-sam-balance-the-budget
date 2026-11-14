@@ -25,7 +25,7 @@ export function TogetherCards({ compact = false }: { compact?: boolean }) {
         <span className="tcard-tag">Class, club, or office</span>
         <strong className="tcard-title">Build one plan as a group</strong>
         <span className="tcard-meta">5 to 40 people · one class period · a 6-character code</span>
-        {!compact && <p className="small">Everyone plays the same budget-desk mission on their own phone. Each plan joins the room’s, and the room shows the plan the group agrees on, card by card. No accounts, and nobody sees who chose what.</p>}
+        {!compact && <p className="small">Everyone plays the same budget-desk mission on their own phone. Each plan joins the room’s, and the room shows the plan the group agrees on, card by card. No accounts, and nobody sees who chose what. End with the big-screen reveal: the group’s budget personality and the card that split the room.</p>}
         <span className="tcard-actions">
           <a className="btn btn-primary" href="#rooms">Start a room</a>
           <a className="btn" href="#teach">For teachers: a lesson plan</a>
@@ -45,7 +45,7 @@ export function TogetherCards({ compact = false }: { compact?: boolean }) {
         <span className="tcard-tag">A few friends or family</span>
         <strong className="tcard-title">Pass the budget</strong>
         <span className="tcard-meta">3 to 10 people · two minutes a turn · one link</span>
-        {!compact && <p className="small">One person makes one change to Uncle Sam’s budget, then sends the link to the next. See how many hands it takes to fix it, and who made the move that did it.</p>}
+        {!compact && <p className="small">One person makes one change to Uncle Sam’s budget, then sends the link to the next. Each turn has a 4-hour clock, and the link shows whose turn it is. The one who meets the goal closes the deal, and everyone in the chain gets credit.</p>}
         <span className="tcard-actions">
           <a className="btn btn-primary" href="#chain">Start a chain</a>
           {!compact && <ShareButton text={chainText} url={siteRoot() + '?chain'} label="Send it to the group" kind="chain" />}
@@ -55,7 +55,7 @@ export function TogetherCards({ compact = false }: { compact?: boolean }) {
         <span className="tcard-tag">One friend, or many</span>
         <strong className="tcard-title">Duel on the final mission</strong>
         <span className="tcard-meta">2 plans per duel · about 10 minutes each · one link for many friends</span>
-        {!compact && <p className="small">You each balance the budget on your own, with your plans sealed. Then the two plans face off in three rounds: the debt, the economy, and the balance. Plans are compared, never people.</p>}
+        {!compact && <p className="small">You each balance the budget on your own, with your plans sealed. Then the two plans face off in three rounds, revealed one at a time like a boxing scorecard: the debt, the economy, and the balance. Everyone who plays the same link lands on one board. Plans are compared, never people.</p>}
         <span className="tcard-actions">
           <a className="btn btn-primary" href="#level-10">Build your plan</a>
           <a className="btn" href="#duels">Your duels</a>

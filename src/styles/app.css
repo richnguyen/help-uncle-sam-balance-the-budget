@@ -3664,3 +3664,103 @@ a.stb-streak { color: inherit; text-decoration: none; white-space: nowrap; }
 .fc-badge-row { flex-wrap: wrap; row-gap: 4px; }
 .fc-new { white-space: nowrap; }
 .fc-share-btn { margin-right: -6px; }
+.rc-streak { display: block; margin-top: 4px; font-size: 0.875rem; color: var(--ink); text-decoration: none; }
+.rc-streak strong { font-size: 1rem; }
+.rc-streak:not([data-on]) > span[aria-hidden] { filter: grayscale(1); opacity: 0.6; }
+.rc-streak:hover { text-decoration: underline; }
+/* Pass the budget: the turn clock, the message preview, and the Budget Closer receipt. */
+.chain-clock { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); font-size: 0.9375rem; }
+.chain-clock span:last-child { color: var(--muted); }
+.chain-clock[data-late] { background: color-mix(in srgb, var(--critical) 10%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--critical) 45%, transparent); }
+.chain-clock[data-late] span:last-child { color: var(--ink); font-weight: 700; }
+.chain-preview { margin: 10px 0 0; }
+.chain-closer { border: 2px solid var(--gold); }
+.chain-closer-head { display: flex; gap: 14px; align-items: flex-start; }
+.chain-trophy { font-size: 2.75rem; line-height: 1; animation: trophy-pop 0.6s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes trophy-pop { from { transform: scale(0.3) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .chain-trophy { animation: none; } }
+.chain-hands { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 0 8px; padding: 0; list-style: none; }
+.chain-hands li { position: relative; display: grid; gap: 2px; padding: 8px 12px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 2px var(--tag, var(--line)); min-width: 0; }
+.chain-hands li:not(:last-child)::after { content: '→'; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 700; }
+.chain-hand-name { font-weight: 800; overflow-wrap: anywhere; }
+.chain-hand-tag { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tag, var(--muted)); }
+.chain-hands li[data-tag="Taxed"] { --tag: #2467c4; } .chain-hands li[data-tag="Cut"] { --tag: #2f8a57; } .chain-hands li[data-tag="Spent"] { --tag: #8a5a12; }
+.chain-hands li[data-tag="Tax cut"] { --tag: #7a4fb0; } .chain-hands li[data-tag="Undid"] { --tag: #6b7570; } .chain-hands li[data-tag="Closer"] { --tag: var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--surface)); }
+/* Rooms: the reveal controls and the projector screen. */
+.reveal-controls { display: grid; gap: 10px; }
+.reveal-timer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.reveal-clock { font-size: 2rem; font-weight: 800; }
+body.reveal-open { overflow: hidden; }
+.room-reveal { position: fixed; inset: 0; z-index: 200; overflow: auto; background: #123d2e; color: #f4f7f2; padding: clamp(16px, 4vw, 56px); }
+.room-reveal[data-arch="gridlock"] { background: #3b2a12; }
+.room-reveal[data-arch="hawks"] { background: #3a1a1d; }
+.rr-inner { max-width: 1200px; margin: 0 auto; display: grid; gap: clamp(12px, 2.4vh, 28px); }
+.rr-eyebrow { font-size: clamp(0.8125rem, 1.6vw, 1.125rem); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c9e4d6; }
+.rr-arch { display: flex; align-items: center; gap: clamp(10px, 2vw, 28px); }
+.rr-emoji { font-size: clamp(3rem, 9vw, 7.5rem); line-height: 1; }
+.rr-name { margin: 0; font-family: var(--font-display, inherit); font-size: clamp(2.25rem, 7.5vw, 6.5rem); line-height: 0.95; font-weight: 800; color: #fff; text-transform: none; }
+.rr-line { margin: 0; font-size: clamp(1.0625rem, 2.4vw, 1.75rem); max-width: 60ch; }
+.rr-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(12px, 2vw, 24px); }
+@media (max-width: 760px) { .rr-grid { grid-template-columns: 1fr; } }
+.rr-box { background: #fbfcfa; color: #111b16; border-radius: 18px; padding: clamp(14px, 2.4vw, 28px); display: grid; gap: 10px; align-content: start; }
+.rr-box p { margin: 0; font-size: clamp(1rem, 1.8vw, 1.375rem); }
+.rr-k { font-size: clamp(0.75rem, 1.3vw, 1rem); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8a5a12; }
+.rr-card { font-size: clamp(1.25rem, 2.8vw, 2.125rem); font-weight: 800; line-height: 1.15; }
+.rr-bar { display: flex; height: clamp(34px, 5vh, 52px); border-radius: 12px; overflow: hidden; background: #dde3dc; font-weight: 800; font-size: clamp(1rem, 2vw, 1.5rem); }
+.rr-bar span { display: flex; align-items: center; padding: 0 12px; white-space: nowrap; }
+.rr-bar span:first-child { background: #2467c4; color: #fff; }
+.rr-bar span:last-child { flex: 1; justify-content: flex-end; color: #111b16; }
+.rr-home { grid-template-columns: auto 1fr; align-items: center; gap: 18px; }
+.rr-home .qr { width: clamp(120px, 16vw, 200px); height: auto; border-radius: 8px; }
+@media (max-width: 420px) { .rr-home { grid-template-columns: 1fr; justify-items: start; } }
+.rr-home .btn { justify-self: start; margin-top: 6px; }
+.rr-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.rr-foot .btn { background: #fbfcfa; color: #111b16; }
+.rr-site { font-size: 0.875rem; color: #c9e4d6; }
+/* Duels: the scorecard strip, sealed rounds, the verdict, the 9:16 scorecard, the sealed folder, and the board. */
+.duel-board-head { display: grid; gap: 10px; }
+.duel-bout { display: flex; align-items: baseline; justify-content: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; text-transform: uppercase; overflow-wrap: anywhere; text-align: center; }
+.duel-pts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.duel-pts li { display: grid; justify-items: center; padding: 8px 4px; border-radius: 10px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.duel-pts li[data-shown] { animation: pts-in 0.35s ease-out both; }
+.duel-pts li[data-winner="me"] { box-shadow: inset 0 0 0 2px var(--accent); }
+.duel-pts li[data-winner="them"] { box-shadow: inset 0 0 0 2px var(--gold); }
+.duel-pts-total { background: var(--ink) !important; color: var(--bg); }
+.duel-pts-k { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.8; }
+.duel-pts-v { font-size: 1.25rem; font-weight: 800; }
+@keyframes pts-in { from { transform: scale(0.85); opacity: 0.3; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .duel-pts li[data-shown], .duel-round { animation: none !important; } }
+.duel-skip { justify-self: center; }
+.duel-round-sealed { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; border: 2px dashed var(--line); background: var(--surface-2); }
+.duel-rounds > .duel-round { animation: round-in 0.45s cubic-bezier(.2,1.2,.4,1) both; }
+@keyframes round-in { from { transform: translateY(10px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.duel-verdict { display: inline-block; justify-self: start; padding: 4px 12px; border-radius: 999px; background: #b4232f; color: #fff; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.8125rem; }
+.duel-card-wrap { display: grid; gap: 10px; justify-items: center; margin: 16px 0; }
+.duel-card-wrap .section-title { justify-self: start; }
+.duel-card { width: min(100%, 340px); aspect-ratio: 9 / 16; box-sizing: border-box; display: grid; grid-template-rows: auto auto 1fr auto auto auto auto; gap: 10px; padding: 22px 20px; border-radius: 22px; background: #f2f4ef; color: #111b16; box-shadow: 0 0 0 8px #14261f, 0 10px 30px rgb(0 0 0 / 0.25); text-align: center; }
+.dc-eyebrow { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #b4232f; }
+.dc-names { display: grid; font-family: var(--font-display); font-weight: 800; font-size: 2.25rem; line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
+.dc-vs { font-family: inherit; font-size: 1rem; color: #5d6862; margin: 4px 0; }
+.dc-rounds { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; align-content: center; }
+.dc-rounds li { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 2px #c9d0ca; text-align: left; }
+.dc-rounds li:not([data-winner="tie"]) { box-shadow: inset 0 0 0 3px #c9a645; }
+.dc-r { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; color: #5d6862; }
+.dc-t { font-weight: 800; }
+.dc-p { font-weight: 800; font-size: 1.25rem; }
+.dc-total { font-size: 3rem; font-weight: 800; line-height: 1; }
+.dc-verdict { justify-self: center; padding: 6px 16px; border-radius: 999px; background: #b4232f; color: #fff; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.dc-head { font-weight: 800; font-size: 1.125rem; }
+.dc-foot { font-size: 0.75rem; color: #47524c; }
+.duel-folder { position: relative; display: grid; gap: 6px; margin: 12px 0; padding: 26px 18px 16px; border-radius: 4px 14px 14px 14px; background: #e8d3a3; color: #2b2213; box-shadow: inset 0 0 0 2px #c9a86a, 0 4px 0 #b8955a; }
+.duel-folder-tab { position: absolute; top: -14px; left: 0; padding: 3px 12px; border-radius: 8px 8px 0 0; background: #e8d3a3; box-shadow: inset 0 2px 0 #c9a86a; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.duel-folder-seal { position: absolute; top: 10px; right: 14px; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #b4232f; box-shadow: 0 0 0 4px #8f1b25; font-size: 1.5rem; transform: rotate(-8deg); }
+.duel-folder-title { font-size: 1.25rem; padding-right: 64px; }
+.duel-folder-rating { justify-self: start; padding: 2px 10px; border-radius: 999px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.06em; color: #fff; background: #c99a1e; }
+.duel-folder-rating[data-rating="gentle"] { background: #2f8a57; } .duel-folder-rating[data-rating="steep"] { background: #c4462f; }
+.duel-table { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.duel-table li { display: grid; grid-template-columns: 2rem 1fr auto; gap: 2px 10px; align-items: baseline; padding: 10px 12px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.duel-table li[data-mine] { box-shadow: inset 0 0 0 2px var(--accent); }
+.dt-rank { font-weight: 800; font-size: 1.25rem; }
+.dt-who { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; min-width: 0; overflow-wrap: anywhere; }
+.dt-rec { font-weight: 800; }
+.dt-stats { grid-column: 2 / -1; }

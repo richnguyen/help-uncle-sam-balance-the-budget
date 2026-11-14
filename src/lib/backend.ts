@@ -208,3 +208,9 @@ export const saveFeedVote = (item: string, choice: string) => upsertOwn('feed_vo
 // Following bills (bill_follows): the stage now, so the hourly alert run knows when it moves.
 export const followBill = (bill: string, status: string) => upsertOwn('bill_follows', { bill, status });
 export const unfollowBill = (bill: string) => call<null>(`bill_follows?bill=eq.${encodeURIComponent(bill)}`, { method: 'DELETE', auth: true, prefer: 'return=minimal' });
+
+// Duel boards (supabase/migrations/…_duel_boards.sql): every plan on one duel link.
+export interface DuelBoardRow { p: string; lv: string; ph: boolean; name: string | null; host: boolean; mine: boolean }
+export const duelBoard = (duel: string) => rpc<DuelBoardRow[]>('duel_board', { p_duel: duel });
+export const enterDuel = (duel: string, host: { p: string; lv: string; ph: boolean; name?: string }, mine: { p: string; lv: string; ph: boolean; name?: string }) =>
+  authRpc<null>('enter_duel', { p_duel: duel, h_p: host.p, h_lv: host.lv, h_ph: host.ph, h_name: host.name ?? '', p_p: mine.p, p_lv: mine.lv, p_ph: mine.ph, p_name: mine.name ?? '' });

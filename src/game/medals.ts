@@ -17,6 +17,7 @@ export const MEDALS: Medal[] = [
   { id: 'fine-print', name: 'Fine-print reader', desc: 'Open one of the original government documents in Sources & methods.', earned: (j) => j.marks.includes('doc') },
   { id: 'explorer', name: 'Field-guide explorer', desc: 'Read five chapters of the field guide.', earned: (j) => FIELD_GUIDE.filter((p) => j.marks.includes('page:' + p)).length >= 5 },
   { id: 'relay', name: 'Relay', desc: 'Take a turn in a pass-the-budget chain.', earned: (j) => j.marks.includes('chain') },
+  { id: 'closer', name: 'Budget closer', desc: 'Make the move that meets a pass-the-budget chain’s goal.', earned: (j) => j.marks.includes('closer') },
   { id: 'many-hands', name: 'Many hands', desc: 'Make a move in the People’s Budget.', earned: (j) => j.marks.includes('peoples') },
   { id: 'neighbor', name: 'Good neighbor', desc: 'Share your progress or a fact with someone.', earned: (j) => j.marks.includes('share') },
   { id: 'halfway', name: 'Halfway there', desc: 'Finish eight missions.', earned: (j) => STOPS.filter((s) => j.done.includes(s.id)).length >= 8 },

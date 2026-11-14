@@ -21,6 +21,7 @@ import { JOURNEY_LINES } from './script';
 import { ReadingSettings } from './Settings';
 import { InstallButton } from './install';
 import { useJourney } from './state';
+import { useDailyStreak } from './streak';
 import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
 import { Seal } from './Seal';
@@ -235,6 +236,7 @@ export function RecordTop() {
   const { j, done, next, stars, rank, finished } = useProgress();
   const name = useMyName();
   const votes = useVotes();
+  const streak = useDailyStreak();
   const left = balanceOf(j.stars, j.built ?? []);
   const polls = Object.keys(votes.mine.options).length + Object.keys(votes.mine.issues).length;
   const bills = Object.keys(j.feedVotes ?? {}).filter((k) => k.startsWith('bill:')).length;
@@ -260,6 +262,10 @@ export function RecordTop() {
           <div>
             <h2 className="rc-name" id="rc-name">{name || 'Your record'}</h2>
             <span className="rc-rank">{rank.name}</span>
+            <a className="rc-streak" href="#daily" data-on={streak.run > 0 || undefined} aria-label={`Daily Dollar streak: ${streak.run} day${streak.run === 1 ? '' : 's'} in a row; best ${streak.best}`}>
+              <span aria-hidden="true">🔥</span> <strong className="num">{streak.run}</strong> {streak.run === 1 ? 'day' : 'days'} in a row{streak.best > streak.run ? <span className="muted"> · best {streak.best}</span> : null}
+              {streak.run === 0 && <span className="muted"> · play today’s Daily Dollar to start one</span>}
+            </a>
           </div>
         </div>
         <div className="rc-progress">
@@ -342,7 +348,8 @@ export function RecordTop() {
           <div>
             <div className="complete-title">Informed Budget Voter</div>
             <p className="small muted">For learning where federal money comes from and goes, why the government borrows, how Congress budgets, what the future holds for Social Security, and for casting a vote on each.</p>
-            <div className="sb-actions" style={{ marginTop: 8 }}><ShareButton kind="level" text={`I finished all ${STOPS.length} missions of “${GAME_NAME}” and earned ${stars} of ${MAX_STARS} stars. I’m an Informed Budget Voter.`} /></div>
+            {streak.best >= 2 && <p className="small"><span aria-hidden="true">🔥</span> Best Daily Dollar streak: <strong>{streak.best} days</strong></p>}
+            <div className="sb-actions" style={{ marginTop: 8 }}><ShareButton kind="level" text={`I finished all ${STOPS.length} missions of “${GAME_NAME}” and earned ${stars} of ${MAX_STARS} stars${streak.best >= 2 ? `, with a ${streak.best}-day Daily Dollar streak 🔥` : ''}. I’m an Informed Budget Voter.`} /></div>
           </div>
         </div>
       )}

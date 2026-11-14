@@ -7,6 +7,7 @@ const winByHand = require('./winbyhand');
 const base = process.argv[2] || 'http://localhost:5173/';
 const out = __OUT + '/duel/';
 require('fs').mkdirSync(out, { recursive: true });
+const skip = async (p) => { if (await p.locator('.duel-skip').count()) { await p.locator('.duel-skip').click(); await p.waitForTimeout(300); } };
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
 const J = (o) => JSON.stringify({ v: 2, done: [], stars: {}, steps: {}, quiz: {}, choices: {}, started: null, marks: [], medals: [], settings: { text: 'normal', theme: 'system', freeRoam: false, narration: false, voice: 'off', haptics: false, sounds: false, voiceV: 2 }, ...o });
 const local = (href) => { const u = new URL(href); return base + u.pathname.replace(/^\//, '') + u.search; };
@@ -45,7 +46,7 @@ async function winOtherWay(p) {
   ok(await A.locator('.plan-bar').getByRole('link', { name: 'Duel a friend' }).count() === 1, 'the action bar says “Duel a friend”');
   await A.locator('#duel-start input').fill('Ruth'); await A.waitForTimeout(300);
   const inv = await linkOf(A, '#duel-start');
-  ok(/^Ruth here\. Duel me on the final mission/.test(inv.text) && /\/p\/duel\/\?duel=[a-z0-9]{6}&hp=10\.[^&]*/.test(inv.url) && /hby=Ruth/.test(inv.url), 'the invite: ' + inv.url.slice(0, 110));
+  ok(/^🔒 Ruth sealed a (Balanced Budget plan|budget plan) \(Rating: (Gentle|Moderate|Steep)\)\. Build yours to unseal theirs and face off in 3 rounds: Debt, Economy, Balance 👉 http/.test(inv.text) && /\/p\/duel-(gentle|moderate|steep)\/\?duel=[a-z0-9]{6}&hp=10\.[^&]*/.test(inv.url) && /hby=Ruth/.test(inv.url), 'the invite: ' + inv.url.slice(0, 110));
   await A.locator('#duel-start').screenshot({ path: out + 'start.png' });
   await A.locator('#duel-start').getByRole('link', { name: 'See your invite' }).tap(); await A.waitForTimeout(800);
   ok(/Your duel invite/.test(await A.locator('h1').textContent()) && /No replies yet/.test(await A.locator('main').innerText()), 'Ruth’s own invite page: no replies yet');
@@ -69,6 +70,7 @@ async function winOtherWay(p) {
   ok(await bar.count() === 1, 'the action bar: Reveal the duel');
   await bar.tap(); await B.waitForTimeout(1000);
   ok(/^#duel\?duelr=/.test(await B.evaluate(() => location.hash)) && /You vs\. Ruth/.test(await B.locator('h1').textContent()), 'the reveal: ' + await B.locator('h1').textContent());
+  await skip(B);
   const rounds = await B.$$eval('.duel-round:not(.duel-tiebreak)', (r) => r.map((x) => x.innerText.replace(/\s+/g, ' ')));
   const even = await B.locator('.duel-tiebreak').count();
   ok(even === (/^Tied|on (fewer cards|a gentler economy)$/.test(await B.locator('.duel-score-num').textContent()) ? 1 : 0), 'the tie-breaker card shows only when the rounds are even: ' + (even ? (await B.locator('.duel-tiebreak p').textContent()) : 'not needed'));
@@ -88,6 +90,7 @@ async function winOtherWay(p) {
   // 3. Ruth opens Sam's reply: the same rounds, from Ruth's side.
   await A.goto(local(reply.url)); await A.waitForSelector('h1'); await A.waitForTimeout(800);
   ok(/You vs\. Sam/.test(await A.locator('h1').textContent()), 'Ruth sees: ' + await A.locator('h1').textContent());
+  await skip(A);
   const aScore = await A.locator('.duel-score-num').innerText();
   const flipped = (s) => s.replace(/^Your plan wins/, 'X').replace(/^Ruth’s plan wins/, 'Your plan wins').replace(/^X/, 'Sam’s plan wins');
   ok(aScore === flipped(score) || (score.startsWith('Tied') && aScore === score), `the score from Ruth’s side: ${aScore} (Sam saw ${score})`);
@@ -99,6 +102,7 @@ async function winOtherWay(p) {
   await C.locator('.actionbar').getByRole('button', { name: 'Start the duel' }).tap(); await C.waitForTimeout(900);
   await C.locator('.pcard-add:not(.on)').first().click(); await C.waitForTimeout(400);
   await C.locator('.duel-banner').getByRole('button', { name: 'Reveal now' }).click(); await C.waitForTimeout(900);
+  await skip(C);
   ok(/doesn’t balance the budget yet/.test(await C.locator('.duel-score').innerText()), 'revealing early is honest: ' + (await C.locator('.duel-balanced').innerText()));
   const reply2 = await linkOf(C, '.duel-send');
   ok(!/[?&]by=/.test(reply2.url), 'an unsigned reply');
@@ -138,7 +142,7 @@ async function winOtherWay(p) {
   const cardsTie = await A.evaluate(async () => { const D = await import('/src/game/duel.ts'); const Z = { revenues: 0, socialSecurity: 0, medicare: 0, medicaid: 0, otherMandatory: 0, defense: 0, nondefense: 0 }; const p = { ids: ['cut-defense-budget'], lv: Z, gradual: true }; const r = D.duelRounds(p, p); return { by: r.tiebreakBy, t: r.tiebreak, o: r.outcome }; });
   ok(cardsTie.by === 'cards' && cardsTie.t === 'tie' && cardsTie.o === 'tied', 'the same plan both ways: even on the economy and on cards, a true tie');
   const T = await mk(J({}));
-  await T.goto(base + tb.hash); await T.waitForTimeout(800);
+  await T.goto(base + tb.hash); await T.waitForTimeout(800); await skip(T);
   const tbCard = await T.locator('.duel-tiebreak').innerText().catch(() => '');
   ok(/Tie-breaker · The gentler plan/i.test(tbCard) && /on a gentler economy$/.test(await T.locator('.duel-score-num').textContent()), 'the tie-breaker is shown: ' + (await T.locator('.duel-score-num').textContent()) + ' | ' + tbCard.replace(/\s+/g, ' ').slice(0, 120));
   await T.locator('.duel-rounds').screenshot({ path: out + 'tiebreak.png' });

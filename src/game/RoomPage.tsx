@@ -9,7 +9,9 @@ import { goalGap } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import { ZERO } from '../lib/sandbox';
 import { DESK, missionLong, missionShort, STOP_BY_ID, stopForCode, STOPS } from './levels';
-import { BALLOT, siteRoot } from './plans';
+import { BALLOT, concentration, encodePlan, siteRoot } from './plans';
+import { groupArchetype, mostSplit, splitPct } from './roomReveal';
+import { QrCode } from '../components/QrCode';
 import { activeRoom, forgetRoom, rememberRoom, setActiveRoom } from './rooms';
 import { ROOM_LINES } from './script';
 import { PUBLIC_SITE } from './share';
@@ -44,6 +46,7 @@ export default function RoomPage({ param }: { param: string | null }) {
   const [me, setMe] = useState<Membership | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [show, setShow] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!ROOM_CODE.test(code)) { setRoom('missing'); return; }
@@ -159,6 +162,20 @@ export default function RoomPage({ param }: { param: string | null }) {
       </section>
 
       {t && t.plans > 0 && (
+        <Section id="reveal" title="The reveal" sub="For the end of class or the meeting: the group’s budget personality, the card that split the room, and a dare to beat it. Made to go up on the big screen.">
+          <RevealControls code={room.code} host={room.mine} onShow={() => setShow(true)} />
+        </Section>
+      )}
+      {show && t && t.plans > 0 && (
+        <RoomReveal
+          name={room.name} plans={t.plans} members={members} met={a.met} title={lower(d.title)}
+          arch={groupArchetype({ met: a.met, rating: a.econ.rating, top: concentration(a.shares) })}
+          split={mostSplit(t.cards, t.plans)} soloUrl={`${siteRoot()}?${encodePlan({ level: d.id, goal: d.goal, ids: roomIds, lv: ZERO, gradual: true, by: room.name })}`}
+          onClose={() => setShow(false)}
+        />
+      )}
+
+      {t && t.plans > 0 && (
         <Section id="cards" title="The cards in members’ plans" sub={`Share of the ${t.plans} plan${t.plans === 1 ? '' : 's'} sent that use each card. More than half puts a card in the room’s plan.`}>
           <ol className="rlist">
             {[...OPTIONS].sort((x, y) => (t.cards[y.id] ?? 0) - (t.cards[x.id] ?? 0)).filter((o) => t.cards[o.id]).map((o) => {
@@ -210,5 +227,94 @@ export default function RoomPage({ param }: { param: string | null }) {
       </Section>
       <p className="small muted">Rooms keep each member’s latest plan for {missionShort(STOP_BY_ID[d.id])} (cards only) and count members’ progress and votes. Nobody, including whoever started the room, can see who did what. Not a scientific survey.</p>
     </>
+  );
+}
+
+const NAME_OF = Object.fromEntries(OPTIONS.map((o) => [o.id, o.name]));
+const TIMER_KEY = (code: string) => `ftd:room-timer:${code}`;
+
+/** Show the reveal now, or (for whoever started the room) when a class timer runs out. The timer lives on this screen only. */
+function RevealControls({ code, host, onShow }: { code: string; host: boolean; onShow: () => void }) {
+  const [end, setEnd] = useState<number | null>(() => { try { const v = Number(localStorage.getItem(TIMER_KEY(code))); return v > Date.now() ? v : null; } catch { return null; } });
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!end) return;
+    const iv = setInterval(() => {
+      const n = Date.now(); setNow(n);
+      if (n >= end) { setEnd(null); try { localStorage.removeItem(TIMER_KEY(code)); } catch { /* storage off */ } onShow(); }
+    }, 500);
+    return () => clearInterval(iv);
+  }, [end, code, onShow]);
+  const start = (min: number) => { const e = Date.now() + min * 60000; setEnd(e); setNow(Date.now()); try { localStorage.setItem(TIMER_KEY(code), String(e)); } catch { /* storage off */ } };
+  const stop = () => { setEnd(null); try { localStorage.removeItem(TIMER_KEY(code)); } catch { /* storage off */ } };
+  const left = end ? Math.max(0, Math.ceil((end - now) / 1000)) : 0;
+  return (
+    <div className="reveal-controls">
+      {end ? (
+        <div className="reveal-timer" role="timer" aria-live="off">
+          <span className="reveal-clock num">{Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}</span>
+          <span className="small">until the reveal. Plans sent before then count.</span>
+          <button type="button" className="btn btn-sm" onClick={stop}>Stop the timer</button>
+        </div>
+      ) : host ? (
+        <div className="sb-actions" role="group" aria-label="Start a timer for the reveal">
+          <span className="small">Reveal in:</span>
+          {[5, 10, 15, 20].map((m) => <button key={m} type="button" className="btn btn-sm" onClick={() => start(m)}>{m} min</button>)}
+        </div>
+      ) : null}
+      <div className="sb-actions"><button type="button" className="btn btn-primary" onClick={onShow}>Show the reveal</button></div>
+    </div>
+  );
+}
+
+/** The projector screen: big enough to photograph from the back of the room. */
+function RoomReveal({ name, plans, members, met, title, arch, split, soloUrl, onClose }: {
+  name: string; plans: number; members: number; met: boolean; title: string;
+  arch: ReturnType<typeof groupArchetype>; split: ReturnType<typeof mostSplit>; soloUrl: string; onClose: () => void;
+}) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    addEventListener('keydown', esc);
+    document.body.classList.add('reveal-open');
+    return () => { removeEventListener('keydown', esc); document.body.classList.remove('reveal-open'); };
+  }, [onClose]);
+  const sp = split ? splitPct(split.share) : null;
+  const shareText = `Our room “${name}” is ${arch.name}${met ? '' : ' (we failed to pass a budget!)'}.${split && sp ? ` The card that split us: ${sp.yes}% put “${NAME_OF[split.id]}” in their plan; ${sp.no}% left it out.` : ''} Think you can beat the room?`;
+  return (
+    <div className="room-reveal" role="dialog" aria-modal="true" aria-labelledby="reveal-arch" data-arch={arch.id}>
+      <div className="rr-inner">
+        <div className="rr-eyebrow">{name} · {plans} plan{plans === 1 ? '' : 's'} from {members} member{members === 1 ? '' : 's'} · Group fiscal archetype</div>
+        <div className="rr-arch">
+          <span className="rr-emoji" aria-hidden="true">{arch.emoji}</span>
+          <h2 id="reveal-arch" className="rr-name">{arch.name}</h2>
+        </div>
+        <p className="rr-line">{arch.line}{met ? ` Goal: ${title}.` : ''}</p>
+        <div className="rr-grid">
+          <section className="rr-box rr-split" aria-labelledby="rr-split-t">
+            <div className="rr-k" id="rr-split-t">The most controversial card</div>
+            {split && sp ? (
+              <>
+                <div className="rr-card">“{NAME_OF[split.id]}”</div>
+                <div className="rr-bar" aria-hidden="true"><span style={{ width: `${sp.yes}%` }}>{sp.yes}%</span><span>{sp.no}%</span></div>
+                <p><strong>{sp.yes}%</strong> of this room put it in their plan; <strong>{sp.no}%</strong> left it out. Discuss.</p>
+              </>
+            ) : <p>Every plan agreed on every card so far. Unanimous, for now.</p>}
+          </section>
+          <section className="rr-box rr-home" aria-labelledby="rr-home-t">
+            <QrCode url={soloUrl} size={168} label="QR code: build your own plan and try to beat the room" />
+            <div>
+              <div className="rr-k" id="rr-home-t">Take it home</div>
+              <p>Think your group blew it? Build your own solo plan in 3 minutes and see if you can beat the room.</p>
+              <a className="btn btn-primary" href={soloUrl}>Beat the room</a>
+            </div>
+          </section>
+        </div>
+        <div className="rr-foot">
+          <ShareButton text={shareText} url={soloUrl} label="Share the result" className="btn" kind="room" />
+          <button type="button" className="btn" onClick={onClose}>Back to the room</button>
+          <span className="rr-site">balancethebudget.us · plans compared, never people · scored with CBO’s numbers</span>
+        </div>
+      </div>
+    </div>
   );
 }
