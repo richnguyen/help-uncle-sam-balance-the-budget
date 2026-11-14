@@ -25,8 +25,7 @@ budget adviser.
   medals); and Uncle Sam close up, with a plain speech bubble, standing on this year's deficit,
   running. The choices are the tab bar along the bottom.
 - **The tab bar** (`src/game/TabBar.tsx`), along the bottom of every screen outside a mission,
-  like an app's, five tabs alike: Mission (the next mission to play, or the road map once every
-  mission is done), Daily (the Daily Dollar), Feed in the middle (the main menu and its feed),
+  like an app's, five tabs alike: Roadmap (the road map, opened at the stop you are on, ready to continue), Daily (the Daily Dollar), Feed in the middle (the main menu and its feed),
   Together (Play together) and You (your record, then the field guide; a person icon; once
   the player has given a first name, the tab and its page title say that name instead). Each is the main menu's own icon with a short
   name. The tab for the screen you're on is lit, with a bar above it: the road map counts as
@@ -848,8 +847,8 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   mission on a walk through Washington in this order: the Lincoln Memorial, the White House, the
   Treasury Building, the Washington Monument, the Jefferson Memorial, the National Mall, the U.S.
   Capitol. The page opens at the stop you are on: it is bigger, in its campaign's colour, with a
-  ring of one arc per step of the mission (done steps filled), a START or CONTINUE bubble, and
-  Uncle Sam beside it. A finished stop shows a tick and its stars, and turns gold at three; a
+  ring of one arc per step of the mission (done steps filled), and a START or CONTINUE bubble (Uncle Sam
+  stays in the top bar). A finished stop shows a tick and its stars, and turns gold at three; a
   locked stop is gray but shows its topic; each campaign's budget desk is a larger stop ringed in
   gold. A tap on a stop opens its card: the mission, minutes, steps left, Start / Continue, Quick
   play, and for a finished one "What I learned" (its takeaways). The campaign's header stays
