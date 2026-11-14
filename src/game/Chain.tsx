@@ -7,6 +7,7 @@ import { money, moneyWords, pct } from '../lib/format';
 import { goalGap } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import { ZERO } from '../lib/sandbox';
+import { useCardFilter } from './cardFilter';
 import { useHaptics } from './haptics';
 import { DESK, missionShort, STOP_BY_ID } from './levels';
 import { CARD_CODE, cleanName, myName, setMyName, siteRoot } from './plans';
@@ -69,6 +70,7 @@ export default function Chain({ param }: { param: string | null }) {
   const chain: ChainState = { level: given?.level ?? level, turns: mine ? [...before, mine] : before, w: mine ? stamp : null };
   const d = DESK.find((x) => x.n === chain.level)!;
   const ids = cardsIn(chain.turns);
+  const filter = useCardFilter(ids.length);
   const idsBefore = cardsIn(before);
   const a = assess(d.goal, ids, ZERO, true);
   const wasMet = assess(d.goal, idsBefore, ZERO, true).met && before.length > 0;
@@ -170,20 +172,23 @@ export default function Chain({ param }: { param: string | null }) {
             <label htmlFor="chain-name">Your first name (optional, shown in the chain)</label>
             <input id="chain-name" className="input" maxLength={16} value={name} placeholder="First name" autoComplete="given-name" onChange={(e) => setName(e.target.value)} />
           </div>
-          <ol className="peoples-cards">
-            {[...OPTIONS].sort((x, y) => Number(ids.includes(y.id)) - Number(ids.includes(x.id)) || x.name.localeCompare(y.name)).map((o) => {
+          {filter.pills}
+          <ol className="peoples-cards chain-cards">
+            {[...OPTIONS].filter((o) => filter.keep(o, ids.includes(o.id))).sort((x, y) => Number(ids.includes(y.id)) - Number(ids.includes(x.id)) || x.name.localeCompare(y.name)).map((o) => {
               const isIn = ids.includes(o.id);
               const own = assess(d.goal, [o.id], ZERO, true).progress;
               return (
                 <li key={o.id} className="peoples-card" data-in={isIn}>
+                  <div className="chain-card-text">
                   <div className="peoples-card-head">
-                    <span className="peoples-chip" data-in={isIn}>{isIn ? 'In' : 'Out'}</span>
+                    {isIn && <span className="peoples-chip" data-in>In</span>}
                     <span className="rcard-kind" data-side={o.side}>{o.side === 'revenue' ? 'Tax' : 'Cut'}</span>
                     <strong className="peoples-name">{o.name}</strong>
                   </div>
                   <div className="small muted">{o.savings10 < 0 ? <>Adds to the gap · {money(-o.savings10 * 1e9)} more borrowing over ten</> : <>Closes {own >= 1 ? 'the whole gap' : `${Math.max(own > 0 ? 1 : 0, Math.round(own * 100))}%`} on its own · {money(o.savings10 * 1e9)} over ten</>} years</div>
+                  </div>
                   <div className="peoples-actions">
-                    <button type="button" className="vote-btn" onClick={() => take(o.id, !isIn)}>{isIn ? 'Take it out' : 'Add it'}</button>
+                    <button type="button" className="vote-btn" aria-label={`${isIn ? 'Take it out' : 'Add it'}: ${o.name}`} onClick={() => take(o.id, !isIn)}>{isIn ? 'Take it out' : 'Add it'}</button>
                   </div>
                 </li>
               );

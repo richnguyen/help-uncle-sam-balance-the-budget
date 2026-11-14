@@ -68,7 +68,7 @@ const methods = () => ({
     lead: t!.line,
     method: <>{t!.method}</>,
     sources: t!.sources.map((id) => SOURCE_BY_ID[id]).filter(Boolean).map((x) => ({ title: `${x.publisher}, ${x.title}`, url: x.url })),
-    leaves: <>{t!.leaves} It’s a test of the plan, not a forecast; the goal and the stars are judged with the twist in place for everyone on this desk, friends’ challenges and duels included.</>,
+    leaves: <>{t!.leaves} It’s a test of the plan, not a forecast; the goal and the stars are judged with the twist in place for everyone on this desk, friends’ challenges and showdowns included.</>,
   }])) as Record<'rates' | 'recession', Method>,
 }) satisfies Record<string, Method>;
 export type MethodId = keyof ReturnType<typeof methods>;

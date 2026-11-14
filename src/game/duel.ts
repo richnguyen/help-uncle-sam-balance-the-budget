@@ -1,19 +1,27 @@
 import { useSyncExternalStore } from 'react';
 import { type Assessment, assess, LAST_FY } from '../lib/assess';
-import type { Levers } from '../lib/sandbox';
+import { LEVERS, type Levers } from '../lib/sandbox';
+import { OPTIONS_DATA } from '../lib/planData';
 import { load, save } from '../lib/storage';
 import { DESK } from './levels';
 import { cleanName, decodePlan, encodePlan, siteRoot } from './plans';
 
-// The level 10 duel: two people balance Uncle Sam's budget on their own, without seeing each
-// other's plan, then compare in three rounds. Everything travels in links, so it works on the
-// static site and in the artifact, with no accounts:
-//   the invite  …/p/duel-<rating>/?duel=<id>&hp=10.abc&hlv=r2&hby=Ruth   the host's plan, sealed
-//   the reply   …/p/duel-back/?duelr=<id>&hp=…&hby=Ruth&p=10.xyz&by=Sam   both plans
-// One invite can go to many friends; each reply is its own head-to-head, and every duel is kept
-// in this browser (the Duels page). Plans are compared, never people: no rankings of players.
+// The Sealed Showdown (the final mission's duel): two people balance Uncle Sam's budget on their
+// own, without seeing each other's plan, then the plans unseal in three rounds. Everything travels
+// in links, so it works on the static site and in the artifact, with no accounts:
+//   the invite  …/p/duel-<rating>-c<cards>-d<debt>/?duel=<id>&hp=10.abc&hlv=r2&hby=Ruth   the host's plan, sealed
+//   the reply   …/p/duel-back/?duelr=<id>&hp=…&hby=Ruth&p=10.xyz&by=Sam                    both plans
+//   a side match on a link's board: the reply's shape with vs=1 (nothing is saved or entered)
+// The invite's preview is a classified dossier: the rating, how many cards, where the debt lands,
+// and the moves blacked out. The plan itself rides in the link and the game hides it until the
+// friend locks in their own ("sealed by the page": the address can be decoded by someone who
+// tries). One invite can go to many friends; each reply is its own head-to-head, every plan on a
+// link shares one board, and every duel is kept in this browser (the Showdowns page). Plans are
+// compared, never people: no rankings of players.
 
 export const DUEL_LEVEL = 'level-10';
+/** What players call it: two sealed plans, then three rounds. (Routes and link parameters keep the older word, duel.) */
+export const SHOWDOWN = 'Sealed Showdown';
 const D10 = () => DESK.find((d) => d.id === DUEL_LEVEL)!;
 
 export interface DuelPlan { ids: string[]; lv: Levers; gradual: boolean }
@@ -50,15 +58,17 @@ const replyQuery = (d: Pick<Duel, 'id' | 'host' | 'hostName' | 'guest' | 'guestN
   new URLSearchParams(code(d.guest!, d.guestName)).forEach((v, k) => q.set(k, v));
   return q.toString();
 };
-/** The invite: my plan, sealed, and my name. */
-export const inviteLink = (d: Pick<Duel, 'id' | 'host' | 'hostName'>) => `${siteRoot()}p/duel-${assessDuel(d.host).econ.rating}/?${inviteQuery(d)}`;
+/** The invite: my plan, sealed, and my name. Its preview page is the dossier that matches the plan. */
+export const inviteLink = (d: Pick<Duel, 'id' | 'host' | 'hostName'>) => `${siteRoot()}p/${dossierId(d.host)}/?${inviteQuery(d)}`;
+/** A side match on a link's board: my plan against another plan on it. Nothing is saved or entered. */
+export const sideHash = (id: string, mine: DuelPlan, theirs: DuelPlan, theirName?: string) => '#duel?' + replyQuery({ id, host: theirs, hostName: theirName, guest: mine }) + '&vs=1';
 /** The reply: both plans, so the host sees the comparison on any device. */
 export const replyLink = (d: Pick<Duel, 'id' | 'host' | 'hostName' | 'guest' | 'guestName'>) => `${siteRoot()}p/duel-back/?${replyQuery(d)}`;
 /** Where a duel's comparison opens inside the game. */
 export const resultHash = (d: Pick<Duel, 'id' | 'host' | 'hostName' | 'guest' | 'guestName'>) => '#duel?' + replyQuery(d);
 export const inviteHash = (d: Pick<Duel, 'id' | 'host' | 'hostName'>) => '#duel?' + inviteQuery(d);
 /** Reads a duel from the part of the hash after "duel?". */
-export function readDuelParam(param: string | null): { kind: 'invite' | 'reply'; id: string; host: DuelPlan; hostName?: string; guest?: DuelPlan; guestName?: string } | null {
+export function readDuelParam(param: string | null): { kind: 'invite' | 'reply'; id: string; host: DuelPlan; hostName?: string; guest?: DuelPlan; guestName?: string; side?: boolean } | null {
   if (!param) return null;
   const q = new URLSearchParams(param);
   const id = (q.get('duel') ?? q.get('duelr') ?? '').replace(/[^a-z0-9]/g, '').slice(0, 12);
@@ -67,7 +77,7 @@ export function readDuelParam(param: string | null): { kind: 'invite' | 'reply';
   if (q.has('duelr')) {
     const g = plan(q);
     if (!g) return null;
-    return { kind: 'reply', id, host: h, hostName: h.by, guest: g, guestName: g.by };
+    return { kind: 'reply', id, host: h, hostName: h.by, guest: g, guestName: g.by, side: q.has('vs') };
   }
   return { kind: 'invite', id, host: h, hostName: h.by };
 }
@@ -151,10 +161,107 @@ export type Rating = 'gentle' | 'moderate' | 'steep';
 const RATING_WORD: Record<Rating, string> = { gentle: 'Gentle', moderate: 'Moderate', steep: 'Steep' };
 /** The sealed plan's rating (how hard it hits the economy), the one thing the invite reveals. */
 export const sealedRating = (p: DuelPlan): Rating => assessDuel(p).econ.rating;
-/** The invite: a sealed briefing folder. Says only whether the plan balances and how steep it is. */
-export function sealedText(name: string, p: DuelPlan) {
+/** What the dossier shows of a sealed plan: enough to aim at, nothing of the moves. */
+export interface Dossier { rating: Rating; met: boolean; cards: number; levers: number; moves: number; debt: number; bars: number[] }
+const hash = (t: string) => { let h = 2166136261; for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619); return h >>> 0; };
+export function dossier(p: DuelPlan): Dossier {
   const a = assessDuel(p);
-  return `🔒 ${name || 'A friend'} sealed a ${a.met ? 'Balanced Budget plan' : 'budget plan'} (Rating: ${RATING_WORD[a.econ.rating]}). Build yours to unseal theirs and face off in 3 rounds: Debt, Economy, Balance 👉`;
+  const levers = LEVERS.filter((l) => p.lv[l.id]).length;
+  const moves = p.ids.length + levers;
+  // The blacked-out bars: one per move (up to eight), their lengths from a scramble of the plan,
+  // so a bar's length says nothing about the move under it.
+  let h = hash(planKey(p));
+  const bars = Array.from({ length: Math.min(moves, 8) }, () => { h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; return 46 + (h % 49); });
+  return { rating: a.econ.rating, met: a.met, cards: p.ids.length, levers, moves, debt: Math.round(debtShare(a) * 100), bars };
+}
+export const RATING_NAME = (r: Rating) => RATING_WORD[r];
+/** The pre-drawn previews: three or fewer cards, 4 to 11, or 12 and up; debt to the nearest 5% of GDP from 70 to 90. */
+export const cardBucket = (n: number) => (n <= 3 ? 3 : n >= 12 ? 12 : n);
+export const debtBucket = (d: number) => Math.max(70, Math.min(90, Math.round(d / 5) * 5));
+export const dossierId = (p: DuelPlan) => { const d = dossier(p); return `duel-${d.rating}-c${cardBucket(d.cards)}-d${debtBucket(d.debt)}`; };
+const blocks = (d: Dossier) => d.bars.slice(0, 3).map((w) => '█'.repeat(Math.round(w / 8))).join(' ');
+/** The invite's message: the dossier in a line. The name and the exact figures go here; the preview card is pre-drawn. */
+export function sealedText(name: string, p: DuelPlan) {
+  const d = dossier(p);
+  const who = name || 'A friend';
+  return `🔒 SEALED BUDGET PLAN · CLASSIFIED. ${who} ${d.met ? 'balanced Uncle Sam’s budget and sealed the plan' : 'built a plan for Uncle Sam’s budget and sealed it'}. Rating: ${RATING_WORD[d.rating]} · ${d.cards} CBO option${d.cards === 1 ? '' : 's'} · debt at ${d.debt}% of GDP by FY${LAST_FY} · moves: ${blocks(d)}. Build yours to unseal ${name ? name + '’s' : 'their'} moves and face off across 3 rounds 👉`;
+}
+
+// ---------- the fog of war: what a friend sees of the sealed plan while building ----------
+const BAND: Record<Rating, number> = { gentle: 0, moderate: 1, steep: 2 };
+const AREA: { id: string; label: string; levers: string[] }[] = [
+  { id: 'tax', label: 'taxes', levers: ['revenues'] },
+  { id: 'ss', label: 'Social Security', levers: ['socialSecurity'] },
+  { id: 'medicare', label: 'Medicare', levers: ['medicare'] },
+  { id: 'medicaid', label: 'Medicaid', levers: ['medicaid'] },
+  { id: 'defense', label: 'defense', levers: ['defense'] },
+  { id: 'other', label: 'other programs', levers: ['nondefense', 'otherMandatory'] },
+];
+const OPT = new Map(OPTIONS_DATA.options.map((o) => [o.id, o]));
+const list = (xs: string[]) => (xs.length <= 1 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs.at(-1));
+/** The parts of the budget a plan changed, by card or across the board. */
+export function areasTouched(p: DuelPlan) {
+  const hit = new Set<string>([...p.ids.map((id) => OPT.get(id)?.lever as string | undefined), ...LEVERS.filter((l) => p.lv[l.id]).map((l) => l.id as string)].filter((x): x is string => !!x));
+  return { touched: AREA.filter((a) => a.levers.some((l) => hit.has(l))).map((a) => a.label), left: AREA.filter((a) => !a.levers.some((l) => hit.has(l))).map((a) => a.label) };
+}
+export interface Fog { debt: number; band: Rating; clue: string }
+/**
+ * The sealed benchmark: the debt figure (the dossier already shows it), only the band of the
+ * economy rating, and for the balance round a single vague clue: which parts of the budget the
+ * plan touched, never how much or with which cards.
+ */
+export function fog(sealed: DuelPlan): Fog {
+  const a = assessDuel(sealed);
+  const { touched, left } = areasTouched(sealed);
+  const clue = !touched.length ? 'The sealed plan changes nothing yet.'
+    : !left.length ? 'The sealed plan touched every part of the budget.'
+    : `The sealed plan touched ${list(touched)}, but left ${list(left)} alone.`;
+  return { debt: debtShare(a), band: a.econ.rating, clue };
+}
+/**
+ * Uncle Sam's running commentary while a friend builds against a sealed plan. It uses only what
+ * the fog shows (the debt figure and the rating band) and the friend's own plan, and it treats
+ * taxes and cuts alike: what it needles is steepness and a lopsided split, never a side.
+ */
+export function showdownTaunt(mine: DuelPlan, sealed: DuelPlan): { id: 'bold' | 'heat' | 'safe' | 'lopsided' | 'ahead'; line: string } | null {
+  if (!mine.ids.length && !LEVERS.some((l) => mine.lv[l.id])) return null;
+  const a = assessDuel(mine), b = assessDuel(sealed);
+  const ahead = debtShare(a) < debtShare(b) - 0.001;
+  const steeper = BAND[a.econ.rating] > BAND[b.econ.rating], gentler = BAND[a.econ.rating] < BAND[b.econ.rating];
+  const w = whoPays(a);
+  if (steeper && ahead) return { id: 'bold', line: `Bold move. You’re ahead on the debt, but your economy round is taking heat: you’re at ${RATING_WORD[a.econ.rating]}, and the sealed plan is rated ${RATING_WORD[b.econ.rating]}.` };
+  if (steeper) return { id: 'heat', line: `Rough patch: behind on the debt, and steeper than the sealed plan. Try a card that phases in more gently.` };
+  if (!ahead) return { id: 'safe', line: `Playing it safe? The sealed plan ${gentler ? 'took more heat and ' : ''}leaves the debt lower. You’re behind in Round 1.` };
+  if (w.any && Math.abs(w.taxShare - 0.5) > 0.25) return { id: 'lopsided', line: `You’re ahead on the debt, but it’s nearly all ${w.taxShare > 0.5 ? 'taxes' : 'spending cuts'}. The balance round goes to the plan closer to half and half.` };
+  return { id: 'ahead', line: 'Ahead on the debt, and no steeper than the sealed plan. The balance round is still in the fog.' };
+}
+
+// ---------- the unsealed autopsy: where two plans split ----------
+export interface Lean { side: 'tax' | 'cuts' | 'even'; share: number; top?: string }
+/**
+ * Which way a plan leans (55% or more of its savings from one side), and the biggest move on that
+ * side: a card the other plan doesn't play, when there is one, since that's where the two differ.
+ */
+export function lean(p: DuelPlan, other?: DuelPlan): Lean {
+  const a = assessDuel(p), w = whoPays(a);
+  const side: Lean['side'] = !w.any ? 'even' : w.taxShare >= 0.55 ? 'tax' : w.taxShare <= 0.45 ? 'cuts' : 'even';
+  const cards = p.ids.map((id) => OPT.get(id)).filter((o): o is NonNullable<typeof o> => !!o && o.savings10 > 0 && (side === 'even' || (o.side === 'revenue') === (side === 'tax')));
+  const own = (o: { id: string }) => Number(!other?.ids.includes(o.id));
+  const card = cards.sort((x, y) => own(y) - own(x) || y.savings10 - x.savings10)[0];
+  // No card on that side: the biggest across-the-board change on it.
+  const lever = LEVERS.filter((l) => p.lv[l.id] && (side === 'even' || (l.id === 'revenues') === (side === 'tax')) && (l.id === 'revenues' ? p.lv[l.id] > 0 : p.lv[l.id] < 0)).sort((x, y) => Math.abs(p.lv[y.id]) - Math.abs(p.lv[x.id]))[0];
+  const top = card ? card.name : lever ? `${lever.label} ${p.lv[lever.id] > 0 ? '+' : ''}${p.lv[lever.id]}% across the board` : undefined;
+  return { side, share: side === 'tax' ? w.taxShare : side === 'cuts' ? 1 - w.taxShare : w.taxShare, top };
+}
+const leanLine = (who: string, l: Lean) => {
+  const pc = Math.round(l.share * 100), inc = l.top ? ` (including “${l.top}”)` : '';
+  return l.side === 'tax' ? `${who} relied ${pc}% on tax increases${inc}.` : l.side === 'cuts' ? `${who} relied ${pc}% on spending cuts${inc}.` : `${who} split the load: ${pc}% taxes, ${100 - pc}% cuts${inc}.`;
+};
+/** "Where you split": each plan's lean in a sentence, and the tagline for the pair. */
+export function divergence(a: DuelPlan, b: DuelPlan, aName: string, bName: string) {
+  const la = lean(a, b), lb = lean(b, a);
+  const tagline = la.side !== 'even' && lb.side !== 'even' && la.side !== lb.side ? 'Same goal, opposite paths.' : la.side === lb.side ? 'Same goal, similar paths.' : 'Same goal, different mixes.';
+  return { a: la, b: lb, lines: [leanLine(aName, la), leanLine(bName, lb)], tagline };
 }
 
 /**

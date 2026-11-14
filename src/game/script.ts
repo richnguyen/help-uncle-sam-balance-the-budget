@@ -85,16 +85,16 @@ export const TOGETHER_LINES = {
   teach: 'Teachers, this one’s for your class. Everybody plays on their own phone, and the class builds one plan together. No accounts, no sign-ups.',
 };
 
-// The level 10 duel: two plans built blind, then compared in three rounds.
+// The Sealed Showdown: two plans built blind, then unsealed in three rounds.
 export const DUEL_LINES = {
-  invite: 'A friend wants a duel, partner! You each balance my budget on your own, then we compare three rounds: the debt, the economy, and the balance.',
-  playing: 'Their plan is sealed until you reveal yours. Balance my budget your way, then tap Reveal the duel.',
-  host: 'Your plan is sealed in this link. Send it to as many friends as you like, and each reply gets its own head-to-head.',
-  won: 'Your plan takes the duel, partner! Send it back to your friend, then see who else wants a go.',
-  tied: 'An even duel! Two good plans, built different ways. Send yours back and compare notes.',
+  invite: 'A sealed plan, partner! You can see its rating and where the debt lands, but not one move. Build yours to unseal it, then we go three rounds: the debt, the economy, and the balance.',
+  playing: 'Their moves are sealed until you lock in yours. The dotted line is their benchmark. Balance my budget your way, then tap Lock in and unseal.',
+  host: 'Your plan is sealed in this link. Send it to as many friends as you like. Each one who finishes lands on the same board.',
+  won: 'Your plan takes the showdown, partner! Send the result back, then see who else wants a go.',
+  tied: 'A draw! Two good plans, built different ways. Send yours back and compare notes.',
   lost: 'Their plan takes this one. Want a rematch? Every round can swing with a card or two.',
-  list: 'Here’s every duel on this device: your plan next to each friend’s. Plans get compared, never people.',
-  broken: 'Hmm, this duel link looks incomplete, partner. Ask your friend to send it again.',
+  list: 'Here’s every showdown on this device: your plan next to each friend’s. Plans get compared, never people.',
+  broken: 'Hmm, this showdown link looks incomplete, partner. Ask your friend to send it again.',
 };
 
 export const PLAN_LINES = {

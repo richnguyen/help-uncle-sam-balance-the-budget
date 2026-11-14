@@ -1,5 +1,6 @@
-// The level 10 duel, end to end on phones: Ruth builds a plan and sends one invite; Sam and a
-// second friend each play it blind, reveal, and reply; Ruth sees every head-to-head and a rematch.
+// The Sealed Showdown (the final mission's duel), end to end on phones: Ruth builds a plan and
+// sends it sealed; Sam and a second friend each build blind against the sealed benchmark, lock in,
+// unseal, and reply; Ruth sees every head-to-head and a rematch.
 const __OUT = require('path').join(__dirname, 'out'); // screenshots and other output (git-ignored)
 for (const d of ['', 'm', 'duel', 'dock']) require('fs').mkdirSync(require('path').join(__OUT, d), { recursive: true });
 const { chromium, devices } = require('playwright');
@@ -11,7 +12,7 @@ const skip = async (p) => { if (await p.locator('.duel-skip').count()) { await p
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
 const J = (o) => JSON.stringify({ v: 2, done: [], stars: {}, steps: {}, quiz: {}, choices: {}, started: null, marks: [], medals: [], settings: { text: 'normal', theme: 'system', freeRoam: false, narration: false, voice: 'off', haptics: false, sounds: false, voiceV: 2 }, ...o });
 const local = (href) => { const u = new URL(href); return base + u.pathname.replace(/^\//, '') + u.search; };
-const linkOf = async (p, scope) => { const h = await p.locator(scope + ' .social-link[data-net="whatsapp"]').first().getAttribute('href'); const t = decodeURIComponent(new URL(h).searchParams.get('text')); return { text: t, url: t.match(/https?:\/\/\S+/)[0] }; };
+const linkOf = async (p, scope) => { const h = await p.locator(scope + ' .social-link[data-net="whatsapp"]').first().getAttribute('href'); const t = new URL(h).searchParams.get('text'); return { text: t, url: t.match(/https?:\/\/\S+/)[0] }; };
 const done = async (p) => /complete|met/i.test((await p.locator('.sb-big').first().textContent()) || '');
 // A different plan: every card, then across-the-board spending cuts instead of a tax increase.
 async function winOtherWay(p) {
@@ -40,34 +41,35 @@ async function winOtherWay(p) {
   ok(await winByHand(A), 'Ruth meets the level 10 goal');
   await A.waitForTimeout(500);
   const cel = A.locator('.celebrate');
-  ok(await cel.getByRole('button', { name: 'Send the duel' }).count() === 1 && /Duel a friend/.test(await cel.innerText()), 'the level 10 pop-up sends a duel');
+  ok(await cel.getByRole('button', { name: 'Send the sealed plan' }).count() === 1 && /Sealed Showdown/.test(await cel.innerText()), 'the final mission’s pop-up sends a sealed plan');
   await A.keyboard.press('Escape'); await A.waitForTimeout(300);
-  ok(await A.locator('#duel-start').count() === 1 && await A.locator('#challenge').count() === 0, 'level 10: “Duel a friend” replaces “Challenge a friend”');
-  ok(await A.locator('.plan-bar').getByRole('link', { name: 'Duel a friend' }).count() === 1, 'the action bar says “Duel a friend”');
+  ok(await A.locator('#duel-start').count() === 1 && await A.locator('#challenge').count() === 0, 'the final mission: the Sealed Showdown replaces “Challenge a friend”');
+  ok(await A.locator('.plan-bar').getByRole('link', { name: 'Seal and dare a friend' }).count() === 1, 'the action bar says “Seal and dare a friend”');
   await A.locator('#duel-start input').fill('Ruth'); await A.waitForTimeout(300);
   const inv = await linkOf(A, '#duel-start');
-  ok(/^🔒 Ruth sealed a (Balanced Budget plan|budget plan) \(Rating: (Gentle|Moderate|Steep)\)\. Build yours to unseal theirs and face off in 3 rounds: Debt, Economy, Balance 👉 http/.test(inv.text) && /\/p\/duel-(gentle|moderate|steep)\/\?duel=[a-z0-9]{6}&hp=10\.[^&]*/.test(inv.url) && /hby=Ruth/.test(inv.url), 'the invite: ' + inv.url.slice(0, 110));
+  ok(/^🔒 SEALED BUDGET PLAN · CLASSIFIED\. Ruth balanced Uncle Sam’s budget and sealed the plan\. Rating: (Gentle|Moderate|Steep) · \d+ CBO options? · debt at \d+% of GDP by FY\d{4} · moves: [█ ]+\. Build yours to unseal Ruth’s moves and face off across 3 rounds 👉 http/.test(inv.text) && /\/p\/duel-(gentle|moderate|steep)-c\d+-d\d+\/\?duel=[a-z0-9]{6}&hp=10\.[^&]*/.test(inv.url) && /hby=Ruth/.test(inv.url), 'the invite: ' + inv.text.slice(0, 150) + ' … ' + inv.url.replace(/^https?:\/\/[^/]+/, '').slice(0, 60));
+  ok(await A.locator('#duel-start .dossier').count() === 1 && await A.locator('#duel-start .dossier-moves li').count() >= 1, 'Ruth sees the dossier her friends will see, moves blacked out');
   await A.locator('#duel-start').screenshot({ path: out + 'start.png' });
-  await A.locator('#duel-start').getByRole('link', { name: 'See your invite' }).tap(); await A.waitForTimeout(800);
-  ok(/Your duel invite/.test(await A.locator('h1').textContent()) && /No replies yet/.test(await A.locator('main').innerText()), 'Ruth’s own invite page: no replies yet');
+  await A.locator('#duel-start').getByRole('link', { name: 'See your dossier' }).tap(); await A.waitForTimeout(800);
+  ok(/Your sealed plan/.test(await A.locator('h1').textContent()) && /No replies yet/.test(await A.locator('main').innerText()), 'Ruth’s own invite page: no replies yet');
 
   // 2. Sam, brand new, opens the invite: their plan is sealed; level 10 opens straight away.
   const B = await mk(J({}));
   await B.goto(local(inv.url)); await B.waitForSelector('h1'); await B.waitForTimeout(600);
-  ok(/^#duel\?duel=/.test(await B.evaluate(() => location.hash)) && /Ruth challenged you to a duel/.test(await B.locator('h1').textContent()), 'Sam lands on the invite: ' + await B.locator('h1').textContent());
+  ok(/^#duel\?duel=/.test(await B.evaluate(() => location.hash)) && /Ruth sealed a budget plan\. Can yours beat it\?/.test(await B.locator('h1').textContent()), 'Sam lands on the invite: ' + await B.locator('h1').textContent());
   const invText = await B.locator('main').innerText();
   ok(/sealed/i.test(invText) && /The debt\./.test(invText) && /The economy\./.test(invText) && /The balance\./.test(invText), 'the invite: sealed plan and the three rounds');
   await tidy(B); await B.screenshot({ path: out + 'invite.png' });
-  await B.locator('.actionbar').getByRole('button', { name: 'Start the duel' }).tap(); await B.waitForTimeout(900);
-  ok(await B.evaluate(() => location.hash) === '#level-10' && await B.locator('.pcard').count() > 0, 'Start the duel opens level 10 (not locked)');
-  ok(/Duel with Ruth/.test(await B.locator('.duel-banner').innerText()) && await B.locator('.pcard-add.on').count() === 0, 'blind banner, and a fresh plan');
-  ok(await B.locator('.duel-banner').getByRole('button', { name: 'Reveal now' }).count() === 0, 'no “Reveal now” before any card');
+  await B.locator('.actionbar').getByRole('button', { name: 'Build your plan to unseal it' }).tap(); await B.waitForTimeout(900);
+  ok(await B.evaluate(() => location.hash) === '#level-10' && await B.locator('.pcard').count() > 0, '“Build your plan to unseal it” opens the final mission (not locked)');
+  ok(/Sealed Showdown with Ruth/.test(await B.locator('.duel-banner').innerText()) && await B.locator('.pcard-add.on').count() === 0, 'blind banner, and a fresh plan');
+  ok(await B.locator('.duel-banner').getByRole('button', { name: 'Lock in now' }).count() === 0, 'no “Lock in now” before any card');
   await tidy(B); await B.screenshot({ path: out + 'blind.png' });
   ok(await winOtherWay(B), 'Sam meets the goal another way');
   await B.waitForTimeout(500);
   ok(await B.locator('.celebrate').count() === 0, 'no pop-up in a duel: the reveal is the payoff');
-  const bar = B.locator('.plan-bar').getByRole('button', { name: 'Reveal the duel' });
-  ok(await bar.count() === 1, 'the action bar: Reveal the duel');
+  const bar = B.locator('.plan-bar').getByRole('button', { name: 'Lock in and unseal' });
+  ok(await bar.count() === 1, 'the action bar: Lock in and unseal');
   await bar.tap(); await B.waitForTimeout(1000);
   ok(/^#duel\?duelr=/.test(await B.evaluate(() => location.hash)) && /You vs\. Ruth/.test(await B.locator('h1').textContent()), 'the reveal: ' + await B.locator('h1').textContent());
   await skip(B);
@@ -81,7 +83,7 @@ async function winOtherWay(p) {
   await tidy(B); await B.screenshot({ path: out + 'reveal.png', fullPage: true });
   await B.locator('#duel-back-name').fill('Sam'); await B.waitForTimeout(300);
   const reply = await linkOf(B, '.duel-send');
-  ok(/^Sam here\. I played your budget duel/.test(reply.text) && /\/p\/duel-back\/\?duelr=/.test(reply.url) && /hby=Ruth/.test(reply.url) && /[?&]by=Sam/.test(reply.url) && /[?&]p=10\./.test(reply.url), 'the reply: ' + reply.text.slice(0, 80));
+  ok(/^Sam here\. I unsealed your budget plan/.test(reply.text) && /\/p\/duel-back\/\?duelr=/.test(reply.url) && /hby=Ruth/.test(reply.url) && /[?&]by=Sam/.test(reply.url) && /[?&]p=10\./.test(reply.url), 'the reply: ' + reply.text.slice(0, 80));
   await B.goto(base + '#duels'); await B.waitForTimeout(700);
   const bRows = await B.$$eval('.duel-row', (r) => r.map((x) => x.innerText.replace(/\s+/g, ' ')));
   ok(bRows.length === 1 && /You vs\. Ruth/.test(bRows[0]), 'Sam’s Duels page: ' + bRows.join(' | '));
@@ -99,9 +101,9 @@ async function winOtherWay(p) {
   // 4. A second friend plays the same link: their own head-to-head. They reveal early.
   const C = await mk(J({}));
   await C.goto(local(inv.url)); await C.waitForSelector('h1'); await C.waitForTimeout(500);
-  await C.locator('.actionbar').getByRole('button', { name: 'Start the duel' }).tap(); await C.waitForTimeout(900);
+  await C.locator('.actionbar').getByRole('button', { name: 'Build your plan to unseal it' }).tap(); await C.waitForTimeout(900);
   await C.locator('.pcard-add:not(.on)').first().click(); await C.waitForTimeout(400);
-  await C.locator('.duel-banner').getByRole('button', { name: 'Reveal now' }).click(); await C.waitForTimeout(900);
+  await C.locator('.duel-banner').getByRole('button', { name: 'Lock in now' }).click(); await C.waitForTimeout(900);
   await skip(C);
   ok(/doesn’t balance the budget yet/.test(await C.locator('.duel-score').innerText()), 'revealing early is honest: ' + (await C.locator('.duel-balanced').innerText()));
   const reply2 = await linkOf(C, '.duel-send');
@@ -109,7 +111,7 @@ async function winOtherWay(p) {
   await A.goto(local(reply2.url)); await A.waitForTimeout(800);
   await A.goto(base + '#duels'); await A.waitForTimeout(700);
   const aRows = await A.$$eval('.duel-row', (r) => r.map((x) => x.innerText.replace(/\s+/g, ' ')));
-  ok(aRows.filter((r) => /^You vs\./.test(r)).length === 2 && aRows.some((r) => /You vs\. Sam/.test(r)) && aRows.some((r) => /You vs\. Your friend/.test(r)) && aRows.some((r) => /Open invite/.test(r)), 'Ruth’s Duels page, one link, two friends:\n   ' + aRows.join('\n   '));
+  ok(aRows.filter((r) => /^You vs\./.test(r)).length === 2 && aRows.some((r) => /You vs\. Sam/.test(r)) && aRows.some((r) => /You vs\. Your friend/.test(r)) && aRows.some((r) => /Sealed plan out/.test(r)), 'Ruth’s Duels page, one link, two friends:\n   ' + aRows.join('\n   '));
   await tidy(A); await A.screenshot({ path: out + 'duels.png', fullPage: true });
   // Opening the same reply twice doesn't duplicate it.
   await A.goto(local(reply.url)); await A.waitForTimeout(600); await A.goto(base + '#duels'); await A.waitForTimeout(500);
@@ -118,7 +120,7 @@ async function winOtherWay(p) {
   // 5. Rematch: back to level 10, with the friend's name on the invite.
   await A.locator('.duel-row', { hasText: 'You vs. Sam' }).getByRole('link', { name: 'Rematch' }).tap(); await A.waitForTimeout(900);
   ok(/Rematch with Sam/.test(await A.locator('.challenge-banner').first().innerText()), 'rematch banner on level 10');
-  ok(/Rematch: send Sam a new duel/.test(await A.locator('#duel-start h2').textContent().catch(() => '')), 'the invite says it’s a rematch');
+  ok(/Rematch: send Sam a new sealed plan/.test(await A.locator('#duel-start h2').textContent().catch(() => '')), 'the invite says it’s a rematch');
 
   // 5b. The tie-breakers: rounds even, the gentler steepest year wins, then fewer cards (found among small plans, then shown).
   const tb = await A.evaluate(async () => {
