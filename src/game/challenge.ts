@@ -42,6 +42,9 @@ export function takeLinkFromSearch() {
     if (id && /^[0-9a-f]{12}$/.test(id)) keep.set('id', id);
     for (const k of ['p', 'lv', 'ph', 'by', 'b']) { const v = q.get(k); if (v != null) keep.set(k, v); }
     const daily = q.has('daily');
+    // A shared Daily Dollar result: the puzzle, the sharer's right/wrong pattern and first name.
+    const dailyQ = new URLSearchParams();
+    for (const k of ['dn', 'vs', 'by']) { const v = q.get(k); if (v != null) dailyQ.set(k, v); }
     const peoples = q.has('peoples');
     const room = (q.get('room') ?? '').toUpperCase();
     const chain = new URLSearchParams();
@@ -57,7 +60,7 @@ export function takeLinkFromSearch() {
       : isPlan ? '#plan?' + keep.toString()
       : room ? '#room?c=' + encodeURIComponent(room)
       : isChain ? '#chain' + (chain.toString() ? '?' + chain.toString() : '')
-      : daily ? '#daily' : peoples ? '#peoples' : location.hash;
+      : daily ? '#daily' + (dailyQ.toString() ? '?' + dailyQ.toString() : '') : peoples ? '#peoples' : location.hash;
     // A link through a preview page (/p/<kind>/) lands on the game's root.
     history.replaceState(null, '', location.pathname.replace(/p\/[^/]+\/?$/, '') + hash);
   } catch { /* not allowed in this frame */ }

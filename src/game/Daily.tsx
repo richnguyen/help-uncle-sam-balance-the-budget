@@ -11,6 +11,9 @@ import { ShareButton, SocialShare } from './ShareButton';
 import { useJourney } from './state';
 import { SamSays } from './UncleSam';
 import { partnerEvent } from '../lib/partners';
+import { backendOn } from '../lib/backend';
+import { callPct, countDaily, crowdLine, crowdSummary, dailyShareUrl, friendFrom, hardest, useDailyStats } from './dailyCrowd';
+import { myName } from './plans';
 
 // The Daily Dollar page: one chain of real federal numbers a day; call each next one higher or lower.
 
@@ -43,6 +46,13 @@ export default function Daily({ param = null }: { param?: string | null }) {
   const known = chain[Math.min(i, ROUNDS - 1)];
   const next = chain[Math.min(i, ROUNDS - 1) + 1];
   const score = answers.filter(Boolean).length;
+  // A friend's shared result for the same puzzle (?daily&dn=…&vs=…&by=…), shown beside this one.
+  const friend = preview ? null : friendFrom(param);
+  const sameDay = friend?.puzzle === n;
+  const fname = friend?.by || 'Your friend';
+  const fscore = friend ? friend.vs.filter(Boolean).length : 0;
+  // How everyone else did on today's calls (anonymous counts; only on the public site).
+  const crowd = useDailyStats(n, !preview && backendOn(), answers.length);
   const st = streak(loadResults(), key);
 
   const call = (higher: boolean) => {
@@ -54,10 +64,17 @@ export default function Daily({ param = null }: { param?: string | null }) {
     buzz(right ? 'right' : 'wrong');
     if (preview) { if (a.length >= ROUNDS && a.every(Boolean)) buzz('win'); return; }
     saveResult(key, a);
-    if (a.length >= ROUNDS) { partnerEvent('played'); j.mark('daily'); if (a.every(Boolean)) buzz('win'); }
+    countDaily(n, a.length, right ? 1 : 0);
+    if (a.length >= ROUNDS) { countDaily(n, 0, a.filter(Boolean).length); partnerEvent('played'); j.mark('daily'); if (a.every(Boolean)) buzz('win'); }
   };
   const advance = () => setRevealed(false);
-  const shareTextStr = `The Daily Dollar #${n}${theme ? ` · ${editionName(theme)}` : ''} · ${score}/${ROUNDS}\n${grid(answers)}\nHigher or lower, on real federal numbers.`;
+  // Spoiler-free: the score and the grid, a streak, and which call caught the most players out.
+  const extra = [st.run > 1 ? `🔥 ${st.run} days in a row` : '', crowdLine(crowd) ?? ''].filter(Boolean);
+  const shareTextStr = `The Daily Dollar #${n}${theme ? ` · ${editionName(theme)}` : ''} · ${score}/${ROUNDS}\n${grid(answers)}\n${extra.length ? extra.join('\n') + '\n' : ''}Higher or lower, on real federal numbers.`;
+  const shareUrl = dailyShareUrl(SITE_URL, n, answers, myName());
+  const thisCall = revealed ? callPct(crowd, answers.length) : null;
+  const sum = crowdSummary(crowd);
+  const hard = hardest(crowd);
   const finished = done && !revealed;
 
   return (
@@ -74,6 +91,11 @@ export default function Daily({ param = null }: { param?: string | null }) {
         {finished ? DAILY_LINES.score[score] : theme ? themeLine(theme) : DAILY_LINES.intro}
       </SamSays>
 
+      {friend && !finished && (
+        <p className="daily-friend small" role="note">{sameDay
+          ? <><strong>{fname} got {fscore} of {ROUNDS}</strong> on today’s puzzle. Your turn.</>
+          : <>{fname}’s result was for puzzle #{friend.puzzle}; today’s is #{n}. Play it and send yours back.</>}</p>
+      )}
       {!finished && (
         <section className="card daily" aria-live="polite">
           <div className="daily-progress" aria-label={`Call ${round + 1} of ${ROUNDS}`}>
@@ -91,6 +113,7 @@ export default function Daily({ param = null }: { param?: string | null }) {
               <strong>{next.label}</strong>
               <div className="daily-value num">{revealed ? next.shown : '?'}</div>
               {revealed && <div className="small"><strong>{answers.at(-1) ? 'Right!' : 'Not this time.'}</strong> {ratio(known.value, next.value)}</div>}
+              {thisCall && <div className="small daily-crowd">{thisCall.pct}% of players got this one.</div>}
             </div>
           </div>
           {!revealed ? (
@@ -109,14 +132,22 @@ export default function Daily({ param = null }: { param?: string | null }) {
         <section className="card daily-done">
           <div className="daily-score"><span className="num">{score}</span><span className="small"> of {ROUNDS}</span></div>
           <div className="daily-grid" aria-label={`${score} of ${ROUNDS} right`}>{grid(answers)}</div>
+          {friend && sameDay && (
+            <div className="daily-vs-friend" role="note" aria-label={`You: ${score} of ${ROUNDS}. ${fname}: ${fscore} of ${ROUNDS}.`}>
+              <div><span className="stat-label">You</span><span className="num">{score}/{ROUNDS}</span><span aria-hidden="true">{grid(answers)}</span></div>
+              <div><span className="stat-label">{fname}</span><span className="num">{fscore}/{ROUNDS}</span><span aria-hidden="true">{grid(friend.vs)}</span></div>
+              <p className="small">{score === fscore ? `A tie: ${score} each.` : score > fscore ? `${score - fscore} more than ${fname}. Send yours back.` : `${fname} got ${fscore - score} more. Send yours back anyway.`}</p>
+            </div>
+          )}
+          {sum && <p className="small daily-crowd-sum">Today so far: {sum.players.toLocaleString('en-US')} players, {sum.avg.toFixed(1)} of {ROUNDS} on average; {sum.perfect}% got all five.{hard ? ` The hardest was call ${hard.call} (${hard.pct}% right).` : ''}</p>}
           {preview ? <><p className="small">That was a preview, so it isn’t saved.</p><ActionBar label="Next"><a className="btn btn-primary" href="#daily">Play today’s puzzle</a></ActionBar></> : <>
           <p className="small">{st.run > 1 ? `${st.run} days in a row. ` : ''}You’ve played {st.played} day{st.played === 1 ? '' : 's'} so far. The next puzzle is ready in {untilNext()}.{theme && theme.day < theme.days ? ` ${theme.name} goes on through ${longDate(theme.end)}.` : ''}</p>
           {upcoming && <p className="small daily-upcoming"><strong>Coming up: {upcoming.name}, {span(upcoming)}.</strong> {upcoming.id === 'tax' ? 'A week of puzzles about taxes, ending on Tax Day.' : 'A week of puzzles about the budget, starting the day the President’s budget request is due.'}</p>}
           <ActionBar label="Share">
-            <ShareButton text={shareTextStr} url={`${SITE_URL}?daily`} label="Share my result" className="btn btn-primary" />
+            <ShareButton text={shareTextStr} url={shareUrl} label="Share my result" className="btn btn-primary" />
             <a className="btn" href="#journey">Play the full game</a>
           </ActionBar>
-          <SocialShare text={shareTextStr} url={`${SITE_URL}?daily`} />
+          <SocialShare text={shareTextStr} url={shareUrl} />
           <ReminderControl where="daily" />
           </>}
         </section>
