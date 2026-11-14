@@ -878,6 +878,19 @@ paid federal income tax there (IRS county data, states and DC), its sources, and
 game that pass on a partner code from the page's address. Rerun it when the state figures change;
 the game's state chapter links to each state's page.
 
+**Daily Dollar posts (dry run).** `npm run social:drafts` (`scripts/social/compose.mjs`) writes the
+brand accounts' three daily posts for review, to `social/drafts/<date>.md` (git-ignored), and posts
+nothing. The puzzles come from the game's own code (`src/game/daily.ts`, loaded through Vite) and the
+crowd's numbers from the public, read-only `daily_stats()`, so the posts match the game:
+*morning* (7:30 AM ET), the puzzle's topic and first number; *midday* (1 PM ET), each call's share
+right so far, by call number only, once every call has 20 answers (otherwise it's skipped);
+*evening* (8 PM ET), yesterday's numbers, its hardest call told the right way round, and the source.
+Each platform's version fits its length (Bluesky 300, Mastodon 500), dropping detail before the
+source, and its link carries the platform's partner code (`?via=bot-bluesky`). `--date` and
+`--days` preview other days; `npm run test:social` checks the rules (no spoilers, lengths, codes,
+no party or ideology words). `.github/workflows/social-drafts.yml` runs it three times a day and
+puts the drafts on the run's summary page (Actions tab); it uses no secrets and posts nothing.
+
 ## Test it
 
 The browser tests live in `tests/e2e/`: 42 Playwright scripts, one per area of the game, each

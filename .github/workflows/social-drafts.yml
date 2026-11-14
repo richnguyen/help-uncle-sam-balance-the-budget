@@ -1,0 +1,30 @@
+# Daily Dollar social posts, DRY RUN: three times a day, writes the brand accounts' posts (from the
+# game's own puzzle and the crowd's public, read-only counts) to this run's summary page for
+# review. Nothing is posted; no secrets are used. Times are UTC: about 7:30 AM, 1 PM and 8 PM
+# Eastern in winter (an hour later in summer). Run it by hand from the Actions tab too.
+name: Social post drafts (dry run)
+
+on:
+  schedule:
+    - cron: '27 12 * * *'
+    - cron: '57 17 * * *'
+    - cron: '57 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drafts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check the posts' rules
+        run: npm run test:social
+      - name: Write today's drafts (nothing is posted)
+        run: npm run social:drafts

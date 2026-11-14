@@ -19,3 +19,6 @@ data/raw/census/tab20_*.txt
 # Browser tests: screenshots and run logs
 tests/e2e/out/
 tests/e2e/.runs/
+
+# Social post drafts (scripts/social/compose.mjs)
+social/drafts/
