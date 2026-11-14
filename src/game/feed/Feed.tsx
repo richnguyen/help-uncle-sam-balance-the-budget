@@ -3,7 +3,8 @@ import { useVotes } from '../../lib/votes';
 import { DEADLINES } from '../daily';
 import { useHaptics } from '../haptics';
 import { useJourney } from '../state';
-import { CaughtUp, Carousel, FeedCard, Icon, ICON, NewContext, SkeletonCard } from './cards';
+import { CaughtUp, Carousel, FeedCard, Icon, ICON, NewContext, SharedContext, SkeletonCard } from './cards';
+import { takeSharedPost } from './sharePost';
 import { useMoves } from './follow';
 import { isNewSince, markFeedSeen, sinceVisit } from './since';
 import { buildItems, mix, page, rowKey, TOPICS, type FeedRow, type Topic } from './items';
@@ -24,7 +25,9 @@ const remember = (m: Memory) => { try { sessionStorage.setItem(MEMORY, JSON.stri
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function Feed() {
-  const mem = useRef(recall()).current;
+  // A post someone shared (opened from their link) leads the feed, from the top.
+  const [sharedId] = useState(takeSharedPost);
+  const mem = useRef(sharedId ? null : recall()).current;
   const [topic, setTopic] = useState<Topic | 'all'>(mem?.topic ?? 'all');
   const [seed, setSeed] = useState(mem?.seed ?? today());
   const items = useMemo(() => buildItems(), []);
@@ -36,7 +39,11 @@ export function Feed() {
     for (const m of moves) ids.add(`bill:${m.id}`);
     return ids;
   }, [items, moves.map((m) => m.id + m.now).join()]); // eslint-disable-line react-hooks/exhaustive-deps
-  const all = useMemo(() => mix(items, topic, seed, Date.now(), newIds), [items, topic, seed, newIds]);
+  const all = useMemo(() => {
+    const rows = mix(items, topic, seed, Date.now(), newIds);
+    const i = sharedId ? rows.findIndex((r) => r.kind === 'item' && r.item.id === sharedId) : -1;
+    return i > 0 ? [rows[i], ...rows.slice(0, i), ...rows.slice(i + 1)] : rows;
+  }, [items, topic, seed, newIds, sharedId]);
   // The feed is open: what's in it now counts as seen for the Feed tab's count.
   useEffect(() => { markFeedSeen(); }, []);
 
@@ -146,7 +153,7 @@ export function Feed() {
           <div style={{ height: offsets[a] }} aria-hidden="true" />
           {visible.map((r, i) => (
             <div key={rowKey(r)} data-key={rowKey(r)} ref={track} className="feed-row" aria-posinset={a + i + 1} aria-setsize={done ? all.length : -1}>
-              <Row row={r} isNew={newIds.has(rowKey(r))} fresher={newIds.size} />
+              <Row row={r} isNew={newIds.has(rowKey(r))} fresher={newIds.size} sharedId={sharedId} />
             </div>
           ))}
           <div style={{ height: offsets[loaded.length] - offsets[b] }} aria-hidden="true" />
@@ -167,9 +174,9 @@ export function Feed() {
   );
 }
 
-function Row({ row, isNew, fresher }: { row: FeedRow; isNew: boolean; fresher: number }) {
+function Row({ row, isNew, fresher, sharedId }: { row: FeedRow; isNew: boolean; fresher: number; sharedId: string | null }) {
   if (row.kind === 'caughtup') return <CaughtUp fresh={row.fresh} fresher={fresher} since={sinceVisit()} />;
-  if (row.kind === 'item') return <NewContext.Provider value={isNew}><FeedCard item={row.item} /></NewContext.Provider>;
+  if (row.kind === 'item') return <SharedContext.Provider value={row.item.id === sharedId}><NewContext.Provider value={isNew}><FeedCard item={row.item} /></NewContext.Provider></SharedContext.Provider>;
   return <Carousel row={row} />;
 }
 

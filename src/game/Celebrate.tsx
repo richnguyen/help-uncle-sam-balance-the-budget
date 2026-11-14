@@ -1,5 +1,6 @@
 import { lower } from '../lib/format';
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { load, save } from '../lib/storage';
 import { useHaptics } from './haptics';
 import { LevelIcon } from './icons';
 import { campaignOf, DIFF_COLOR, diffKey, LEVELS, missionLong, missionShort, nextOf, STOPS, type Stop } from './levels';
@@ -28,7 +29,7 @@ const took = (m?: number | null) => (m ? ` in ${m} minute${m === 1 ? '' : 's'}` 
  * `challenge`: the player took a friend's challenge, so the card ends with the result (send it back,
  * or try again). `newcomer`: they haven't played the earlier levels, so the next step is level 1.
  */
-export function Celebration({ stop, stars, onClose, line, share, children, challenge, newcomer = false, onShare, minutes }: { stop: Stop; stars: number; onClose: () => void; line?: string; share?: { text: string; url: string; duel?: boolean }; children?: ReactNode; challenge?: { outcome: Outcome; by: string }; newcomer?: boolean; onShare?: () => void; minutes?: number | null }) {
+export function Celebration({ stop, stars, onClose, line, share, children, challenge, newcomer = false, onShare, minutes }: { stop: Stop; stars: number; onClose: () => void; line?: string; share?: { text: string; url: string; duel?: boolean; receipt?: { text: (mix: boolean) => string; card: (mix: boolean) => Promise<Blob | null> } }; children?: ReactNode; challenge?: { outcome: Outcome; by: string }; newcomer?: boolean; onShare?: () => void; minutes?: number | null }) {
   const next = nextOf(stop.id);
   const box = useRef<HTMLDivElement>(null);
   const buzz = useHaptics();
@@ -42,9 +43,12 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
   }, [onClose]); // eslint-disable-line react-hooks/exhaustive-deps
   const say = line ?? CHEER[stars];
   const fact = factFor(stop);
-  const text = share?.text ?? `I finished ${missionShort(stop)} of “${GAME_NAME}”${took(minutes)} with ${stars} of 3 stars. Did you know? ${fact} Your turn:`;
+  // A plan's receipt, with or without how it splits cuts and taxes (the player's choice, remembered).
+  const [mix, setMix] = useState(() => load<boolean>('share-mix', true));
+  const receipt = share?.receipt && !challenge ? share.receipt.text(mix) : null;
+  const text = receipt ?? share?.text ?? `I finished ${missionShort(stop)} of “${GAME_NAME}”${took(minutes)} with ${stars} of 3 stars. Did you know? ${fact} Your turn:`;
   const url = share?.url ?? SITE_URL;
-  const card = () => shareCard({ eyebrow: `${missionLong(stop)} complete${minutes ? ` · ${minutes} min` : ''}`, title: stop.title, stars, fact: `Did you know? ${fact}`, color: DIFF_COLOR[stop.difficulty], samSvg: box.current?.querySelector('svg.sam')?.outerHTML });
+  const card = receipt && share?.receipt ? () => share.receipt!.card(mix) : () => shareCard({ eyebrow: `${missionLong(stop)} complete${minutes ? ` · ${minutes} min` : ''}`, title: stop.title, stars, fact: `Did you know? ${fact}`, color: DIFF_COLOR[stop.difficulty], samSvg: box.current?.querySelector('svg.sam')?.outerHTML });
   // Level 1 ends with the player's own card ("my share of Uncle Sam") instead of a fact card.
   const mine = stop.id === 'level-1' && !share && !challenge;
   return (
@@ -76,6 +80,12 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
           {!challenge && !mine && (
             <div className="celebrate-share">
               <div className="small"><span className="stat-label">{share?.duel ? 'Duel a friend' : share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share?.duel ? 'Your plan goes in the link, sealed. Each friend balances the budget on their own, then you compare three rounds: the debt, the economy, and the balance.' : share ? 'Send your plan as a link. Your friend plays the same mission and sees how much you two agree.' : fact}</div></div>
+              {receipt && (
+                <>
+                  <pre className="receipt-preview" aria-label="Your plan receipt, as it will be shared">{receipt}</pre>
+                  <label className="switch receipt-mix"><input type="checkbox" checked={mix} onChange={(e) => { setMix(e.target.checked); save('share-mix', e.target.checked); }} /> Show how my plan splits spending cuts and taxes</label>
+                </>
+              )}
               {share && <NameField id="cel-name" label={share.duel ? 'Sign your duel (first name, optional)' : 'Sign your challenge (first name, optional)'} />}
               <div className="celebrate-share-actions"><ShareButton text={text} card={card} url={url} label={share?.duel ? 'Send the duel' : share ? 'Send the challenge' : 'Share'} kind={share ? 'plan' : 'level'} onShare={onShare} /></div>
               <SocialShare text={text} url={url} kind={share ? 'plan' : 'level'} onShare={onShare} />

@@ -19,6 +19,8 @@ import { FollowButton, MovedNote } from './follow';
 import { Seal } from '../Seal';
 import { diffKey, type IconId } from '../levels';
 import { Terms } from '../../components/Terms';
+import { ShareButton, SocialShare } from '../ShareButton';
+import { postShareText, postUrl } from './sharePost';
 
 // One card per kind of post. Every card has the same head: what it is, its official source and
 // date, and Save. Then its body, and its own one action: vote, swipe, check, start, or read more.
@@ -34,6 +36,7 @@ export function Icon({ d, size = 18 }: { d: ReactNode; size?: number }) {
 export const ICON = {
   bookmark: <path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" />,
   bookmarkOn: <path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" fill="currentColor" />,
+  share: <><path d="M12 14.5V3.5M7.5 8 12 3.5 16.5 8" /><path d="M5 12v8.5h14V12" /></>,
   bill: <><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 15.5h5" /></>,
   chart: <><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" /></>,
   poll: <><path d="M5 20V12M12 20V5M19 20v-9" /><path d="M3 20h18" /></>,
@@ -101,23 +104,36 @@ function SourceMark({ mark }: { mark: Mark }) {
 
 /** Posts newer than the last visit wear a "New" mark (set by the feed). */
 export const NewContext = createContext(false);
+/** True for the post someone shared with this player (opened from their link). */
+export const SharedContext = createContext(false);
 
 function Head({ item, badge }: { item: FeedItem; badge?: string }) {
   const isNew = useContext(NewContext);
+  const shared = useContext(SharedContext);
+  const [sharing, setSharing] = useState(false);
   const s = item.source;
   const date = item.kind === 'news' ? when(item.news.time, item.news.dateOnly) : s.date ? (item.kind === 'bill' ? `Updated ${fmtDate(s.date)}` : /^\d{4}-\d/.test(s.date) ? fmtDate(s.date) : s.date) : '';
   return (
+    <>
     <header className="fc-head">
       <SourceMark mark={markFor(item)} />
       <span className="fc-head-text">
-        <span className="fc-badge-row"><span className="fc-badge" data-topic={item.topic}><Icon d={TOPIC_ICON[item.topic]} size={14} />{badge ?? KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}</span>{isNew && <span className="fc-new">New</span>}</span>
+        <span className="fc-badge-row"><span className="fc-badge" data-topic={item.topic}><Icon d={TOPIC_ICON[item.topic]} size={14} />{badge ?? KIND_LABEL[item.kind] ?? TOPIC_LABEL[item.topic]}</span>{shared ? <span className="fc-new fc-shared">Shared with you</span> : isNew && <span className="fc-new">New</span>}</span>
         <span className="fc-source">
           {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a> : s.name}
           {date && <> · <time>{date}</time></>}
         </span>
       </span>
+      <button type="button" className="fc-share-btn" aria-expanded={sharing} aria-label={`Share: ${item.title}`} title="Share" onClick={() => setSharing(!sharing)}><Icon d={ICON.share} /></button>
       <SaveButton item={item} />
     </header>
+    {sharing && (
+      <div className="fc-share" role="group" aria-label={`Share: ${item.title}`}>
+        <ShareButton text={postShareText(item)} url={postUrl(item)} label="Share or copy the link" className="btn btn-sm" kind="site" />
+        <SocialShare text={postShareText(item)} url={postUrl(item)} kind="site" />
+      </div>
+    )}
+    </>
   );
 }
 

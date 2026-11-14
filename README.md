@@ -132,6 +132,11 @@ budget adviser.
   carry one post per mission with a game: the game's name and goal, its rounds, and "up to 2
   stars". One tap opens the mission straight into Quick play; a locked mission's post says what
   unlocks it instead.
+- **Sharing a post** (`src/game/feed/sharePost.ts`): every post has a Share button beside Save. It
+  opens the phone's share sheet (or copies the link) and the social networks, with the post in a
+  line: a bill's number, title and status; a poll's option and CBO's estimate; a quick check's
+  question, never its answer. The link (`?post=<id>`) opens the feed with that post first, marked
+  "Shared with you", once; a malformed id is ignored. The Daily Dollar's post links to `?daily`.
 - **Sponsors and floor votes** (`scripts/rollcall.mjs`, `src/game/feed/votes.tsx`): a bill's sponsor
   reads exactly as Congress.gov lists them ("Rep. Arrington, Jodey C. [R-TX-19]"), with no colors
   or scores. For bills past introduction, `fetch-bills.mjs` follows the recorded votes Congress.gov
@@ -917,6 +922,15 @@ Congress.gov only on the deploy, with the repository's key, and the deploy publi
 `/bills-full.json` (not committed). `npm run build:artifact` first runs `scripts/pull-bills.mjs`,
 which takes that file from the site when it's newer than the local one, so the claude.ai copy shows
 the same bills as the site; if the site can't be reached, it builds with the local file.
+
+**The plan receipt** (`src/game/receipt.ts`): finishing a budget desk shares a receipt instead of a
+plain line, previewed on the completion screen exactly as it will be posted, with a matching
+1200×630 image: whose plan, the mission and stars, what it achieved; the plan style (🟩 gentle,
+🟨 moderate, 🟥 steep, from the hit to the economy), the cards played and the budget personality;
+how the savings split between spending cuts and taxes, five blocks each (only while the player
+keeps "Show how my plan splits spending cuts and taxes" on; the choice is remembered); the
+biggest moves by budget area; and a dare matched to what a friend could still beat (gentler,
+three stars, fewer cards). It reports and doesn't judge: no party, ideology or blame words.
 
 ## Test it
 
