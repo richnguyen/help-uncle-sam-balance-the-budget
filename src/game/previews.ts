@@ -66,19 +66,19 @@ export const SPECIAL_PREVIEWS: SpecialPreview[] = [
   },
   {
     id: 'duel', color: '#b4232f', mood: 'surprised',
-    eyebrow: 'Budget duel · plan vs. plan', heading: ['Duel me on', 'the budget'], sub: 'Balance the budget, then compare plans',
+    eyebrow: 'Sealed Showdown · plan vs. plan', heading: ['A sealed', 'budget plan'], sub: 'Build yours to unseal it',
     boxLabel: 'Three rounds', box: 'We each balance Uncle Sam’s budget on our own. My plan stays sealed until you finish yours; then the plans face off: the debt, the economy, and the balance.',
-    title: 'Duel me: balance Uncle Sam’s budget',
-    description: 'A friend sent you a budget duel. Balance the federal budget your way, then compare plans in three rounds: the debt, the economy, and the balance. Real CBO numbers.',
-    alt: 'Duel me on the budget: we each balance the budget, then compare plans in three rounds.',
+    title: '🔒 A sealed budget plan. Build yours to unseal it',
+    description: 'A friend balanced Uncle Sam’s budget and sealed the plan. Build yours to unseal theirs, then face off in three rounds: the debt, the economy, and the balance. Real CBO numbers.',
+    alt: 'A sealed budget plan: build yours to unseal it, then face off in three rounds.',
   },
   {
     id: 'duel-back', color: '#1d5a43', mood: 'cheering',
-    eyebrow: 'Budget duel · the reveal', heading: ['Our duel', 'is in'], sub: 'Two plans, three rounds',
+    eyebrow: 'Sealed Showdown · the reveal', heading: ['The plans', 'are unsealed'], sub: 'Two plans, three rounds',
     boxLabel: 'Three rounds', box: 'The debt: whose plan leaves it lower. The economy: whose plan goes easier on it. The balance: whose split of taxes and cuts is closer to even.',
-    title: 'Our budget duel is in: see the three rounds',
-    description: 'Your friend played your budget duel. See both plans side by side, round by round: the debt, the economy, and the balance. Plans are compared, never people.',
-    alt: 'Our budget duel is in: two plans, three rounds.',
+    title: 'Our Sealed Showdown is in: see the three rounds',
+    description: 'Your friend unsealed your budget plan. See both plans side by side, round by round: the debt, the economy, and the balance, and where the two split. Plans are compared, never people.',
+    alt: 'Our Sealed Showdown is in: two plans, three rounds.',
   },
 ];
 /** The People's Budget's preview, kept for links made before the others existed. */

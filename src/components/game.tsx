@@ -70,7 +70,7 @@ export function GapBar({ segments, progress }: { segments: GapSegment[]; progres
 /** Economy gauge: the steepest single-year tightening, against gentle / moderate / steep zones. */
 export const econLabel = (peakStep: number) => (peakStep <= 0.005 ? 'Gentle' : peakStep <= 0.01 ? 'Moderate' : 'Steep');
 
-export function EconMeter({ peakStep, vertical = false, compact = false }: { peakStep: number; vertical?: boolean; compact?: boolean }) {
+export function EconMeter({ peakStep, vertical = false, compact = false, ghost }: { peakStep: number; vertical?: boolean; compact?: boolean; /** A sealed plan's band (the Sealed Showdown): hatched, with a dashed outline. */ ghost?: 'gentle' | 'moderate' | 'steep' }) {
   const max = 0.015;
   const at = Math.min(peakStep, max) / max;
   const label = econLabel(peakStep);
@@ -78,9 +78,9 @@ export function EconMeter({ peakStep, vertical = false, compact = false }: { pea
   if (compact) return (
     <div className="econmeter econmeter-compact" role="meter" aria-label="How hard the plan hits the economy in its steepest year" aria-valuemin={0} aria-valuemax={1.5} aria-valuenow={+(peakStep * 100).toFixed(2)} aria-valuetext={`${label}: ${pct(peakStep, 1)} of GDP in the steepest year`}>
       <div className="econmeter-track">
-        <span className="z z1" style={{ width: '33.333%' }} />
-        <span className="z z2" style={{ width: '33.333%' }} />
-        <span className="z z3" style={{ width: '33.334%' }} />
+        <span className="z z1" style={{ width: '33.333%' }} data-ghost={ghost === 'gentle' || undefined} />
+        <span className="z z2" style={{ width: '33.333%' }} data-ghost={ghost === 'moderate' || undefined} />
+        <span className="z z3" style={{ width: '33.334%' }} data-ghost={ghost === 'steep' || undefined} />
         <span className="econmeter-needle" style={{ left: `${at * 100}%` }} />
       </div>
     </div>

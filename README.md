@@ -576,8 +576,8 @@ all 21 missions, has the gold grand seal.
    with only a gentle hint on level 5. The article's other tactic, levels tuned to be
    "almost winnable" to sell boosters, is deliberately left out: there are no lives, streak
    penalties, rankings of players, ads or purchases. The social clocks (a chain's 4-hour turn
-   clock, a room's reveal timer) only nudge and never cost anything, and a duel link's board
-   ranks plans, never people.
+   clock, a room's reveal timer) only nudge and never cost anything, and a showdown link's board
+   ranks plans, never people (the crown sits on a plan).
 5. **Make it easy to share.** Share buttons on the celebration card, fact cards, ballot and
    certificate use the phone's share sheet, falling back to the clipboard. On the public site,
    "Save image" makes a 1200×630 card with the level, stars, a fact and Uncle Sam.
@@ -724,35 +724,71 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   ends on "Try again". Newcomers are pointed to level 1 at the end, and Uncle Sam's voice starts
   downloading only after the first tap. The share stats count each step: took the challenge, met
   the goal, sent a plan back.
-- **The budget duel** (`/p/duel-<rating>/?duel=…`, `#duel`, `#duels`): the final mission (3.5) shares a duel instead of a
-  challenge. The host's plan travels sealed in the invite (`hp`, `hlv`, `hph`, `hby`); the friend
-  sees only that it exists and whether it balances the budget, plays level 10 on their own from
-  a fresh plan (level 10 opens straight away, with no celebration pop-up), and taps "Reveal the
-  duel". Both plans then go head to head in three rounds, best of three: **the debt** (debt held
-  by the public as a share of GDP in the last projection year, lower wins), **the economy** (the
-  steepest single-year tightening, gentler wins), and **the balance** (new taxes against spending
-  cuts over the projection, cards and across-the-board changes alike, closer to half and half
-  wins). Even after three rounds, the tie-breakers, in order: the gentler steepest year, then
-  fewer policy cards; even on both is a true tie. The economy comes first so the scoring never
-  rewards a steeper plan just for using fewer cards. The reveal shows what each plan does on its own and the cards they share. The friend
-  sends a reply link (`/p/duel-back/?duelr=…`, both plans) back; the host sees the same rounds
-  from their side. One invite goes to many friends: each reply is its own head-to-head, and the
-  Duels page lists every one next to your plan, with "See the rounds" and "Rematch". Everything
-  is in links and this browser's storage, with no accounts; plans are compared, never people.
-  **The sealed envelope** (`sealedText`, `scripts/make-duel-previews.mjs`): the invite reads
-  "🔒 Ruth sealed a Balanced Budget plan (Rating: Moderate). Build yours to unseal theirs…", and
-  its link goes through a preview page per rating (`/p/duel-gentle/`, `-moderate/`, `-steep/`)
-  drawn as a sealed briefing folder; the invite page shows the same folder. **The reveal**: the
-  rounds open one tap at a time, scored like boxing (10–9 a round, 10–10 if even), then the
-  verdict (knockout for all three, split decision for 2–1, majority decision with an even round,
-  a decision on the tie-breaker, or a draw); "Skip to the result" is there, and a comparison seen
-  once opens revealed. **The scorecard**: a 9:16 card sized for a phone screen, and a 1080×1920
-  image to share or save. **Everyone on this link** (`supabase/migrations/20261118000000_duel_boards.sql`,
-  run once in Supabase): each friend who finishes a duel link adds their plan (and the host's
-  from the link) to that link's board through `enter_duel` (signed-in players only, 200 plans a
-  board, 40 new boards a player a day); `duel_board` lists the plans with their first names, if
-  signed. The game plays every plan against every other in the same rounds; a win is a point, a
-  draw half. Offline, or in the claude.ai copy, the board shows the plans this device knows.
+- **The Sealed Showdown** (`/p/duel-<rating>-c<cards>-d<debt>/?duel=…`, `#duel`, `#duels`; routes
+  and link parameters keep the older word, duel): the final mission (3.5) shares a sealed plan
+  instead of a challenge. The host's plan travels in the invite (`hp`, `hlv`, `hph`, `hby`) and
+  the game hides it until the friend locks in a plan of their own. It is **sealed by the page**:
+  the link still carries the plan, so someone who decodes the address can read it; nothing is
+  stored on a server for it. The friend plays the final mission from a fresh plan (it opens
+  straight away, with no celebration pop-up) and taps "Lock in and unseal". Both plans then go
+  head to head in three rounds, best of three: **the debt** (debt held by the public as a share
+  of GDP in the last projection year, lower wins), **the economy** (the steepest single-year
+  tightening, gentler wins), and **the balance** (new taxes against spending cuts over the
+  projection, cards and across-the-board changes alike, closer to half and half wins). Even after
+  three rounds, the tie-breakers, in order: the gentler steepest year, then fewer policy cards;
+  even on both is a true tie. The economy comes first so the scoring never rewards a steeper plan
+  just for using fewer cards. The friend sends a reply link (`/p/duel-back/?duelr=…`, both
+  plans) back; the host sees the same rounds from their side. One invite goes to many friends:
+  each reply is its own head-to-head, and the Showdowns page lists every one next to your plan,
+  with "See the rounds" and "Rematch". Plans are compared, never people.
+  - **The classified dossier** (`dossier`, `sealedText`, `Dossier` in `showdownParts.tsx`,
+    `scripts/make-duel-previews.mjs`): a sealed plan shows three facts and nothing else: its
+    rating (gentle, moderate or steep), how many CBO options it plays, and where the debt lands,
+    with one black bar per move (bar lengths come from a scramble of the plan, so they say nothing
+    about the move). The invite message carries it in a line ("🔒 SEALED BUDGET PLAN · CLASSIFIED.
+    Ruth balanced Uncle Sam’s budget and sealed the plan. Rating: Moderate · 6 CBO options · debt
+    at 84% of GDP by FY2031 · moves: ████ ███ ████. Build yours to unseal Ruth’s moves…"). The
+    site is static, so the link-preview card can't be drawn per link: there are 150 pre-drawn
+    dossiers, one for every rating × cards (3 or fewer, 4 to 11, 12 or more) × debt (to the
+    nearest 5% of GDP, 70 to 90), and the link goes through the one that matches
+    (`dossierId`). The sender's name and the exact figures ride in the message. Regenerate with
+    `node scripts/make-duel-previews.mjs http://localhost:5173/` (dev server up).
+  - **The fog of war** (`fog`, `showdownTaunt`, `FogStrip`, `DebtGhost`): while the friend
+    builds, the desk shows the sealed benchmark without the moves: a dotted line for the sealed
+    debt figure (the dossier already shows that number), only the band of its economy rating
+    (hatched on the gauge, never the number), and for the balance round a single clue: which
+    parts of the budget the sealed plan touched and which it left alone. The split itself stays
+    hidden, so a careful second player can't simply tune a plan to win all three rounds. Uncle
+    Sam needles the plan as it grows, using only what the fog shows and the friend's own plan
+    ("Bold move. You’re ahead on the debt, but your economy round is taking heat…", "Playing it
+    safe?…"). The commentary treats taxes and cuts alike: it needles steepness and a lopsided
+    split, never a side.
+  - **The reveal**: the rounds unseal one tap at a time, each scrolled to its own screen with its
+    picture (the two debt paths drawn side by side; both plans on the gentle / moderate / steep
+    scale; each plan's rating and split against the halfway line) and the referee's stamp. Rounds
+    are scored like boxing (10–9, or 10–10 if even), then the final decision and its verdict
+    (knockout for all three, split decision for 2–1, majority decision with an even round, a
+    decision on the tie-breaker, or a draw). "Skip to the result" is there, and a comparison
+    seen once opens unsealed. Animations stop under reduced motion.
+  - **The unsealed autopsy** (`lean`, `divergence`, `WhereYouSplit`, `splitPng`): after the
+    decision, "Where you split" says each plan's lean in a sentence ("Your plan relied 75% on
+    tax increases (including “…”). Ruth’s plan relied 80% on spending cuts (including “…”). Same
+    goal, opposite paths."), naming a move the other plan didn't play; the tagline is "opposite
+    paths", "similar paths" or "different mixes". It shares as a 1080×1350 image with the
+    original invite link, so the debate pulls more friends onto the same link. Then every move of
+    both plans, the black bars wiping away, with shared cards marked. **The scorecard** is a 9:16
+    card sized for a phone screen, and a 1080×1920 image.
+  - **The gauntlet** (`supabase/migrations/20261118000000_duel_boards.sql`, run once in
+    Supabase): each friend who finishes a link adds their plan (and the host's from the link) to
+    that link's board through `enter_duel` (signed-in players only, 200 plans a board, 40 new
+    boards a player a day); `duel_board` lists the plans with their first names, if signed. The
+    game plays every plan against every other in the same rounds (a win is a point, a draw
+    half), and the plan on top holds the crown until another takes it; "Dare the chat" sends the
+    link back out, and "See the rounds" opens a side match against any other plan on the board
+    (`vs=1`, nothing saved or entered). Someone who hasn't locked in a plan sees the board
+    sealed: how many plans, which holds the crown, and each record, with the figures blacked out
+    (hidden by the page, like the plan in the link). Offline, or in the claude.ai copy, the
+    board shows the plans this device knows.
 - **Your Budget Story** (`#story`): phone-story cards (1080×1920) drawn as SVG and saved as
   PNG: a budget personality, the biggest move, the debt path against current law, and the
   closest real proposal; and, if the player chooses, how the plan splits taxes and cuts and their
@@ -809,9 +845,12 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
 - **Uncle Sam reacts** the first time each policy card is played, with one true fact from CBO's
   data.
 - **Play together** (`#together`, and on the road map): the ways to play with other
-  people, each with who it's for, how long it takes, and one button: a room for a class, club,
-  or office; the Daily Dollar as a group-chat habit ("Invite the group"); pass the budget; and
-  the level 10 duel.
+  people. Each card has an icon, who it's for, how long it takes (as chips), one sentence, the
+  steps under "How it works", and one button; a card also shows what you have going (a showdown
+  in progress, your room, your Daily Dollar streak). The Sealed Showdown leads; then a room for a
+  class, club, or office; the Daily Dollar as a group-chat habit ("Invite the group"); and pass
+  the budget. Long card lists (pass the budget, the People's Budget) have a filter (all, taxes,
+  spending, in the plan), and a room page folds away the missions no one has finished.
   Each chapter level's last screen points to them too.
 - **For teachers** (`#teach`, linked from Rooms): a ready 45-minute class (Daily Dollar warm-up,
   levels 1 and 2, a room on level 5, discussion), five discussion questions that don't take

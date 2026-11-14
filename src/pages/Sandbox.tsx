@@ -37,7 +37,8 @@ import { useShareLink } from '../game/shortlinks';
 import { activeRoom, type RoomRef, setActiveRoom } from '../game/rooms';
 import { sendRoomPlan } from '../lib/backend';
 import { load, save } from '../lib/storage';
-import { activeDuel, assessDuel, DUEL_LEVEL, type Duel, rematchFor, resultHash, saveDuel, setActiveDuel, setRematch, splitLabel } from '../game/duel';
+import { activeDuel, assessDuel, DUEL_LEVEL, type Duel, rematchFor, resultHash, saveDuel, setActiveDuel, setRematch, showdownTaunt, splitLabel } from '../game/duel';
+import { DebtGhost, FogStrip } from '../game/showdownParts';
 import { DuelStart, useDuelInvite } from '../game/Duel';
 import { DUEL_LINES } from '../game/script';
 import { Terms } from '../components/Terms';
@@ -386,7 +387,9 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       : `The big one: no borrowing at all. ${missionFacts(goal)} It hasn’t happened since FY2001. Fair warning: ${cardsCanWin ? 'this takes a lot of cards.' : 'even every card on the table isn’t quite enough, so we’ll need some across-the-board changes too.'}${twist ? ' ' + twist.say : ''}`;
   // On level 10 the board's coach also gives the opening line, since the board comes first.
   // A friend's challenge opens with a short line, so the cards come sooner on a phone.
-  const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : special && !met && prog <= 0.001 ? (duel ? { mood: 'happy' as Mood, line: DUEL_LINES.playing } : challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
+  // In a showdown, Uncle Sam needles the plan against the sealed benchmark (only what the fog shows).
+  const taunt = duel ? showdownTaunt({ ids, lv, gradual }, duel.host) : null;
+  const said = hint ? { mood: 'thinking' as Mood, line: hint.line } : taunt ? { mood: (taunt.id === 'ahead' ? 'happy' : taunt.id === 'bold' || taunt.id === 'lopsided' ? 'surprised' : 'thinking') as Mood, line: taunt.line } : special && !met && prog <= 0.001 ? (duel ? { mood: 'happy' as Mood, line: DUEL_LINES.playing } : challenge ? { mood: 'happy' as Mood, line: CHALLENGE_LINES.start } : { mood: 'worried' as Mood, line: introLine }) : coach;
   // Uncle Sam coaches from the top bar (samhud.tsx): his line runs across the strip under it.
   const coachBlock = desk ? <SamSays mood={said.mood} auto={party == null && !(met && !wasMet.current)} delay={special ? 300 : 900}>{said.line}</SamSays> : null;
   const efficiencyBlock = efficiency != null ? (
@@ -509,8 +512,8 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       </details>
   );
   const toChallenge = (e: React.MouseEvent) => { e.preventDefault(); document.getElementById(isDuelLevel ? 'duel-start' : 'challenge')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-  const friendLabel = isDuelLevel ? 'Duel a friend' : 'Challenge a friend';
-  // The duel's reveal: the player's plan joins the friend's, and both open side by side.
+  const friendLabel = isDuelLevel ? 'Seal and dare a friend' : 'Challenge a friend';
+  // The showdown's reveal: the player locks in their plan, and the two unseal round by round.
   const reveal = () => {
     if (!duel) return;
     const done: Duel = { ...duel, guest: { ids, lv, gradual }, guestName: name || undefined, revealed: true, at: new Date().toISOString() };
@@ -523,7 +526,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const duelBy = duel?.hostName || 'your friend';
   // The bottom bar's actions: the hint before the goal (level 5); after it, the challenge or the next level.
   const barButtons = duel
-    ? (met ? <button type="button" className="btn btn-primary" onClick={reveal}>Reveal the duel</button> : null)
+    ? (met ? <button type="button" className="btn btn-primary" onClick={reveal}>Lock in and unseal</button> : null)
     : !met
     ? (desk?.hint ? <button type="button" className="btn btn-hint" onClick={giveHint}>Hint</button> : null)
     : challenge && h2h
@@ -561,19 +564,19 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
         </div>
       )}
       {duel && (
-        <div className="challenge-banner duel-banner" role="note">
+        <div className="challenge-banner duel-banner" role="note" data-taunt={taunt?.id}>
           <div>
-            <strong>Duel with {duelBy}:</strong> {duel.hostName ? `${duel.hostName}’s` : 'their'} plan is <span className="duel-sealed">sealed</span> until you reveal yours.<span className="challenge-banner-more"> Balance the budget your way, then compare three rounds: the debt, the economy, and the balance.</span>
+            <strong>Sealed Showdown with {duelBy}:</strong> {duel.hostName ? `${duel.hostName}’s` : 'their'} moves are <span className="duel-sealed">sealed</span> until you lock in yours.<span className="challenge-banner-more"> Balance the budget your way, then unseal three rounds: the debt, the economy, and the balance.</span>
           </div>
           <span className="duel-banner-actions">
-            {!met && (ids.length > 0 || slidersUsed) && <button type="button" className="link-btn small" onClick={reveal}>Reveal now</button>}
-            <button type="button" className="link-btn small" onClick={leaveDuel}>Leave the duel</button>
+            {!met && (ids.length > 0 || slidersUsed) && <button type="button" className="link-btn small" onClick={reveal}>Lock in now</button>}
+            <button type="button" className="link-btn small" onClick={leaveDuel}>Leave the showdown</button>
           </span>
         </div>
       )}
       {rematch && !duel && (
         <div className="challenge-banner" role="note">
-          <div><strong>Rematch with {rematch.name || 'your friend'}:</strong> build a new plan, then send it from “Duel a friend” below the cards.</div>
+          <div><strong>Rematch with {rematch.name || 'your friend'}:</strong> build a new plan, then seal it and send it from below the cards.</div>
           <button type="button" className="link-btn small" onClick={() => { setRematch(null); setRematchState(null); }}>Cancel the rematch</button>
         </div>
       )}
@@ -601,13 +604,14 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
             </div>
             <div className="hb-row hb-gauges">
               <div className="hb-gauge">
-                <div className="hb-label"><span>Economy</span> <strong>{econLabel(econ.peakStep)}</strong><Rated id="steep" icon label="How the hit to the economy is rated" /></div>
-                <EconMeter peakStep={econ.peakStep} compact />
+                <div className="hb-label"><span>Economy</span> <strong>{econLabel(econ.peakStep)}</strong>{!duel && <Rated id="steep" icon label="How the hit to the economy is rated" />}</div>
+                <EconMeter peakStep={econ.peakStep} compact ghost={duel ? assessDuel(duel.host).econ.rating : undefined} />
               </div>
               <div className="hb-gauge">
-                <div className="hb-label"><span>Who pays</span> <strong>{revTen + spTen ? `${Math.round(revenueShare * 100)}% taxes` : '—'}</strong></div>
+                <div className="hb-label"><span>Who pays</span> <strong>{revTen + spTen ? `${Math.round(revenueShare * 100)}%${duel ? ' tax' : ' taxes'}` : '—'}</strong></div>
                 <SplitBar revenue={revTen} spending={spTen} compact />
               </div>
+              {duel && <DebtGhost sealed={duel.host} mine={{ ids, lv, gradual }} />}
             </div>
             <div className="hb-row hb-tools sb-actions tb-actions">
               <label className="switch hb-phase"><input type="checkbox" checked={gradual} onChange={(e) => setGradual(e.target.checked)} /> Phase in</label>
@@ -615,13 +619,14 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
               <span className="hb-spacer" />
               {hintButton}
               <button type="button" className="btn hb-reset" onClick={reset} disabled={!ids.length && !slidersUsed} aria-label="Start over" title="Start over">↺</button>
-              {met && duel && <button type="button" className="btn btn-primary bar-dup" onClick={reveal}>Reveal the duel</button>}
+              {met && duel && <button type="button" className="btn btn-primary bar-dup" onClick={reveal}>Lock in and unseal</button>}
               {met && !duel && <a className="btn bar-dup" href={isDuelLevel ? '#duel-start' : '#challenge'} onClick={toChallenge}>{friendLabel}</a>}
               {met && <button type="button" className="btn" onClick={copy}>{copied === 'done' ? 'Copied' : 'Copy my plan'}</button>}
               {met && !duel && (nextStop ? <a className="btn btn-primary bar-dup" href={'#' + nextStop.id}>Play {missionShort(nextStop)}</a> : <a className="btn btn-primary bar-dup" href="#story">See your Budget Story</a>)}
             </div>
             {copyBox}
           </section>
+          {duel && <FogStrip sealed={duel.host} mine={{ ids, lv, gradual }} name={duel.hostName} />}
           {challenge && theirs && mineNow && h2h && (
             <section className="card challenge-live" id="vs" aria-live="polite">
               <div className="challenge-live-head">

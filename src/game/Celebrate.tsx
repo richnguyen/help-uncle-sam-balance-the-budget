@@ -79,15 +79,15 @@ export function Celebration({ stop, stars, onClose, line, share, children, chall
           )}
           {!challenge && !mine && (
             <div className="celebrate-share">
-              <div className="small"><span className="stat-label">{share?.duel ? 'Duel a friend' : share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share?.duel ? 'Your plan goes in the link, sealed. Each friend balances the budget on their own, then you compare three rounds: the debt, the economy, and the balance.' : share ? 'Send your plan as a link. Your friend plays the same mission and sees how much you two agree.' : fact}</div></div>
+              <div className="small"><span className="stat-label">{share?.duel ? 'Sealed Showdown' : share ? 'Challenge a friend' : 'Your fact card'}</span><div>{share?.duel ? 'Seal your plan and dare a friend to beat it. They see your rating and where the debt lands, never your moves, until they lock in their own. Then the plans face off in three rounds.' : share ? 'Send your plan as a link. Your friend plays the same mission and sees how much you two agree.' : fact}</div></div>
               {receipt && (
                 <>
                   <pre className="receipt-preview" aria-label="Your plan receipt, as it will be shared">{receipt}</pre>
                   <label className="switch receipt-mix"><input type="checkbox" checked={mix} onChange={(e) => { setMix(e.target.checked); save('share-mix', e.target.checked); }} /> Show how my plan splits spending cuts and taxes</label>
                 </>
               )}
-              {share && <NameField id="cel-name" label={share.duel ? 'Sign your duel (first name, optional)' : 'Sign your challenge (first name, optional)'} />}
-              <div className="celebrate-share-actions"><ShareButton text={text} card={card} url={url} label={share?.duel ? 'Send the duel' : share ? 'Send the challenge' : 'Share'} kind={share ? 'plan' : 'level'} onShare={onShare} /></div>
+              {share && <NameField id="cel-name" label={share.duel ? 'Sign your sealed plan (first name, optional)' : 'Sign your challenge (first name, optional)'} />}
+              <div className="celebrate-share-actions"><ShareButton text={text} card={card} url={url} label={share?.duel ? 'Send the sealed plan' : share ? 'Send the challenge' : 'Share'} kind={share ? 'plan' : 'level'} onShare={onShare} /></div>
               <SocialShare text={text} url={url} kind={share ? 'plan' : 'level'} onShare={onShare} />
             </div>
           )}
