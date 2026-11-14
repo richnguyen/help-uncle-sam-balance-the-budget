@@ -1,8 +1,10 @@
-# Daily Dollar social posts, DRY RUN: three times a day, writes the brand accounts' posts (from the
-# game's own puzzle and the crowd's public, read-only counts) to this run's summary page for
-# review. Nothing is posted; no secrets are used. Times are UTC: about 7:30 AM, 1 PM and 8 PM
-# Eastern in winter (an hour later in summer). Run it by hand from the Actions tab too.
-name: Social post drafts (dry run)
+# Daily Dollar posts for the brand account, three times a day. Always writes the day's drafts to
+# this run's summary page (from the game's own puzzle and the crowd's public, read-only counts).
+# Posts to Bluesky only when the repository variable SOCIAL_POSTING is "on" (Settings → Secrets
+# and variables → Actions → Variables), signing in with the variable BLUESKY_HANDLE and the
+# secret BLUE_SKY_APP_KEY (an app password). Times are UTC: about 7:30 AM, 1 PM and 8 PM Eastern
+# in winter (an hour later in summer). Run it by hand from the Actions tab, picking a slot.
+name: Daily Dollar posts
 
 on:
   schedule:
@@ -10,12 +12,22 @@ on:
     - cron: '57 17 * * *'
     - cron: '57 0 * * *'
   workflow_dispatch:
+    inputs:
+      slot:
+        description: Which post (posted only if SOCIAL_POSTING is "on")
+        type: choice
+        options: [drafts only, morning, midday, evening]
+        default: drafts only
 
 permissions:
   contents: read
 
+concurrency:
+  group: social-posts
+  cancel-in-progress: false
+
 jobs:
-  drafts:
+  posts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -26,5 +38,24 @@ jobs:
       - run: npm ci
       - name: Check the posts' rules
         run: npm run test:social
-      - name: Write today's drafts (nothing is posted)
+      - name: Write today's drafts
         run: npm run social:drafts
+      - name: Pick the post for this time
+        id: slot
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          PICKED: ${{ inputs.slot }}
+        run: |
+          case "$SCHEDULE" in
+            '27 12 * * *') slot=morning ;;
+            '57 17 * * *') slot=midday ;;
+            '57 0 * * *') slot=evening ;;
+            *) case "$PICKED" in morning|midday|evening) slot="$PICKED" ;; *) slot= ;; esac ;;
+          esac
+          echo "slot=$slot" >> "$GITHUB_OUTPUT"
+      - name: Post to Bluesky
+        if: ${{ vars.SOCIAL_POSTING == 'on' && steps.slot.outputs.slot != '' }}
+        env:
+          BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUE_SKY_APP_KEY }}
+        run: node scripts/social/post.mjs --slot ${{ steps.slot.outputs.slot }} --live

@@ -888,8 +888,17 @@ right so far, by call number only, once every call has 20 answers (otherwise it'
 Each platform's version fits its length (Bluesky 300, Mastodon 500), dropping detail before the
 source, and its link carries the platform's partner code (`?via=bot-bluesky`). `--date` and
 `--days` preview other days; `npm run test:social` checks the rules (no spoilers, lengths, codes,
-no party or ideology words). `.github/workflows/social-drafts.yml` runs it three times a day and
-puts the drafts on the run's summary page (Actions tab); it uses no secrets and posts nothing.
+no party or ideology words; the Bluesky client against a stand-in). `.github/workflows/social-drafts.yml`
+runs three times a day and puts the drafts on the run's summary page (Actions tab).
+
+**Posting to Bluesky** (`scripts/social/post.mjs`, `scripts/social/bluesky.mjs`) is off until the
+repository variable `SOCIAL_POSTING` is `on`. It signs in with the variable `BLUESKY_HANDLE` (the
+account's handle, e.g. `dailydollar.bsky.social`) and the secret `BLUE_SKY_APP_KEY` (an app
+password, never the account password), and posts the same text the drafts show, with a clickable
+link and a link card. A skipped slot isn't posted, and a text already among the account's recent
+posts isn't posted again, so re-running is safe. `node scripts/social/post.mjs --slot morning`
+prints what it would post. To post one by hand: Actions → Daily Dollar posts → Run workflow, pick
+a slot. To stop: set `SOCIAL_POSTING` to anything but `on`.
 
 ## Test it
 
