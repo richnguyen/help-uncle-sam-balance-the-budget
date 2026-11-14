@@ -14,6 +14,7 @@ import { PEOPLES_LINES } from './script';
 import { PUBLIC_SITE } from './share';
 import { ShareButton, SocialShare } from './ShareButton';
 import { useJourney } from './state';
+import { useCardFilter } from './cardFilter';
 import { SamSays } from './UncleSam';
 
 // The People's Budget (#peoples): one shared budget, built by everyone who plays. Each player gets
@@ -69,6 +70,7 @@ export default function Peoples() {
   const segments: GapSegment[] = a.shares.map((x) => ({ id: x.id, label: x.name, share: Math.max(0, x.share) * k, side: x.side }));
   const still = goalGap('stabilize', a.sim, CTX.startRatio);
   const cards = useMemo(() => [...OPTIONS].sort((x, y) => (t?.cards[y.id]?.net ?? 0) - (t?.cards[x.id]?.net ?? 0) || x.name.localeCompare(y.name)), [t]);
+  const filter = useCardFilter(cards.filter((o) => (t?.cards[o.id]?.net ?? 0) > 0).length);
 
   const move = async (card: string, dir: 1 | -1) => {
     setBusy(card + dir); setError('');
@@ -146,8 +148,9 @@ export default function Peoples() {
       </section>
 
       <Section id="cards" title="The cards" sub="Net pushes over the last 30 days. In the budget when more people pushed a card in than out. Each card’s share is how much of the gap it closes on its own.">
+        {filter.pills}
         <ol className="peoples-cards">
-          {cards.map((o) => {
+          {cards.filter((o) => filter.keep(o, (t?.cards[o.id]?.net ?? 0) > 0)).map((o) => {
             const c = t?.cards[o.id] ?? { net: 0, in: 0, out: 0 };
             const isIn = c.net > 0;
             const own = assess('stabilize', [o.id], ZERO, true).progress;

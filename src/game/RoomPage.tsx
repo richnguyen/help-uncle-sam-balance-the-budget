@@ -188,16 +188,25 @@ export default function RoomPage({ param }: { param: string | null }) {
 
       {t && (
         <Section id="progress" title="How the room is doing" sub="Levels finished by the room’s members.">
-          <ol className="rlist">
-            {STOPS.map((s) => <Bar key={s.id} label={`${s.n}. ${s.title}`} share={members ? (t.done[s.id] ?? 0) / members : 0} note={`${t.done[s.id] ?? 0} of ${members}`} />)}
-          </ol>
+          {(() => {
+            // The missions someone in the room has finished; the rest fold away.
+            const row = (s: (typeof STOPS)[number]) => <Bar key={s.id} label={`${missionShort(s)} · ${s.title}`} share={members ? (t.done[s.id] ?? 0) / members : 0} note={`${t.done[s.id] ?? 0} of ${members}`} />;
+            const started = STOPS.filter((s) => (t.done[s.id] ?? 0) > 0), rest = STOPS.filter((s) => !(t.done[s.id] ?? 0));
+            return (
+              <>
+                {started.length > 0 ? <ol className="rlist">{started.map(row)}</ol> : <p className="small">No one has finished a mission yet.</p>}
+                {rest.length > 0 && started.length > 0 && <details className="room-more"><summary className="small">{rest.length} mission{rest.length === 1 ? '' : 's'} no one has finished yet</summary><ol className="rlist">{rest.map(row)}</ol></details>}
+              </>
+            );
+          })()}
           <p className="small muted">{finished} of {members} finished {missionShort(STOP_BY_ID[d.id])}.</p>
         </Section>
       )}
 
       {t && (
         <Section id="votes" title="How the room voted" sub={t.votes ? `${t.votes.voters} of ${members} members have voted in the game.` : 'Vote breakdowns appear once 3 people have joined, so no one’s answers stand out.'}>
-          {t.votes && (
+          {t.votes && t.votes.voters === 0 && <p className="small">The questions members answer along the way show up here, with the room’s split on each.</p>}
+          {t.votes && t.votes.voters > 0 && (
             <div className="rvotes">
               {BALLOT.map((q) => {
                 if (q.key.startsWith('option:')) {
@@ -257,9 +266,9 @@ function RevealControls({ code, host, onShow }: { code: string; host: boolean; o
           <button type="button" className="btn btn-sm" onClick={stop}>Stop the timer</button>
         </div>
       ) : host ? (
-        <div className="sb-actions" role="group" aria-label="Start a timer for the reveal">
-          <span className="small">Reveal in:</span>
-          {[5, 10, 15, 20].map((m) => <button key={m} type="button" className="btn btn-sm" onClick={() => start(m)}>{m} min</button>)}
+        <div className="reveal-set" role="group" aria-label="Start a timer for the reveal">
+          <span className="small">Start a class timer. The reveal opens when it runs out.</span>
+          <div className="reveal-mins">{[5, 10, 15, 20].map((m) => <button key={m} type="button" className="btn btn-sm" onClick={() => start(m)}>{m} min</button>)}</div>
         </div>
       ) : null}
       <div className="sb-actions"><button type="button" className="btn btn-primary" onClick={onShow}>Show the reveal</button></div>

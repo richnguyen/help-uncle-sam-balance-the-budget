@@ -14,6 +14,8 @@ import { cleanName, decodePlan, encodePlan, siteRoot } from './plans';
 // in this browser (the Duels page). Plans are compared, never people: no rankings of players.
 
 export const DUEL_LEVEL = 'level-10';
+/** What players call it: two sealed plans, then three rounds. (Routes and link parameters keep the older word, duel.) */
+export const SHOWDOWN = 'Sealed Showdown';
 const D10 = () => DESK.find((d) => d.id === DUEL_LEVEL)!;
 
 export interface DuelPlan { ids: string[]; lv: Levers; gradual: boolean }
