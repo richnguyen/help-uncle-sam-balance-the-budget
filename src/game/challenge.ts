@@ -52,7 +52,7 @@ export function takeLinkFromSearch() {
     const peoples = q.has('peoples');
     const room = (q.get('room') ?? '').toUpperCase();
     const chain = new URLSearchParams();
-    for (const k of ['g', 't', 'n']) { const v = q.get(k); if (v != null) chain.set(k, v); }
+    for (const k of ['g', 't', 'n', 'w']) { const v = q.get(k); if (v != null) chain.set(k, v); }
     const isChain = q.has('chain');
     // A level 10 duel: the invite carries the host's plan (h…), the reply both plans.
     const duel = new URLSearchParams();

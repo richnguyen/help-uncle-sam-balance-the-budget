@@ -43,6 +43,11 @@ const JEF = ['platform', 'colonnade', 'portico', 'dome', 'statue'].map((x) => 'j
   await p.goto(base + '#level-1'); await p.waitForTimeout(1200);
   s = await bar(p);
   ok(s.n === '0' && s.on === null && /0 days in a row; your best is 3/.test(s.label), 'a missed day: 🔥 0 in grey, and the best (3) is remembered: ' + s.label);
+  // The record card (the You tab) carries the streak too.
+  await p.goto(base + '#guide'); await p.waitForTimeout(1000);
+  const rc = (await p.locator('.rc-card .rc-streak').textContent()).replace(/\s+/g, ' ').trim();
+  ok(/^🔥 0 days in a row · best 3 · play today’s Daily Dollar to start one$/.test(rc) && await p.locator('.rc-card .rc-streak').getAttribute('href') === '#daily', 'the record card shows the streak and the best: ' + rc);
+  await p.locator('.rc-card .rc-who').screenshot({ path: __OUT + '/streak-record.png' });
 
   // 3. The Mall: landmark N's finishing touch needs an N-day streak; the best run counts.
   await p.goto(base + '#mall-jefferson'); await p.waitForTimeout(300);

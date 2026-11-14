@@ -525,7 +525,8 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
 - **The streak in the top bar** (`src/game/streak.ts`): 🔥 and the days in a row, left of the
   stars, linking to the Daily Dollar; grey until today's or yesterday's puzzle is played, with the
   best run in its label. It comes from the results kept in the browser, and updates as soon as a
-  puzzle is finished.
+  puzzle is finished. The record card on the You tab shows it too ("🔥 5 days in a row · best 9"), and the
+  Informed Budget Voter certificate adds the best streak to its share.
 - **Watching it go up is the reward.** Pieces not yet built are drawn as blueprints, the next job
   glowing, so the player sees what is coming. Building plays on the drawing itself (Web
   Animations, `anim.ts`): a star flies from the button to the site, scaffolding goes up, then the
@@ -573,8 +574,10 @@ all 21 missions, has the gold grand seal.
    chapter, and medals that reward taking part (voting, reading the original documents,
    exploring the field guide, sharing) as much as winning. Every level can be finished by hand,
    with only a gentle hint on level 5. The article's other tactic, levels tuned to be
-   "almost winnable" to sell boosters, is deliberately left out: there are no timers, lives,
-   streak penalties, leaderboards, ads or purchases.
+   "almost winnable" to sell boosters, is deliberately left out: there are no lives, streak
+   penalties, rankings of players, ads or purchases. The social clocks (a chain's 4-hour turn
+   clock, a room's reveal timer) only nudge and never cost anything, and a duel link's board
+   ranks plans, never people.
 5. **Make it easy to share.** Share buttons on the celebration card, fact cards, ballot and
    certificate use the phone's share sheet, falling back to the clipboard. On the public site,
    "Save image" makes a 1200×630 card with the level, stars, a fact and Uncle Sam.
@@ -721,7 +724,7 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   ends on "Try again". Newcomers are pointed to level 1 at the end, and Uncle Sam's voice starts
   downloading only after the first tap. The share stats count each step: took the challenge, met
   the goal, sent a plan back.
-- **The budget duel** (`/p/duel/?duel=…`, `#duel`, `#duels`): the final mission (3.5) shares a duel instead of a
+- **The budget duel** (`/p/duel-<rating>/?duel=…`, `#duel`, `#duels`): the final mission (3.5) shares a duel instead of a
   challenge. The host's plan travels sealed in the invite (`hp`, `hlv`, `hph`, `hby`); the friend
   sees only that it exists and whether it balances the budget, plays level 10 on their own from
   a fresh plan (level 10 opens straight away, with no celebration pop-up), and taps "Reveal the
@@ -736,6 +739,20 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   from their side. One invite goes to many friends: each reply is its own head-to-head, and the
   Duels page lists every one next to your plan, with "See the rounds" and "Rematch". Everything
   is in links and this browser's storage, with no accounts; plans are compared, never people.
+  **The sealed envelope** (`sealedText`, `scripts/make-duel-previews.mjs`): the invite reads
+  "🔒 Ruth sealed a Balanced Budget plan (Rating: Moderate). Build yours to unseal theirs…", and
+  its link goes through a preview page per rating (`/p/duel-gentle/`, `-moderate/`, `-steep/`)
+  drawn as a sealed briefing folder; the invite page shows the same folder. **The reveal**: the
+  rounds open one tap at a time, scored like boxing (10–9 a round, 10–10 if even), then the
+  verdict (knockout for all three, split decision for 2–1, majority decision with an even round,
+  a decision on the tie-breaker, or a draw); "Skip to the result" is there, and a comparison seen
+  once opens revealed. **The scorecard**: a 9:16 card sized for a phone screen, and a 1080×1920
+  image to share or save. **Everyone on this link** (`supabase/migrations/20261118000000_duel_boards.sql`,
+  run once in Supabase): each friend who finishes a duel link adds their plan (and the host's
+  from the link) to that link's board through `enter_duel` (signed-in players only, 200 plans a
+  board, 40 new boards a player a day); `duel_board` lists the plans with their first names, if
+  signed. The game plays every plan against every other in the same rounds; a win is a point, a
+  draw half. Offline, or in the claude.ai copy, the board shows the plans this device knows.
 - **Your Budget Story** (`#story`): phone-story cards (1080×1920) drawn as SVG and saved as
   PNG: a budget personality, the biggest move, the debt path against current law, and the
   closest real proposal; and, if the player chooses, how the plan splits taxes and cuts and their
@@ -812,9 +829,25 @@ expiring rewards, streaks that punish a missed day, public ranking of people).
   together. The starter gets a 6-character code; members join, the level opens for them, and each
   member's plan that meets the goal joins the room's (a card is in when more than half the plans
   use it). The room sees totals only, and vote breakdowns once 3 have joined.
+  **The reveal** (`src/game/roomReveal.ts`): a projector screen with the group's budget
+  personality (Gridlocked Congress, "Failed to pass a budget!", when the majority plan falls
+  short; otherwise The Ruthless Deficit Hawks, The Dealmakers, The Precision Planners or The
+  Patient Builders, by how hard and how concentrated the plan is, never by whether it taxes or
+  cuts), the most controversial card (the one nearest a 50/50 split of the room's plans), and
+  "Take it home": a QR code and a "Beat the room" button that open a challenge link with the
+  room's plan. Whoever started the room can set a 5–20 minute timer that opens the reveal on that
+  screen. The room isn't locked: plans sent later still change the totals.
 - **Pass the budget** (`#chain`): each person adds one card or takes one out, then passes the link
   on; the chain lives entirely in the link (goal, turns, optional first names), so it needs no
-  server. Every link can branch.
+  server. Every link can branch. **Passing it on** (`src/game/chainKit.ts`): the message says how
+  far Uncle Sam still is from the goal, what you just did in plain words ("cut Defense", "raised
+  the gas tax"), whose turn is next and the 4-hour clock; the link carries the minute it was
+  passed (`w`) and goes through a preview page for the next turn and how far the chain has got
+  ("Waiting on Turn 3…", `scripts/make-chain-previews.mjs`, 46 pages). Whoever opens it sees
+  the turn clock, or how far over it is. **The Budget Closer**: the move that meets the goal
+  shows every hand in order with its kind of move (Taxed, Cut, Spent, Tax cut, Undid) and the
+  closer's trophy, as a card and an image to share back to the group; the closer earns the
+  "Budget closer" medal, and a finished chain takes no more turns.
 - **Share stats** (`#stats`, linked from "How everyone played"): shares made, shared links opened,
   and new players whose first visit came through a shared link, by channel and kind of link, with
   the viral coefficient K = shares per player × new players per share, and the friend-challenge

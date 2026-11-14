@@ -334,3 +334,23 @@ ok((await as(null, 'select public.daily_stats($1) as s', [today - 1])).rows[0].s
 ok(!(await as(null, 'select public.daily_stats($1) as s', [today + 5])).rows[0].s.players && (await as(null, 'select public.daily_stats($1) as s', [today - 9])).rows[0].s.calls.every((x) => x.right === 0), 'daily counts: puzzles far from today, unknown calls and results out of range are ignored');
 ok(await fails(() => as(null, `insert into public.daily_counts (puzzle, call, result, n) values (${today}, 1, 1, 999)`)), 'daily counts: nobody writes the counts directly');
 ok((await as(null, 'select * from public.daily_counts')).rows.length === 0, 'daily counts: nobody reads the table directly');
+
+// Duel boards
+const V = Array.from({ length: 5 }, (_, i) => `00000000-0000-0000-0000-0000000000d${i + 1}`);
+for (const u of V) await db.query('insert into auth.users (id) values ($1)', [u]);
+const enter = (u, duel, p, name, lv = '') => as(u, 'select public.enter_duel($1, $2, $3, $4, $5, $6, $7, $8, $9)', [duel, '10.acg', 'r5', true, 'Ruth', p, lv, true, name]);
+await enter(V[1], 'k7mq3pab', '10.ar', 'Sam');
+await enter(V[2], 'k7mq3pab', '10.agr', '');
+await enter(V[1], 'k7mq3pab', '10.agrs', 'Sam', 'd-5');
+const board = (u) => as(u, 'select public.duel_board($1) as b', ['k7mq3pab']).then((r) => r.rows[0].b);
+const bd = await board(V[1]);
+console.log('  duel_board:', JSON.stringify(bd));
+ok(bd.length === 3 && bd[0].host && bd[0].name === 'Ruth' && bd[0].p === '10.acg' && bd[0].lv === 'r5', 'duel boards: the host’s plan from the link comes first');
+ok(bd[1].name === 'Sam' && bd[1].p === '10.agrs' && bd[1].lv === 'd-5' && bd[1].mine && !bd[2].mine && bd[2].name === null, 'duel boards: a friend’s latest plan replaces their earlier one; yours is marked; an unsigned plan has no name');
+ok((await board(null)).every((x) => !x.mine) && (await board(null)).length === 3, 'duel boards: anyone with the link can read the board');
+ok(await fails(() => enter(null, 'k7mq3pab', '10.a', 'Al')), 'duel boards: signed-out visitors cannot enter a plan');
+ok(await fails(() => enter(V[3], 'k7mq3pab', '5.a', 'Al')) && await fails(() => enter(V[3], 'k7mq3pab', '10.a', 'Al', 'r999.x')) && await fails(() => enter(V[3], 'BAD!', '10.a', 'Al')) && await fails(() => enter(V[3], 'k7mq3pab', '10.a', '<b>')), 'duel boards: only well-formed final-mission plans, duel ids and names');
+ok(await fails(() => as(V[3], `insert into public.duel_entries (duel, user_id, p) values ('k7mq3pab', $1, '10.a')`, [V[3]])) && (await as(V[1], 'select * from public.duel_entries')).rows.length === 0, 'duel boards: nobody reads or writes the table directly');
+let duelCap = false;
+for (let k = 0; k < 41; k++) { try { await enter(V[4], 'cap' + String(k).padStart(4, '0'), '10.a', 'Al'); } catch (e) { duelCap = /Too many duels/.test(e.message); break; } }
+ok(duelCap, 'duel boards: at most 40 new boards per player a day');

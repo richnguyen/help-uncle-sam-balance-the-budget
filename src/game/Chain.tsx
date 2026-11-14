@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { ActionBar } from '../components/ActionBar';
 import { EconMeter, GapBar, type GapSegment, SplitBar } from '../components/game';
 import { PageHead, Section } from '../components/ui';
 import { assess, CTX, LAST_FY } from '../lib/assess';
-import { money, pct } from '../lib/format';
+import { money, moneyWords, pct } from '../lib/format';
 import { goalGap } from '../lib/plan';
 import { OPTIONS_DATA } from '../lib/planData';
 import { ZERO } from '../lib/sandbox';
@@ -11,6 +11,7 @@ import { useHaptics } from './haptics';
 import { DESK, missionShort, STOP_BY_ID } from './levels';
 import { CARD_CODE, cleanName, myName, setMyName, siteRoot } from './plans';
 import { CHAIN_LINES } from './script';
+import { clockText, closerCard, closerText, handName, minutesSince, moveLine, moveTag, passText, previewId, stampNow } from './chainKit';
 import { ShareButton, SocialShare } from './ShareButton';
 import { useJourney } from './state';
 import { SamSays } from './UncleSam';
@@ -27,7 +28,7 @@ const MAX_TURNS = 30;
 const GOAL_TEXT: Record<number, string> = { 5: 'stop Uncle Sam’s debt from outgrowing the economy', 8: 'cut Uncle Sam’s deficit to 3% of GDP', 10: 'balance Uncle Sam’s budget' };
 
 interface Turn { card: string; add: boolean; by: string }
-interface ChainState { level: number; turns: Turn[] }
+interface ChainState { level: number; turns: Turn[]; w?: string | null }
 
 /** Goals the cards alone can reach (balancing the budget also needs across-the-board changes). */
 const REACHABLE = DESK.filter((d) => assess(d.goal, OPTIONS.map((o) => o.id), ZERO, true).met);
@@ -43,12 +44,12 @@ function decode(param: string | null): ChainState | null {
     if (!card) continue;
     turns.push({ card, add: ch !== ch.toLowerCase(), by: cleanName(names[i] ?? '').slice(0, 16) });
   }
-  return { level, turns };
+  return { level, turns, w: q.get('w') };
 }
 function encode(c: ChainState) {
   const t = c.turns.map((x) => (x.add ? CARD_CODE[x.card].toUpperCase() : CARD_CODE[x.card])).join('');
   const n = c.turns.map((x) => x.by).join('~').replace(/~+$/, '');
-  return `chain&g=${c.level}${t ? `&t=${t}` : ''}${n ? `&n=${encodeURIComponent(n)}` : ''}`;
+  return `chain&g=${c.level}${t ? `&t=${t}` : ''}${n ? `&n=${encodeURIComponent(n)}` : ''}${c.w ? `&w=${c.w}` : ''}`;
 }
 const cardsIn = (turns: Turn[]) => {
   const s = new Set<string>();
@@ -63,8 +64,9 @@ export default function Chain({ param }: { param: string | null }) {
   const [level, setLevel] = useState(given?.level ?? REACHABLE[0]?.n ?? 5);
   const [name, setName] = useState(myName);
   const [mine, setMine] = useState<Turn | null>(null);
+  const [stamp, setStamp] = useState('');
   const before = given?.turns ?? [];
-  const chain: ChainState = { level: given?.level ?? level, turns: mine ? [...before, mine] : before };
+  const chain: ChainState = { level: given?.level ?? level, turns: mine ? [...before, mine] : before, w: mine ? stamp : null };
   const d = DESK.find((x) => x.n === chain.level)!;
   const ids = cardsIn(chain.turns);
   const idsBefore = cardsIn(before);
@@ -75,17 +77,24 @@ export default function Chain({ param }: { param: string | null }) {
   const segments: GapSegment[] = a.shares.map((x) => ({ id: x.id, label: x.name, share: Math.max(0, x.share) * kk, side: x.side }));
   const still = goalGap(d.goal, a.sim, CTX.startRatio);
   const full = before.length >= MAX_TURNS;
-  const link = `${siteRoot()}p/chain/?${encode(chain)}`;
+  const link = `${siteRoot()}p/${previewId(chain.turns.length + 1, a.progress, a.met)}/?${encode(chain)}`;
   const hands = new Set(chain.turns.map((t, i) => t.by || `#${i}`)).size;
   const shareText = a.met
-    ? `We did it! Our pass-the-budget chain managed to ${GOAL_TEXT[d.n]} in ${chain.turns.length} turns. See how it happened, or keep it going.`
+    ? closerText(chain.turns, GOAL_TEXT[d.n])
+    : mine ? passText({ gap: moneyWords(still, 1), did: moveLine(mine, NAME), nextTurn: chain.turns.length + 1 })
     : `Your turn! Our pass-the-budget chain is ${Math.floor(a.progress * 100)}% of the way to ${GOAL_TEXT[d.n].replace(/^stop/, 'stopping').replace(/^cut/, 'cutting').replace(/^balance/, 'balancing')}. Make one change and pass it on.`;
+  // Waiting on whom: the turn this link hands over, and how long it has been out.
+  const clock = given && before.length > 0 && !wasMet && !mine ? clockText(before.length + 1, minutesSince(given.w)) : null;
+  const closedTurns = a.met && chain.turns.length > 0 ? chain.turns : wasMet && !mine ? before : null;
 
   const take = (card: string, add: boolean) => {
     buzz('card');
-    setMine({ card, add, by: cleanName(name).slice(0, 16) });
+    const t = { card, add, by: cleanName(name).slice(0, 16) };
+    setMine(t);
+    setStamp(stampNow());
     setMyName(name);
     j.mark('chain');
+    if (assess(d.goal, cardsIn([...before, t]), ZERO, true).met) j.mark('closer');
   };
 
   const sam = mine ? (a.met ? CHAIN_LINES.done : CHAIN_LINES.passed) : given ? (wasMet ? CHAIN_LINES.done : CHAIN_LINES.turn) : CHAIN_LINES.start;
@@ -98,6 +107,8 @@ export default function Chain({ param }: { param: string | null }) {
         lede={<>Each person makes one change to Uncle Sam’s budget, adding one policy card or taking one out, then passes the link on. The goal: {GOAL_TEXT[d.n]} by FY{LAST_FY}.</>}
       />
       <SamSays mood={a.met ? 'cheering' : mine ? 'happy' : 'thinking'} auto>{sam}</SamSays>
+      {clock && <div className="chain-clock" data-late={clock.late || undefined} role="status"><span aria-hidden="true">{clock.late ? '⏰' : '⏳'}</span> <strong>Waiting on Turn {before.length + 1}: that’s you.</strong> <span>{clock.text}</span></div>}
+      {closedTurns && <CloserReceipt turns={closedTurns} goal={GOAL_TEXT[d.n]} mineLast={!!mine && a.met} share={mine ? null : <span className="sb-actions"><ShareButton text={shareText} url={link} label="Share the finished chain" className="btn btn-primary" kind="chain" card={() => closerCard(closedTurns, GOAL_TEXT[d.n], NAME)} /></span>} />}
 
       {!given && !mine && (
         <section className="card chain-start">
@@ -118,7 +129,7 @@ export default function Chain({ param }: { param: string | null }) {
               <li key={i} data-mine={mine && i === chain.turns.length - 1 ? true : undefined}>
                 <span className="num muted chain-n">{i + 1}.</span>
                 <span className="peoples-chip" data-in={t.add}>{t.add ? 'Added' : 'Took out'}</span>
-                <span><strong>{t.by || (mine && i === chain.turns.length - 1 ? 'You' : 'Someone')}</strong> {t.add ? 'added' : 'took out'} “{NAME[t.card]}”</span>
+                <span><strong>{t.by || (mine && i === chain.turns.length - 1 ? 'You' : 'Someone')}</strong> {moveLine(t, NAME)}<span className="muted"> · “{NAME[t.card]}”</span></span>
               </li>
             ))}
           </ol>
@@ -143,11 +154,14 @@ export default function Chain({ param }: { param: string | null }) {
           <h2 className="section-title" id="pass-t">{a.met ? 'Share how your chain did it' : 'Now pass it on'}</h2>
           <p className="small">Your change: you {mine.add ? 'added' : 'took out'} “{NAME[mine.card]}”. Send the link to one person, or a few: each one starts their own branch of the chain.</p>
           <ActionBar label="Pass it on">
-            <ShareButton text={shareText} url={link} label={a.met ? 'Share the chain' : 'Pass it on'} className="btn btn-primary" />
+            <ShareButton text={shareText} url={link} label={a.met ? 'Share the chain' : 'Pass the link'} className="btn btn-primary" kind="chain" card={a.met ? () => closerCard(chain.turns, GOAL_TEXT[d.n], NAME) : undefined} />
             <button type="button" className="btn" onClick={() => setMine(null)}>Change my turn</button>
           </ActionBar>
-          <SocialShare text={shareText} url={link} />
+          {!a.met && <pre className="receipt-preview chain-preview" aria-label="The message that goes with the link">{shareText}</pre>}
+          <SocialShare text={shareText} url={link} kind="chain" />
         </section>
+      ) : wasMet ? (
+        <div className="callout small">This chain met its goal. <a href="#chain">Start a new chain</a> and pass it to the group.</div>
       ) : full ? (
         <div className="callout small">This chain has had its {MAX_TURNS} turns. Start a new one to keep going.</div>
       ) : (
@@ -179,5 +193,34 @@ export default function Chain({ param }: { param: string | null }) {
       )}
       <p className="small muted">The chain lives entirely in its link: nothing is stored anywhere. Scored with CBO’s estimates, phased in over three years, the same way as the budget desk.</p>
     </>
+  );
+}
+
+/** The Budget Closer receipt: every hand in the chain, in order, with what kind of move it made; the last one closed the deal. */
+function CloserReceipt({ turns, goal, mineLast, share }: { turns: Turn[]; goal: string; mineLast: boolean; share: ReactNode }) {
+  const closer = handName(turns.at(-1)!, turns.length - 1);
+  return (
+    <section className="card chain-closer" aria-labelledby="closer-t">
+      <div className="chain-closer-head">
+        <span className="chain-trophy" aria-hidden="true">🏆</span>
+        <div>
+          <div className="stat-label">Budget Closer</div>
+          <h2 className="section-title" id="closer-t">{mineLast ? 'You closed the deal!' : `${closer} closed the deal!`}</h2>
+          <p className="small">The chain managed to {goal} in {turns.length} turn{turns.length === 1 ? '' : 's'}. Everyone in it gets credit.</p>
+        </div>
+      </div>
+      <ol className="chain-hands" role="list" aria-label="Every hand in the chain">
+        {turns.map((t, i) => {
+          const last = i === turns.length - 1;
+          return (
+            <li key={i} data-tag={last ? 'Closer' : moveTag(t)}>
+              <span className="chain-hand-name">{handName(t, i)}</span>
+              <span className="chain-hand-tag">{last ? 'Closed the deal!' : moveTag(t)}</span>
+            </li>
+          );
+        })}
+      </ol>
+      {share && <><p className="small muted">Played a part? Send the finished chain back to the group.</p>{share}</>}
+    </section>
   );
 }

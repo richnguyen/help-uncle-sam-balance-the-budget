@@ -35,6 +35,7 @@ const out = __OUT + '/';
   let p = await person({ width: 1280, height: 900 });
   for (const card of ['Apply the Social Security tax to earnings above', 'Cut the Defense Department', 'Limit the tax savings from itemized']) {
     await p.goto(link); await p.waitForTimeout(900);
+    if (!(await p.locator('#your-turn').count())) { console.log('the chain met its goal: no more turns'); break; }
     await p.locator('.peoples-card', { hasText: card }).getByRole('button', { name: 'Add it' }).click(); await p.waitForTimeout(300);
     link = await linkOf(p);
     console.log('turn added:', card.slice(0, 30), '->', (await p.locator('.peoples-board .sb-big').textContent()));

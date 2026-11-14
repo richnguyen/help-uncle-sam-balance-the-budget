@@ -8,7 +8,7 @@ import { cleanName, decodePlan, encodePlan, siteRoot } from './plans';
 // The level 10 duel: two people balance Uncle Sam's budget on their own, without seeing each
 // other's plan, then compare in three rounds. Everything travels in links, so it works on the
 // static site and in the artifact, with no accounts:
-//   the invite  …/p/duel/?duel=<id>&hp=10.abc&hlv=r2&hby=Ruth       the host's plan, sealed
+//   the invite  …/p/duel-<rating>/?duel=<id>&hp=10.abc&hlv=r2&hby=Ruth   the host's plan, sealed
 //   the reply   …/p/duel-back/?duelr=<id>&hp=…&hby=Ruth&p=10.xyz&by=Sam   both plans
 // One invite can go to many friends; each reply is its own head-to-head, and every duel is kept
 // in this browser (the Duels page). Plans are compared, never people: no rankings of players.
@@ -51,7 +51,7 @@ const replyQuery = (d: Pick<Duel, 'id' | 'host' | 'hostName' | 'guest' | 'guestN
   return q.toString();
 };
 /** The invite: my plan, sealed, and my name. */
-export const inviteLink = (d: Pick<Duel, 'id' | 'host' | 'hostName'>) => `${siteRoot()}p/duel/?${inviteQuery(d)}`;
+export const inviteLink = (d: Pick<Duel, 'id' | 'host' | 'hostName'>) => `${siteRoot()}p/duel-${assessDuel(d.host).econ.rating}/?${inviteQuery(d)}`;
 /** The reply: both plans, so the host sees the comparison on any device. */
 export const replyLink = (d: Pick<Duel, 'id' | 'host' | 'hostName' | 'guest' | 'guestName'>) => `${siteRoot()}p/duel-back/?${replyQuery(d)}`;
 /** Where a duel's comparison opens inside the game. */
@@ -144,4 +144,61 @@ export function duelRounds(mine: DuelPlan, theirs: DuelPlan) {
     : cards.mine === cards.theirs ? 'tie' : cards.mine < cards.theirs ? 'me' : 'them';
   const outcome: 'won' | 'tied' | 'lost' = won > lost || tiebreak === 'me' ? 'won' : won < lost || tiebreak === 'them' ? 'lost' : 'tied';
   return { rounds, outcome, score: `${won}–${lost}`, tiebreak, tiebreakBy, steep, cards, mine: a, theirs: b, balanced: { mine: a.met, theirs: b.met } };
+}
+
+// ---------- the sealed envelope, the boxing scorecard, and the board ----------
+export type Rating = 'gentle' | 'moderate' | 'steep';
+const RATING_WORD: Record<Rating, string> = { gentle: 'Gentle', moderate: 'Moderate', steep: 'Steep' };
+/** The sealed plan's rating (how hard it hits the economy), the one thing the invite reveals. */
+export const sealedRating = (p: DuelPlan): Rating => assessDuel(p).econ.rating;
+/** The invite: a sealed briefing folder. Says only whether the plan balances and how steep it is. */
+export function sealedText(name: string, p: DuelPlan) {
+  const a = assessDuel(p);
+  return `🔒 ${name || 'A friend'} sealed a ${a.met ? 'Balanced Budget plan' : 'budget plan'} (Rating: ${RATING_WORD[a.econ.rating]}). Build yours to unseal theirs and face off in 3 rounds: Debt, Economy, Balance 👉`;
+}
+
+/**
+ * The fight, scored like boxing: each round 10–9 to the plan that wins it (10–10 if even), and a
+ * verdict: all three rounds is a knockout, 2–1 a split decision, a win with an even round a
+ * majority decision, and even rounds go to the tie-breakers (a decision) or a draw.
+ */
+export function scorecard(r: ReturnType<typeof duelRounds>) {
+  const pts = r.rounds.map((x) => (x.winner === 'me' ? [10, 9] : x.winner === 'them' ? [9, 10] : [10, 10]));
+  const total = pts.reduce((s, [a, b]) => [s[0] + a, s[1] + b], [0, 0]);
+  const won = r.rounds.filter((x) => x.winner === 'me').length, lost = r.rounds.filter((x) => x.winner === 'them').length;
+  const verdict = won === 3 || lost === 3 ? 'Knockout'
+    : won === lost ? (r.outcome === 'tied' ? 'Draw' : 'Decision on the tie-breaker')
+    : Math.min(won, lost) > 0 ? 'Split decision' : 'Majority decision';
+  return { pts, total, verdict };
+}
+
+/** Whether this comparison was already revealed on this device (then it opens with every round showing). */
+const SEEN = 'duel-seen';
+export const revealKey = (id: string, a: DuelPlan, b: DuelPlan) => `${id}:${planKey(a)}:${planKey(b)}`;
+export const wasRevealed = (k: string) => load<string[]>(SEEN, []).includes(k);
+export const markRevealed = (k: string) => save(SEEN, [k, ...load<string[]>(SEEN, []).filter((x) => x !== k)].slice(0, 60));
+
+export interface BoardEntry { plan: DuelPlan; name?: string; host: boolean; mine: boolean }
+/** A board row from the server, as a plan (rows that don't read as a final-mission plan are left out). */
+export function boardEntry(x: { p: string; lv: string; ph: boolean; name: string | null; host: boolean; mine: boolean }): BoardEntry | null {
+  const q = new URLSearchParams({ p: x.p, ...(x.lv ? { lv: x.lv } : {}), ...(x.ph ? {} : { ph: '0' }) });
+  const p = plan(q);
+  return p ? { plan: { ids: p.ids, lv: p.lv, gradual: p.gradual }, name: x.name ?? undefined, host: x.host, mine: x.mine } : null;
+}
+/** How a plan reads on the board: the link's own spelling (cards, across-the-board changes, phase-in). */
+export function boardPlanArgs(p: DuelPlan) {
+  const q = new URLSearchParams(code(p));
+  return { p: q.get('p') ?? '10.', lv: q.get('lv') ?? '', ph: q.get('ph') !== '0' };
+}
+/**
+ * Everyone on one link, plan against plan: each plan plays every other in the same three rounds
+ * (and tie-breakers). A win is a point, a draw half. Ordered by points, then the gentler economy.
+ */
+export function standings(entries: BoardEntry[]) {
+  const rows = entries.map((e) => ({ ...e, w: 0, l: 0, t: 0, a: assessDuel(e.plan) }));
+  for (let i = 0; i < rows.length; i++) for (let j = i + 1; j < rows.length; j++) {
+    const o = duelRounds(rows[i].plan, rows[j].plan).outcome;
+    if (o === 'won') { rows[i].w++; rows[j].l++; } else if (o === 'lost') { rows[i].l++; rows[j].w++; } else { rows[i].t++; rows[j].t++; }
+  }
+  return rows.sort((x, y) => (y.w + y.t / 2) - (x.w + x.t / 2) || x.a.econ.peakStep - y.a.econ.peakStep);
 }
