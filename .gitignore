@@ -22,3 +22,6 @@ tests/e2e/.runs/
 
 # Social post drafts (scripts/social/compose.mjs)
 social/drafts/
+
+# The full bills file the deploy publishes (scripts/fetch-bills.mjs); made in CI, not committed
+public/bills-full.json

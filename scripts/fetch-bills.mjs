@@ -202,6 +202,10 @@ let before = '';
 try { before = readFileSync(OUT, 'utf8'); } catch { /* first run */ }
 const text = JSON.stringify(out, null, 1) + '\n';
 writeFileSync(OUT, text);
+// The whole file next to the site too (dist/bills-full.json), so builds made elsewhere (the
+// claude.ai copy: npm run build:artifact) can use the same bills the site shows, sponsors and
+// floor votes included, without a Congress.gov key (scripts/pull-bills.mjs). Not committed.
+writeFileSync(new URL('../public/bills-full.json', import.meta.url), JSON.stringify(out) + '\n');
 // A small public copy next to the site (dist/bills.json), for the alert sender: which stage each
 // bill is at. The sender compares it with what players follow (supabase/functions/daily-reminders).
 writeFileSync(PUBLIC, JSON.stringify({ fetchedAt: out.fetchedAt, bills: bills.map((b) => ({ id: b.id, label: b.label, title: b.title, status: b.status, url: b.url })) }) + '\n');

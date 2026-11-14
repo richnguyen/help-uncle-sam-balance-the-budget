@@ -912,6 +912,12 @@ token with `write:statuses`; with `read` too, a text already posted is recognize
 client key and secret aren't needed to post. Each platform posts on its own: one that isn't set
 up is skipped with a note, and one that fails doesn't stop the other.
 
+**Bills in the claude.ai copy.** Fresh bills (sponsors, floor votes, summaries) are fetched from
+Congress.gov only on the deploy, with the repository's key, and the deploy publishes them as
+`/bills-full.json` (not committed). `npm run build:artifact` first runs `scripts/pull-bills.mjs`,
+which takes that file from the site when it's newer than the local one, so the claude.ai copy shows
+the same bills as the site; if the site can't be reached, it builds with the local file.
+
 ## Test it
 
 The browser tests live in `tests/e2e/`: 42 Playwright scripts, one per area of the game, each
