@@ -918,6 +918,15 @@ Congress.gov only on the deploy, with the repository's key, and the deploy publi
 which takes that file from the site when it's newer than the local one, so the claude.ai copy shows
 the same bills as the site; if the site can't be reached, it builds with the local file.
 
+**The plan receipt** (`src/game/receipt.ts`): finishing a budget desk shares a receipt instead of a
+plain line, previewed on the completion screen exactly as it will be posted, with a matching
+1200×630 image: whose plan, the mission and stars, what it achieved; the plan style (🟩 gentle,
+🟨 moderate, 🟥 steep, from the hit to the economy), the cards played and the budget personality;
+how the savings split between spending cuts and taxes, five blocks each (only while the player
+keeps "Show how my plan splits spending cuts and taxes" on; the choice is remembered); the
+biggest moves by budget area; and a dare matched to what a friend could still beat (gentler,
+three stars, fewer cards). It reports and doesn't judge: no party, ideology or blame words.
+
 ## Test it
 
 The browser tests live in `tests/e2e/`: 42 Playwright scripts, one per area of the game, each

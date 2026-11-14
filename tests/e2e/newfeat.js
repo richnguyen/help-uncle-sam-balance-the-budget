@@ -60,7 +60,7 @@ const { answerAny } = require('./gamehelp');
   for (let k = 0; k < 6 && !(await p.locator('.celebrate').count()); k++) { await p.locator('.pcard-add:not(.on)').first().tap(); await p.waitForTimeout(350); }
   await p.waitForTimeout(800);
   const ch = decodeURIComponent(await p.locator('.celebrate .social-link[data-net="x"]').getAttribute('href'));
-  ok(/text=Ruth here\. I stopped Uncle Sam’s debt/.test(ch) && /by=Ruth/.test(ch), 'challenge: ' + ch.replace(/^.*text=/, '').slice(0, 110));
+  ok(/text=🇺🇸 Ruth’s plan · Mission 1\.9[\s\S]*I stopped Uncle Sam’s debt/u.test(ch) && /by=Ruth/.test(ch), 'challenge (the plan receipt, signed): ' + ch.replace(/^.*text=/, '').slice(0, 110));
   ok(await p.locator('#cel-name').count() === 1, 'the pop-up asks to sign the challenge');
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   const pfy = await p.locator('#pfy-t').textContent();

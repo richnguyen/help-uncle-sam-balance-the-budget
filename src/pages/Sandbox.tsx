@@ -27,7 +27,9 @@ import { AgreementCard, assessShared, ChallengeShare, challengeText, GOAL_DONE, 
 import { CHALLENGE_LINES } from '../game/script';
 import { ShareButton } from '../game/ShareButton';
 import { countPlay, countStep } from '../lib/backend';
-import { encodePlan } from '../game/plans';
+import { archetype, concentration, encodePlan } from '../game/plans';
+import { assess } from '../lib/assess';
+import { receiptCard, receiptText, type ReceiptInput } from '../game/receipt';
 import { Rated } from '../game/Rated';
 import { twistFor } from '../lib/twists';
 import { ballotFrom, compare, useMyName } from '../game/plans';
@@ -278,6 +280,13 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
   const myLink = useShareLink(desk?.id, met && desk ? { ids, lv, gradual, stars: ev.stars } : null, { by: name || undefined, ballot: ballotFrom(journey.choices) });
   // Level 10 shares a duel invite instead of a challenge.
   const invite = useDuelInvite(isDuelLevel && met && !duel && !challenge ? { ids, lv, gradual } : null);
+  // The plan receipt: what the player pulled off, how, and where the savings came from.
+  const receipt: ReceiptInput | null = useMemo(() => {
+    if (!desk || !met) return null;
+    const a = assess(goal, ids, lv, gradual);
+    const persona = archetype({ top: concentration(a.shares), rating: a.econ.rating, cards: ids.length, slidersUsed: Object.values(lv).some((v) => v !== 0) });
+    return { mission: missionShort(STOP_BY_ID[desk.id]), done: GOAL_DONE[goal], stars: ev.stars, cards: selected.map((o) => ({ lever: o.lever, side: o.side, savings10: o.savings10 })), rating: a.econ.rating, personality: persona.name, name: name || undefined };
+  }, [desk, met, goal, ids, lv, gradual, ev.stars, selected, name]); // eslint-disable-line react-hooks/exhaustive-deps
   const shareText = desk ? challengeText(name, `I ${GOAL_DONE[goal]} with ${ids.length} policy card${ids.length === 1 ? '' : 's'} and ${ev.stars} of 3 stars${h2h?.outcome === 'won' ? `, and beat ${byShort}’s plan` : ''}. Can you beat mine?`) : undefined;
   const challengeResult = (inCard: boolean) => challenge && theirs && mineNow ? (
     <div className="challenge-result">
@@ -703,7 +712,7 @@ export default function Sandbox({ desk }: { desk?: Desk }) {
       {desk && <p className="fineprint-link small">This mission’s full chapters and the original documents are in <a href={'#sources-' + desk.id}>Sources &amp; methods</a>.</p>}
       {party != null && desk && (
         <Celebration stop={STOP_BY_ID[desk.id]} stars={party} onClose={() => setParty(null)}
-          line={h2h?.outcome ? CHALLENGE_LINES[h2h.outcome] : DESK_PARTY[party]} share={invite ? { url: invite.url, text: invite.text, duel: true } : myLink && shareText ? { url: myLink, text: shareText } : undefined}
+          line={h2h?.outcome ? CHALLENGE_LINES[h2h.outcome] : DESK_PARTY[party]} share={invite ? { url: invite.url, text: invite.text, duel: true } : myLink && shareText ? { url: myLink, text: shareText, receipt: receipt ? { text: (mix: boolean) => receiptText(receipt, mix), card: (mix: boolean) => receiptCard(receipt, mix) } : undefined } : undefined}
           challenge={challenge && h2h?.outcome ? { outcome: h2h.outcome, by: challengeBy === 'Your friend' ? 'your friend' : challengeBy } : undefined}
           newcomer={newcomer} onShare={() => { returned(); invite?.keep(); }}>
           {challengeResult(true)}
