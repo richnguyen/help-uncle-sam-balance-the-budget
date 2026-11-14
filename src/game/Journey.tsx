@@ -24,6 +24,7 @@ import { useJourney } from './state';
 import { useDailyStreak } from './streak';
 import { useMyName } from './plans';
 import { MenuScene } from './MenuScene';
+import { RoadPath } from './RoadPath';
 import { Seal } from './Seal';
 import { balanceOf, starsSpent } from './build/landmarks';
 import { setAmbienceWanted, startAmbience, stopAmbience, useAmbienceWanted } from './ambience';
@@ -162,60 +163,14 @@ const ROADMAP_AT = 'ftd:roadmap-at';
 
 /** The road map, as its own page: the three campaigns and their missions, with progress at the top. */
 export function LevelsPage() {
-  const { j, done, next, minutesLeft, total, stars, rank, finished } = useProgress();
-  useEffect(() => {
-    let at: string | null = null;
-    try { at = sessionStorage.getItem(ROADMAP_AT); sessionStorage.removeItem(ROADMAP_AT); } catch { /* no storage: stay at the top */ }
-    if (at && at !== 'campaign-1') requestAnimationFrame(() => document.getElementById(at!)?.scrollIntoView({ block: 'start' }));
-  }, []);
+  const j = useJourney();
+  // Another page may ask for a campaign (the mission list in the top bar); otherwise the path opens at your stop.
+  const [at] = useState(() => { try { const v = sessionStorage.getItem(ROADMAP_AT); sessionStorage.removeItem(ROADMAP_AT); return v; } catch { return null; } });
   return (
-    <div className="journey">
-      <PageHead eyebrow="Campaigns" title="The road map" lede="Three campaigns, each with one goal. Missions go from easy to hard, and each one teaches an idea you’ll use at the campaign’s final mission, the budget desk." />
-      <div className="card journey-progress" aria-label="Your progress">
-        <div className="jp-rank">
-          <span className="stat-label">Your title</span>
-          <strong>{rank.name}</strong>
-        </div>
-        <div className="jp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={STOPS.length} aria-valuenow={done.length} aria-label={`${done.length} of ${STOPS.length} missions done`}>
-          {STOPS.map((s) => <span key={s.id} data-done={j.done.includes(s.id)} data-desk={s.kind === 'desk'} data-camp-start={(s.mission === 1 && s.campaign > 1) || undefined} />)}
-        </div>
-        <div className="small"><strong>{done.length} of {STOPS.length}</strong> missions · <strong>★ {stars}</strong> of {MAX_STARS} stars · {finished ? 'all done' : `about ${minutesLeft} of ${total} minutes left`}</div>
-      </div>
-      {CAMPAIGNS.map((c) => {
-        const ms = STOPS.filter((s) => s.campaign === c.n);
-        const fin = ms.filter((s) => j.done.includes(s.id)).length;
-        return (
-          <Section key={c.n} id={'campaign-' + c.n} eyebrow={`Campaign ${c.n} · ${fin} of ${ms.length} missions`} title={c.title} sub={c.blurb}>
-            <ol className="roadmap">
-              {ms.map((s) => {
-                const isDone = j.done.includes(s.id);
-                const open = isUnlocked(s.id, j.done, j.settings.freeRoam);
-                const st = j.stars[s.id] ?? 0;
-                return (
-                  <li key={s.id} className="stop" data-done={isDone} data-open={open} data-kind={s.kind} data-hard={hard(s.difficulty)} data-diff={diffKey(s.difficulty)} data-next={s.id === next?.id}>
-                    <span className="stop-node" aria-hidden="true">{open || isDone ? <LevelIcon id={s.icon} size={20} /> : <LockIcon />}</span>
-                    <div className="stop-body">
-                      <div className="stop-meta">
-                        <span>{s.final ? `Final mission` : `Mission ${s.campaign}.${s.mission}`}</span>
-                        <span className={'pill ' + pillFor(s.difficulty)}>{s.difficulty}{s.kind === 'desk' ? ' · budget desk' : ''}</span>
-                        <span className="muted">about {s.minutes} min</span>
-                        {isDone && <Stars n={st} size="sm" label={`${st} of 3 stars`} />}
-                      </div>
-                      <h3 className="stop-title">{open ? <a href={'#' + s.id}>{s.title}</a> : s.title}</h3>
-                      <div className="small muted">{open ? s.topic : unlockText(s.id)}</div>
-                    </div>
-                    {open && <a className={'btn' + (s.id === next?.id ? ' btn-primary' : '')} href={'#' + s.id} aria-label={`${isDone ? 'Replay' : 'Play'} ${missionShort(s)}: ${s.title}`}>{isDone ? 'Replay' : s.id === next?.id ? 'Play' : 'Open'}</a>}
-                  </li>
-                );
-              })}
-            </ol>
-          </Section>
-        );
-      })}
+    <div className="journey journey-path">
+      <PageHead eyebrow="Campaigns" title="The road map" />
+      <RoadPath scrollTo={at} />
       {j.plans && Object.keys(j.plans).length > 0 && <p className="small"><a href="#story">Your Budget Story</a>: your plans and your budget personality, as cards to share.</p>}
-      <ActionBar label="Play">
-        {next ? <a className="btn btn-primary" href={'#' + next.id}>{done.length ? `Continue: ${missionShort(next)}, ${next.title}` : 'Start mission 1.1'}</a> : <a className="btn btn-primary" href="#story">See your Budget Story</a>}
-      </ActionBar>
     </div>
   );
 }
