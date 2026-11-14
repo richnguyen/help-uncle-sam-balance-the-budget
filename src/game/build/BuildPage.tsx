@@ -1,9 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { ActionBar } from '../../components/ActionBar';
-import { BADGES, loadProgress } from '../../lib/game';
 import { useHaptics } from '../haptics';
 import { isUnlocked, missionShort, STOPS } from '../levels';
 import { useJourney } from '../state';
+import { useDailyStreak } from '../streak';
 import { SamSays } from '../UncleSam';
 import type { Mood } from '../voice';
 import { bump, buildPart, flyStar, hidePart } from './anim';
@@ -12,20 +12,12 @@ import { balanceOf, BUILD_LINES, doneCount, isComplete, isOpen, type Landmark, L
 import { MallView } from './mall';
 
 // Build the Mall: the whole Mall (#mall) and each landmark's building site (#mall-monument …).
-// Stars won in missions pay for each landmark's jobs, in order; accomplishments (medals and
-// budget-desk badges) unlock its decoration. See landmarks.ts for the jobs and their facts.
+// Stars won in missions pay for each landmark's jobs, in order; a Daily Dollar streak unlocks its
+// decoration (landmark N needs an N-day streak, the best run counting). See landmarks.ts for the
+// jobs and their facts.
 
-/** Medals and budget-desk badges: what unlocks the decorations. */
-function useAccomplishments() {
-  const j = useJourney();
-  const [desk, setDesk] = useState(() => loadProgress().badges);
-  useEffect(() => {
-    const on = () => setDesk(loadProgress().badges);
-    window.addEventListener('ftd-progress', on);
-    return () => window.removeEventListener('ftd-progress', on);
-  }, []);
-  return j.medals.length + BADGES.filter((b) => desk.includes(b.id)).length;
-}
+/** The best Daily Dollar streak: what unlocks the decorations. */
+const useStreakBest = () => useDailyStreak().best;
 
 /** Where to win more stars: the next mission, or a replay once every mission is done. */
 function useStarSource() {
@@ -114,7 +106,7 @@ const PRELUDE: Record<string, 'olddome' | 'fire'> = { 'capitol:drum': 'olddome',
 function LandmarkSite({ l }: { l: Landmark }) {
   const j = useJourney();
   const built = j.built ?? [], decor = j.decor ?? [];
-  const acc = useAccomplishments();
+  const acc = useStreakBest();
   const src = useStarSource();
   const buzz = useHaptics();
   const bal = balanceOf(j.stars, built);
@@ -212,8 +204,8 @@ function LandmarkSite({ l }: { l: Landmark }) {
             })}
             <li data-state={placed ? 'done' : fin && acc >= l.decor.need ? 'next' : 'later'} className="bm-job-decor">
               <span className="bm-job-mark" aria-hidden="true">{placed ? '✓' : '✦'}</span>
-              <span className="bm-job-label">{l.decor.label}<span className="small muted bm-job-need"> · {acc >= l.decor.need ? 'unlocked' : `needs ${l.decor.need} accomplishment${l.decor.need === 1 ? '' : 's'}; you have ${acc}`}{!fin && ' · after the last job'}</span></span>
-              <span className="bm-job-cost" aria-hidden="true">free</span>
+              <span className="bm-job-label">{l.decor.label}<span className="small muted bm-job-need"> · {acc >= l.decor.need ? 'unlocked' : <>needs a <a href="#daily">Daily Dollar</a> streak of {l.decor.need} day{l.decor.need === 1 ? '' : 's'}; your best is {acc}</>}{!fin && ' · after the last job'}</span></span>
+              <span className="bm-job-cost" aria-label={`a ${l.decor.need}-day Daily Dollar streak`}>🔥{l.decor.need}</span>
             </li>
           </ol>
           <ul className="bm-sources small">
@@ -230,6 +222,8 @@ function LandmarkSite({ l }: { l: Landmark }) {
             : <button type="button" className="btn btn-primary bm-build" ref={btn} onClick={doBuild} disabled={busy} data-primary>{busy ? 'Building…' : <>Build: {next.label} · <span className="bm-cost">★{next.cost}</span></>}</button>
         ) : !placed && acc >= l.decor.need ? (
           <button type="button" className="btn btn-primary bm-build" onClick={doDecor} disabled={busy} data-primary>{l.decor.label}</button>
+        ) : !placed && fin ? (
+          <a className="btn btn-primary" href="#daily" data-primary>🔥 Play the Daily Dollar</a>
         ) : after ? (
           <a className="btn btn-primary" href={'#mall-' + after.id} data-primary>Next landmark: the {after.short}</a>
         ) : (
@@ -291,7 +285,7 @@ function Postcard({ l, placed, after, acc, onClose }: { l: Landmark; placed: boo
           <div className="stat-label">Greetings from the National Mall</div>
           <h2 className="celebrate-title" id="bm-pc-t">{l.name} is finished!</h2>
           <ul className="takeaways">{l.postcard.map((p) => <li key={p}>{p}</li>)}</ul>
-          <p className="small muted">{acc >= l.decor.need ? `Its finishing touch is unlocked: ${l.decor.label.toLowerCase()}.` : `Its finishing touch (${l.decor.label.toLowerCase()}) unlocks with ${l.decor.need} accomplishments; you have ${acc}.`} Sources: {l.sources.map((s, i) => <span key={s.url}>{i ? ', ' : ''}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></span>)}.</p>
+          <p className="small muted">{acc >= l.decor.need ? `Its finishing touch is unlocked: ${l.decor.label.toLowerCase()}.` : `Its finishing touch (${l.decor.label.toLowerCase()}) unlocks with a ${l.decor.need}-day Daily Dollar streak; your best is ${acc}.`} Sources: {l.sources.map((s, i) => <span key={s.url}>{i ? ', ' : ''}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></span>)}.</p>
           <div className="celebrate-actions">
             {after ? <a className="btn btn-primary" href={'#mall-' + after.id} data-primary onClick={onClose}>Next landmark: the {after.short}</a> : <a className="btn btn-primary" href="#mall" data-primary onClick={onClose}>See the whole Mall</a>}
             <button type="button" className="btn" onClick={onClose}>Stay here</button>

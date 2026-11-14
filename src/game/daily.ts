@@ -4,6 +4,7 @@ import { dollars, money, pct } from '../lib/format';
 import { estimateTaxes } from '../lib/tax';
 import { OPTIONS_DATA } from '../lib/planData';
 import { load, save } from '../lib/storage';
+import { DAILY_EVENT } from './streak';
 
 // The Daily Dollar: five higher-or-lower calls a day on real federal numbers. Everyone gets the
 // same puzzle on the same date (it is chosen from the date, in this browser), so results can be
@@ -307,7 +308,7 @@ export function themeBlurb(t: Theme) {
 // ---------- results, kept in this browser ----------
 export type Results = Record<string, boolean[]>;
 export const loadResults = () => load<Results>('daily', {});
-export const saveResult = (key: string, answers: boolean[]) => { const r = loadResults(); r[key] = answers; save('daily', r); };
+export const saveResult = (key: string, answers: boolean[]) => { const r = loadResults(); r[key] = answers; save('daily', r); try { window.dispatchEvent(new Event(DAILY_EVENT)); } catch { /* not in a browser */ } };
 
 /** Days played, and how many days in a row up to today (or yesterday, if today isn't played yet). */
 export function streak(r: Results, key: string) {

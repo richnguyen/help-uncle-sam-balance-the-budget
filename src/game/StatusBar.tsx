@@ -5,6 +5,7 @@ import { campaignOf, isUnlocked, MAX_STARS, missionShort, rankFor, STOP_BY_ID, S
 import { MEDALS } from './medals';
 import { balanceOf } from './build/landmarks';
 import { useJourney } from './state';
+import { useDailyStreak } from './streak';
 import { useMyName } from './plans';
 import { useNarrator } from './voice';
 import { SamPortrait, SpeechStrip } from './samhud';
@@ -43,6 +44,7 @@ function Pop({ id, open, setOpen, hover = false, button, children, className = '
 
 export function StatusBar({ route, title }: { route: string; title?: string }) {
   const j = useJourney();
+  const streak = useDailyStreak();
   const n = useNarrator();
   const desk = useDeskBadges();
   const [open, setOpen] = useState<Menu>(null);
@@ -114,6 +116,7 @@ export function StatusBar({ route, title }: { route: string; title?: string }) {
         {/* Right, in one line: your score, his voice, and the way out. */}
         <div className="hud-side hud-right">
           <div className="hud-row">
+            <a className="stb-streak" href="#daily" data-on={streak.run > 0 || undefined} aria-label={`Daily Dollar streak: ${streak.run} day${streak.run === 1 ? '' : 's'} in a row${streak.best > streak.run ? `; your best is ${streak.best}` : ''}`} title={`Daily Dollar: ${streak.run} day${streak.run === 1 ? '' : 's'} in a row · best ${streak.best}`}><span aria-hidden="true">🔥</span> <strong className="num">{streak.run}</strong></a>
             <a className="stb-stars ab-stars" href="#mall" aria-label={`${left} stars to spend on building the Mall (${stars} won)`} title={`${left} stars to spend · ${stars} of ${MAX_STARS} won`}><span aria-hidden="true">★</span> <strong className="num">{left}</strong></a>
             <Pop id="acc" open={open} setOpen={setOpen} button={(p) => (
               <button type="button" className="stb-acc-btn" {...p} aria-label={`Accomplishments: ${earned} of ${total}`}><AwardIcon size={17} /> <strong className="num">{earned}</strong></button>

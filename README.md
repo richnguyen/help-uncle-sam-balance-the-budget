@@ -510,9 +510,17 @@ landmark's site at `#mall-monument`, `#mall-lincoln` …).
   of Freedom. Each fact was checked against the National Park Service, the Architect of the
   Capitol, the Senate, the White House Historical Association or the Treasury, and each landmark
   lists its sources. A finished landmark sends a postcard with three more facts.
-- **Accomplishments unlock the finishing touches:** medals and budget-desk badges unlock each
-  landmark's decoration (the ring of 50 flags, Lincoln lit at night, the cherry trees on the
-  Tidal Basin, Hamilton's statue, the South Lawn fountain, fireworks over the Capitol).
+- **A Daily Dollar streak unlocks the finishing touches:** each landmark's decoration (the ring
+  of 50 flags, Lincoln lit at night, the cherry trees on the Tidal Basin, Hamilton's statue, the
+  South Lawn fountain, fireworks over the Capitol) needs a streak as long as the landmark's place
+  on the Mall: 1 day for the Washington Monument, up to 6 for the Capitol (🔥1 … 🔥6 in the list
+  of jobs). The best run counts, so a missed day never takes back what was unlocked. A finished
+  landmark whose decoration is still locked points to the Daily Dollar, and the decoration
+  unlocks the moment the streak is long enough.
+- **The streak in the top bar** (`src/game/streak.ts`): 🔥 and the days in a row, left of the
+  stars, linking to the Daily Dollar; grey until today's or yesterday's puzzle is played, with the
+  best run in its label. It comes from the results kept in the browser, and updates as soon as a
+  puzzle is finished.
 - **Watching it go up is the reward.** Pieces not yet built are drawn as blueprints, the next job
   glowing, so the player sees what is coming. Building plays on the drawing itself (Web
   Animations, `anim.ts`): a star flies from the button to the site, scaffolding goes up, then the
