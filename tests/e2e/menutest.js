@@ -17,7 +17,7 @@ const { answerAny } = require('./gamehelp');
   // The choices are the tab bar: five tabs alike, with icons and names, Mission in the middle.
   const tabs = await p.$$eval('.tabbar a.tab', (l) => l.map((a) => { const i = a.querySelector('.tab-icon').getBoundingClientRect(); return { id: a.dataset.tab, href: a.getAttribute('href'), label: a.querySelector('.tab-label').textContent, icon: !!a.querySelector('.tab-icon svg'), size: `${Math.round(i.width)}x${Math.round(i.height)}`, bg: getComputedStyle(a.querySelector('.tab-icon')).backgroundColor, cur: a.getAttribute('aria-current') }; }));
   ok(tabs.map((t) => t.id).join() === 'mission,daily,menu,together,guide' && tabs.every((t) => t.icon && t.label) && tabs[2].label === 'Feed' && tabs[4].label === 'You' && await p.locator('header.hud a[href="#journey"]').count() === 0 && new Set(tabs.map((t) => t.size)).size === 1, 'the tab bar, five tabs alike: ' + tabs.map((t) => t.label).join(' · '));
-  ok(tabs[0].href === '#level-spend' && tabs[2].href === '#journey' && tabs[2].cur === 'page' && tabs.filter((t) => t.cur).length === 1 && tabs.filter((t, k) => k !== 2).every((t) => t.bg === tabs[0].bg), `Mission first goes to the next mission (${tabs[0].href}); the main menu, in the middle, is lit on the main menu`);
+  ok(tabs[0].href === '#levels' && tabs[2].href === '#journey' && tabs[2].cur === 'page' && tabs.filter((t) => t.cur).length === 1 && tabs.filter((t, k) => k !== 2).every((t) => t.bg === tabs[0].bg), `Roadmap first goes to the road map (${tabs[0].href}); the main menu, in the middle, is lit on the main menu`);
   ok(await p.locator('.menu-item, .mc-camp, .menu-strip, .ticker').count() === 0, 'no menu buttons, campaign chips or headline strip on the main menu');
   const tr = await p.$$eval('.menu-tr > *', (l) => l.map((a) => a.getAttribute('href')));
   ok(tr.join() === '#mall,#settings,#guide' && /★ 5/.test(await p.locator('.menu-mall').textContent()) && /5 stars to spend/.test(await p.locator('.menu-mall').getAttribute('aria-label')), `top right: Build the Mall (with the stars to spend), Settings and Your record (${tr.join(' ')})`);
@@ -105,7 +105,7 @@ const { answerAny } = require('./gamehelp');
   ok(await p.locator('.ms-drift').first().evaluate((e) => getComputedStyle(e).animationName) === 'none', 'less motion: the scene holds still');
   p = await mk({ ...devices['iPhone 13'] }, J({ done: [], stars: {}, started: null }));
   await p.goto(base + '#journey'); await p.waitForTimeout(900);
-  ok(await p.locator('.tabbar a[data-tab="mission"] .tab-label').textContent() === 'Mission' && await p.locator('.tabbar a[data-tab="mission"]').getAttribute('href') === '#level-1' && /Howdy/.test(await p.locator('.menu-sam-text').textContent()), 'first visit: the Mission tab opens mission 1.1, and Uncle Sam’s hello');
+  ok(await p.locator('.tabbar a[data-tab="mission"] .tab-label').textContent() === 'Roadmap' && await p.locator('.tabbar a[data-tab="mission"]').getAttribute('href') === '#levels' && /Howdy/.test(await p.locator('.menu-sam-text').textContent()), 'first visit: the Roadmap tab opens the road map, and Uncle Sam’s hello');
   // Every tab goes to its screen and is lit there; it stays in missions too.
   for (const [id, hash] of [['daily', '#daily'], ['together', '#together'], ['guide', '#guide'], ['menu', '#journey']]) {
     await p.locator(`.tabbar a[data-tab="${id}"]`).tap(); await p.waitForTimeout(700);
@@ -128,8 +128,10 @@ const { answerAny } = require('./gamehelp');
   ok(Math.abs(stack.gap) <= 2 && stack.tabBottom === 0, `a screen’s own action bar sits right on the tab bar (gap ${stack.gap}px)`);
   await p.goto(base + '#journey'); await p.waitForTimeout(800);
   await p.locator('.tabbar a[data-tab="mission"]').tap(); await p.waitForTimeout(900);
+  ok(await p.evaluate(() => location.hash) === '#levels' && /^Start$/i.test(await p.locator('.stop[data-next="true"] .rp-bubble').innerText()), 'the Roadmap tab opens the road map at the stop to start');
+  await p.locator('.stop[data-next="true"] .stop-btn').tap(); await p.waitForTimeout(300); await p.locator('.rp-card-go').tap(); await p.waitForTimeout(900);
   const ms = await p.evaluate(() => { const t = document.querySelector('.tabbar'); const a = [...document.querySelectorAll('.actionbar')].find((e) => getComputedStyle(e).display !== 'none'); return { tab: !!t, lit: t?.querySelector('[aria-current="page"]')?.dataset.tab, gap: t && a ? Math.round(t.getBoundingClientRect().top - a.getBoundingClientRect().bottom) : null, bar: document.querySelector('.hud-title')?.textContent }; });
-  ok(await p.evaluate(() => location.hash) === '#level-1' && ms.tab && ms.lit === 'mission' && Math.abs(ms.gap) <= 2 && await p.locator('.level-nav .btn-primary').count() === 1 && ms.bar === 'Mission 1.1', `in a mission the tab bar stays (Mission lit), the step’s Back / Continue right on it (gap ${ms.gap}px), and the top bar says ${ms.bar}`);
+  ok(await p.evaluate(() => location.hash) === '#level-1' && ms.tab && ms.lit === 'mission' && Math.abs(ms.gap) <= 2 && await p.locator('.level-nav .btn-primary').count() === 1 && ms.bar === 'Mission 1.1', `in a mission the tab bar stays (Roadmap lit), the step’s Back / Continue right on it (gap ${ms.gap}px), and the top bar says ${ms.bar}`);
 
   // In a mission, "Mission 1.1" opens the road map in the top bar.
   const fs = await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.hud-title')).fontSize));

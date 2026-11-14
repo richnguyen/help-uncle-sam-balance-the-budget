@@ -7,11 +7,10 @@ import { queueQuick } from './quickplay';
 import { CAMP_COLOR, MATERIAL, road, type Spot, W, type Zone } from './roadLayout';
 import { useJourney } from './state';
 import { useDailyStreak } from './streak';
-import { UncleSam } from './UncleSam';
 
 // The road map: a walk from the Lincoln Memorial to the Capitol with one stop per mission (see
 // roadLayout.ts for where things sit and how the ground is drawn). The stop you are on is bigger,
-// with a ring for its steps, a START or CONTINUE bubble, and Uncle Sam beside it; a tap on any stop
+// with a ring for its steps and a START or CONTINUE bubble (Uncle Sam is in the top bar); a tap on any stop
 // opens its card. The campaign's header stays pinned while you scroll; a tap on it opens all three
 // campaigns, and its book opens that campaign's briefing. The landmarks beside the walk are the
 // ones built with stars on the Mall: built parts stand in full, the rest show as blueprints.
@@ -114,7 +113,6 @@ export function RoadPath({ scrollTo }: { scrollTo?: string | null }) {
     const upTo = !next ? z.spots.length : next.campaign > z.n ? z.spots.length : next.campaign < z.n ? 0 : z.spots.findIndex((p) => p.s.id === next.id) + 1;
     return z.segs.slice(0, upTo).join(' ');
   };
-  const samSays = !here ? null : here.boss ? 'The big one, partner.' : (() => { const n = stepsOf(here.s.id), d = doneSteps(here.s.id); return d === 0 ? (j.done.length ? 'Next stop, partner!' : 'Start here, partner!') : `${n - d} step${n - d === 1 ? '' : 's'} to go, partner!`; })();
   const card = open ? R.spots.find((p) => p.s.id === open) ?? null : null;
 
   return (
@@ -198,13 +196,6 @@ export function RoadPath({ scrollTo }: { scrollTo?: string | null }) {
               </section>
             );
           })}
-
-          {here && samSays && (
-            <div className="rp-sam" data-side={here.x >= 195 ? 'left' : 'right'} style={{ left: here.x >= 195 ? here.x - 138 : here.x + 68, top: here.y - (here.boss ? 20 : 34) }} aria-hidden="true">
-              <span className="rp-sam-says">{samSays}</span>
-              <UncleSam mood="happy" size={64} crop="bust" greet={false} />
-            </div>
-          )}
 
           {card && (() => {
             const { done, stars, unlocked, state } = stateOf(card);

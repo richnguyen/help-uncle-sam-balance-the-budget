@@ -1,5 +1,5 @@
 // The road map as a path: one stop per mission on a walk from the Lincoln Memorial to the Capitol.
-// The stop you are on has a ring for its steps, a CONTINUE bubble and Uncle Sam beside it; a tap
+// The stop you are on has a ring for its steps, and a CONTINUE bubble; a tap
 // opens its card; the campaign header stays pinned and changes with the campaign; a tap on it
 // opens the three campaigns, its book the briefing; the arrow brings you back to your stop.
 const __OUT = require('path').join(__dirname, 'out');
@@ -24,7 +24,7 @@ const ORDER = ['level-1', 'level-2', 'level-spend', 'level-3', 'level-4', 'level
   const box = await next.locator('.stop-btn').boundingBox();
   ok(box && box.y > 120 && box.y < 600, `the path opens at your stop (${Math.round(box.y)}px down the screen)`);
   ok(await next.locator('.rp-ring').count() === 1 && /^Continue$/i.test(await next.locator('.rp-bubble').innerText()) && /Step 3 of \d/.test(await next.locator('.rp-step').textContent()), 'your stop: a ring for its steps, a CONTINUE bubble, and “Step 3 of …”');
-  ok(await p.locator('.rp-sam .sam').count() === 1 && /steps? to go, partner/.test(await p.locator('.rp-sam-says').textContent()), 'Uncle Sam stands beside it: ' + await p.locator('.rp-sam-says').textContent());
+  ok(await p.locator('.rp-sam').count() === 0, 'Uncle Sam stays in the top bar, not on the path');
   ok(/Campaign 1 · Mission 4 of 9/i.test(await p.locator('.rp-head-eyebrow').textContent()) && /Stop the debt/.test(await p.locator('.rp-head-title').textContent()), 'the pinned header: Campaign 1, Mission 4 of 9');
   await p.screenshot({ path: __OUT + '/roadpath.png' });
   // The card.
@@ -65,10 +65,10 @@ const ORDER = ['level-1', 'level-2', 'level-spend', 'level-3', 'level-4', 'level
   // 2. A new player, and the last stop.
   const q = await mk(0, []);
   await q.goto(base + '#levels'); await q.waitForTimeout(1400);
-  ok(/^Start$/i.test(await q.locator('.stop[data-next="true"] .rp-bubble').innerText()) && /Start here, partner/.test(await q.locator('.rp-sam-says').textContent()), 'a new player: START on Mission 1.1');
+  ok(/^Start$/i.test(await q.locator('.stop[data-next="true"] .rp-bubble').innerText()), 'a new player: START on Mission 1.1');
   const z = await mk(20, []);
   await z.goto(base + '#levels'); await z.waitForTimeout(1400);
-  ok(await z.locator('.stop[data-next="true"][data-boss]').count() === 1 && /Campaign 3 · Mission 5 of 5/i.test(await z.locator('.rp-head-eyebrow').textContent()) && /The big one/.test(await z.locator('.rp-sam-says').textContent()) && await z.locator('.rp-side[data-kind="showdown"]').count() === 1, 'the last stop: Campaign 3’s final budget desk before the Capitol, with the Sealed Showdown beside it');
+  ok(await z.locator('.stop[data-next="true"][data-boss]').count() === 1 && /Campaign 3 · Mission 5 of 5/i.test(await z.locator('.rp-head-eyebrow').textContent()) && await z.locator('.rp-side[data-kind="showdown"]').count() === 1, 'the last stop: Campaign 3’s final budget desk before the Capitol, with the Sealed Showdown beside it');
   await z.screenshot({ path: __OUT + '/roadpath-finish.png' });
   ok(!errs.length, 'no page errors' + (errs.length ? ': ' + errs.join(' | ') : ''));
   console.log(fails ? `${fails} FAILED` : 'all passed');

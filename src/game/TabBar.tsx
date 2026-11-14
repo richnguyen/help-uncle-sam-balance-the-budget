@@ -8,8 +8,8 @@ import { useMyName } from './plans';
 import { useMoves } from './feed/follow';
 import { useNewCount } from './feed/since';
 
-// The tab bar, along the bottom of every screen: Mission (the next mission to
-// play, or the road map once all are done), the Daily Dollar, the feed (the main menu) in the middle, Play
+// The tab bar, along the bottom of every screen: Roadmap (the road map, opened at the stop you
+// are on, ready to continue), the Daily Dollar, the feed (the main menu) in the middle, Play
 // together, and You (your record, then the field guide), all alike. The tab for the screen
 // you're on is lit. (Build the Mall is the button at the main menu's top right, and the top
 // bar's stars.) It stays in missions too, under the step's own Back / Continue bar.
@@ -43,9 +43,7 @@ export function TabBar({ route }: { route: Route }) {
   // On the Feed tab: what's arrived since the feed was last open, and followed bills that moved.
   const fresh = useNewCount() + useMoves().length;
   const tabs: { id: TabId; href: string; label: string; icon: Parameters<typeof MenuIcon>[0]['id']; title: string }[] = [
-    next
-      ? { id: 'mission', href: '#' + next.id, label: 'Mission', icon: 'play', title: `${started ? 'Continue' : 'Start'}: ${missionShort(next)}, ${next.title}` }
-      : { id: 'mission', href: '#levels', label: 'Mission', icon: 'play', title: 'Every mission, on the road map' },
+    { id: 'mission', href: '#levels', label: 'Roadmap', icon: 'play', title: next ? `The road map: ${started ? 'continue' : 'start'} at ${missionShort(next)}, ${next.title}` : 'The road map: every mission' },
     { id: 'daily', href: '#daily', label: 'Daily', icon: 'daily', title: 'The Daily Dollar' },
     { id: 'menu', href: '#journey', label: 'Feed', icon: 'home', title: 'The feed, on the main menu' },
     { id: 'together', href: '#together', label: 'Together', icon: 'together', title: 'Play together' },

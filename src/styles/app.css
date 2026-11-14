@@ -3992,12 +3992,6 @@ body.reveal-open { overflow: hidden; }
 .rp-final > span { display: inline-block; white-space: nowrap; padding: 2px 9px; border-radius: 999px; background: #111b16; color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 .stop[data-boss][data-done="true"] .rp-final { top: 88px; }
 .rp-step { left: -74px; top: 88px; width: 148px; text-align: center; font-size: 12px; font-weight: 700; color: var(--cc); pointer-events: none; }
-/* Uncle Sam beside your stop, in a small clearing */
-.rp-sam { width: 64px; pointer-events: none; z-index: 2; }
-.rp-sam::before { content: ''; position: absolute; inset: -6px -14px -10px; border-radius: 50%; background: radial-gradient(closest-side, #dcead0 72%, transparent); z-index: -1; }
-.rp-sam .sam { display: block; }
-.rp-sam-says { position: absolute; left: -24px; bottom: calc(100% + 8px); width: 112px; box-sizing: border-box; padding: 8px 10px; border: 2px solid #c9d2c6; border-radius: 12px; background: #fff; font-size: 12.5px; font-weight: 700; line-height: 1.3; }
-.rp-sam-says::after { content: ''; position: absolute; left: 52px; bottom: -8px; width: 12px; height: 12px; background: #fff; border-right: 2px solid #c9d2c6; border-bottom: 2px solid #c9d2c6; transform: rotate(45deg); }
 /* the card that opens on a tap */
 .rp-card { left: 20px; width: 350px; box-sizing: border-box; padding: 16px; border-radius: 16px; background: var(--cc); box-shadow: 0 6px 0 var(--ce); color: #fff; display: flex; flex-direction: column; gap: 8px; z-index: 6; animation: rp-pop 0.16s ease-out both; }
 .rp-card::before { content: ''; position: absolute; left: calc(var(--ax) - 8px); top: -8px; width: 16px; height: 16px; background: var(--cc); transform: rotate(45deg); }
@@ -4047,6 +4041,6 @@ body.reveal-open { overflow: hidden; }
 .rp-brief-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; } .rp-brief-text span { font-size: 0.8rem; color: var(--ink-2); }
 .rp-brief-list li[data-locked] strong { color: var(--muted); }
 /* at night the ground dims; the stops and cards keep their colours */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rp { background: #2a3a2c; } :root:not([data-theme="light"]) .rp-ground { filter: brightness(0.58) saturate(0.85); } :root:not([data-theme="light"]) .rp-cap { color: #dfe6e1; } :root:not([data-theme="light"]) .rp-sam::before { background: radial-gradient(closest-side, #7f9a7a 72%, transparent); } :root:not([data-theme="light"]) .rp-side-label, :root:not([data-theme="light"]) .rp-mark[data-built] .rp-chip { color: #eef2ee; } :root:not([data-theme="light"]) .rp-side-label span { color: #cdd6cf; } }
-:root[data-theme="dark"] .rp { background: #2a3a2c; } :root[data-theme="dark"] .rp-ground { filter: brightness(0.58) saturate(0.85); } :root[data-theme="dark"] .rp-cap { color: #dfe6e1; } :root[data-theme="dark"] .rp-sam::before { background: radial-gradient(closest-side, #7f9a7a 72%, transparent); } :root[data-theme="dark"] .rp-side-label, :root[data-theme="dark"] .rp-mark[data-built] .rp-chip { color: #eef2ee; } :root[data-theme="dark"] .rp-side-label span { color: #cdd6cf; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rp { background: #2a3a2c; } :root:not([data-theme="light"]) .rp-ground { filter: brightness(0.58) saturate(0.85); } :root:not([data-theme="light"]) .rp-cap { color: #dfe6e1; } :root:not([data-theme="light"]) .rp-side-label, :root:not([data-theme="light"]) .rp-mark[data-built] .rp-chip { color: #eef2ee; } :root:not([data-theme="light"]) .rp-side-label span { color: #cdd6cf; } }
+:root[data-theme="dark"] .rp { background: #2a3a2c; } :root[data-theme="dark"] .rp-ground { filter: brightness(0.58) saturate(0.85); } :root[data-theme="dark"] .rp-cap { color: #dfe6e1; } :root[data-theme="dark"] .rp-side-label, :root[data-theme="dark"] .rp-mark[data-built] .rp-chip { color: #eef2ee; } :root[data-theme="dark"] .rp-side-label span { color: #cdd6cf; }
 @media (prefers-reduced-motion: reduce) { .rp-bubble, .rp-card, .rp-sheet { animation: none; } .rp-head { transition: none; } }
