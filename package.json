@@ -24,7 +24,7 @@
     "test:e2e": "node tests/e2e/run.mjs",
     "test:e2e:full": "node tests/e2e/run.mjs --tier full",
     "state-pages": "node scripts/make-state-pages.mjs --images",
-    "test:social": "node scripts/social/posts.test.mjs && node scripts/social/bluesky.test.mjs",
+    "test:social": "node scripts/social/posts.test.mjs && node scripts/social/bluesky.test.mjs && node scripts/social/mastodon.test.mjs",
     "social:drafts": "node scripts/social/compose.mjs"
   },
   "dependencies": {
